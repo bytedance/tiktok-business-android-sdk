@@ -1,0 +1,5 @@
+include ':business-core'
+
+include ':samples:AnalyticsSample'
+
+rootProject.name = "Tiktok Business SDK"

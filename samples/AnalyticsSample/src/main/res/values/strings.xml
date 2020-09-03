@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Tiktok Analytics Sample</string>
+    <string name="tiktok_business_app_key">api-access-token</string>
+    <string name="trigger_event">Trigger Event</string>
+</resources>
