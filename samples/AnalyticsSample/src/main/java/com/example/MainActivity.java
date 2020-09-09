@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getCanonicalName();
 
     private JSONObject properties;
+
     private TextView propsTV;
     private TextView eventTV;
 
@@ -37,8 +39,18 @@ public class MainActivity extends AppCompatActivity {
 
         propsTV = (TextView) findViewById(R.id.propsPrettyViewer);
         eventTV = (TextView) findViewById(R.id.eventName);
+        Button resetBtn = (Button) findViewById(R.id.resetBtn);
         properties = new JSONObject();
         ImageButton savedEventsBtn = (ImageButton) findViewById(R.id.savedEventsBtn);
+
+        resetBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                eventTV.setText("");
+                properties = new JSONObject();
+                updatePropsTV();
+            }
+        });
 
         propsTV.setOnClickListener(new View.OnClickListener() {
             @Override

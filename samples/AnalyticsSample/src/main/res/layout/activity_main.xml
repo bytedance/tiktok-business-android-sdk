@@ -78,14 +78,14 @@
             android:layout_marginBottom="10dp"
             android:orientation="horizontal">
             <Button
-                android:id="@+id/btn_date"
+                android:id="@+id/resetBtn"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="@string/reset"
                 android:layout_width="wrap_content" />
 
             <Button
-                android:id="@+id/btn_converter"
+                android:id="@+id/sendBtn"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
                 android:text="@string/send"
