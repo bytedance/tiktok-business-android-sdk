@@ -84,9 +84,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int selected) {
                         properties = new JSONObject();
-                        TestEvents.TTEventType ttEventType = TestEvents.TTEventType.valueOf(events[selected]);
-                        eventTV.setText(ttEventType.getEventType());
-                        for (TestEvents.TTProperty ttProperty : TestEvents.TTEventProperties.get(ttEventType)) {
+                        TestEvents.TestEventType TestEventType = TestEvents.TestEventType.valueOf(events[selected]);
+                        eventTV.setText(TestEventType.getEventType());
+                        for (TestEvents.TestProperty ttProperty : TestEvents.TTEventProperties.get(TestEventType)) {
                             try {
                                 properties.put(ttProperty.getProperty(), "");
                             } catch (JSONException e) {

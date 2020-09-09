@@ -8,13 +8,13 @@ public class TestEvents {
 
     public static String[] getEvents() {
         ArrayList<String> events = new ArrayList<String>();
-        for (TTEventType ttEventType: TTEventType.values()) {
-            events.add(ttEventType.toString());
+        for (TestEventType TestEventType: TestEventType.values()) {
+            events.add(TestEventType.toString());
         }
         return events.toArray(new String[events.size()]);
     }
 
-    public enum TTEventType {
+    public enum TestEventType {
         LAUNCH_APP("LaunchApp"),
         INSTALL_APP("InstallApp"),
         RETENTION_2D("2Dretention"),
@@ -48,7 +48,7 @@ public class TestEvents {
 
         private String eventType;
 
-        TTEventType(String eventType) {
+        TestEventType(String eventType) {
             this.eventType = eventType;
         }
 
@@ -57,7 +57,7 @@ public class TestEvents {
         }
     }
 
-    public enum TTProperty {
+    public enum TestProperty {
         SUCCESS("success"),
         CONTENT_TYPE("content_type"),
         SKU_ID("sku_id"),
@@ -112,7 +112,7 @@ public class TestEvents {
 
         private String property;
 
-        TTProperty(String property) {
+        TestProperty(String property) {
             this.property = property;
         }
 
@@ -121,174 +121,174 @@ public class TestEvents {
         }
     }
 
-    public static HashMap<TTEventType, TTProperty[]> TTEventProperties = new HashMap<TTEventType, TTProperty[]>();
+    public static HashMap<TestEventType, TestProperty[]> TTEventProperties = new HashMap<TestEventType, TestProperty[]>();
 
     static {
-        TTEventProperties.put(TTEventType.LAUNCH_APP, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.INSTALL_APP, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.RETENTION_2D, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.ADD_PAYMENT_INFO, new TTProperty[]{
-                TTProperty.SUCCESS,
+        TTEventProperties.put(TestEventType.LAUNCH_APP, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.INSTALL_APP, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.RETENTION_2D, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.ADD_PAYMENT_INFO, new TestProperty[]{
+                TestProperty.SUCCESS,
         });
-        TTEventProperties.put(TTEventType.ADD_TO_CART, new TTProperty[]{
-                TTProperty.CONTENT_TYPE,
-                TTProperty.SKU_ID,
-                TTProperty.DESCRIPTION,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
+        TTEventProperties.put(TestEventType.ADD_TO_CART, new TestProperty[]{
+                TestProperty.CONTENT_TYPE,
+                TestProperty.SKU_ID,
+                TestProperty.DESCRIPTION,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
         });
-        TTEventProperties.put(TTEventType.ADD_TO_WISHLIST, new TTProperty[]{
-                TTProperty.PAGE_TYPE,
-                TTProperty.CONTENT_ID,
-                TTProperty.DESCRIPTION,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
+        TTEventProperties.put(TestEventType.ADD_TO_WISHLIST, new TestProperty[]{
+                TestProperty.PAGE_TYPE,
+                TestProperty.CONTENT_ID,
+                TestProperty.DESCRIPTION,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
         });
-        TTEventProperties.put(TTEventType.CHECKOUT, new TTProperty[]{
-                TTProperty.DESCRIPTION,
-                TTProperty.SKU_ID,
-                TTProperty.NUMBER_OF_ITEMS,
-                TTProperty.PAYMENT_AVAILABLE,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
-                TTProperty.GAME_ITEM_TYPE,
-                TTProperty.GAME_ITEM_ID,
-                TTProperty.ROOM_TYPE,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
-                TTProperty.LOCATION,
-                TTProperty.CHECKIN_DATE,
-                TTProperty.CHECKOUT_DATE,
-                TTProperty.NUMBER_OF_ROOMS,
-                TTProperty.NUMBER_OF_NIGHTS,
+        TTEventProperties.put(TestEventType.CHECKOUT, new TestProperty[]{
+                TestProperty.DESCRIPTION,
+                TestProperty.SKU_ID,
+                TestProperty.NUMBER_OF_ITEMS,
+                TestProperty.PAYMENT_AVAILABLE,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
+                TestProperty.GAME_ITEM_TYPE,
+                TestProperty.GAME_ITEM_ID,
+                TestProperty.ROOM_TYPE,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
+                TestProperty.LOCATION,
+                TestProperty.CHECKIN_DATE,
+                TestProperty.CHECKOUT_DATE,
+                TestProperty.NUMBER_OF_ROOMS,
+                TestProperty.NUMBER_OF_NIGHTS,
         });
-        TTEventProperties.put(TTEventType.COMPLETE_TUTORIAL, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.VIEW_CONTENT, new TTProperty[]{
-                TTProperty.PAGE_TYPE,
-                TTProperty.SKU_ID,
-                TTProperty.DESCRIPTION,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
-                TTProperty.SEARCH_STRING,
-                TTProperty.ROOM_TYPE,
-                TTProperty.LOCATION,
-                TTProperty.CHECKIN_DATE,
-                TTProperty.CHECKOUT_DATE,
-                TTProperty.NUMBER_OF_ROOMS,
-                TTProperty.NUMBER_OF_NIGHTS,
-                TTProperty.OUTBOUND_ORIGINATION_CITY,
-                TTProperty.OUTBOUND_DESTINATION_CITY,
-                TTProperty.RETURN_ORIGINATION_CITY,
-                TTProperty.RETURN_DESTINATION_CITY,
-                TTProperty.CLASS,
-                TTProperty.NUMBER_OF_PASSENGER,
+        TTEventProperties.put(TestEventType.COMPLETE_TUTORIAL, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.VIEW_CONTENT, new TestProperty[]{
+                TestProperty.PAGE_TYPE,
+                TestProperty.SKU_ID,
+                TestProperty.DESCRIPTION,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
+                TestProperty.SEARCH_STRING,
+                TestProperty.ROOM_TYPE,
+                TestProperty.LOCATION,
+                TestProperty.CHECKIN_DATE,
+                TestProperty.CHECKOUT_DATE,
+                TestProperty.NUMBER_OF_ROOMS,
+                TestProperty.NUMBER_OF_NIGHTS,
+                TestProperty.OUTBOUND_ORIGINATION_CITY,
+                TestProperty.OUTBOUND_DESTINATION_CITY,
+                TestProperty.RETURN_ORIGINATION_CITY,
+                TestProperty.RETURN_DESTINATION_CITY,
+                TestProperty.CLASS,
+                TestProperty.NUMBER_OF_PASSENGER,
         });
-        TTEventProperties.put(TTEventType.CREATE_GROUP, new TTProperty[]{
-                TTProperty.GROUP_NAME,
-                TTProperty.GROUP_LOGO,
-                TTProperty.GROUP_DESCRIPTION,
-                TTProperty.GROUP_TYPE,
-                TTProperty.GROUP_ID,
+        TTEventProperties.put(TestEventType.CREATE_GROUP, new TestProperty[]{
+                TestProperty.GROUP_NAME,
+                TestProperty.GROUP_LOGO,
+                TestProperty.GROUP_DESCRIPTION,
+                TestProperty.GROUP_TYPE,
+                TestProperty.GROUP_ID,
         });
-        TTEventProperties.put(TTEventType.CREATE_ROLE, new TTProperty[]{
-                TTProperty.ROLE_TYPE,
+        TTEventProperties.put(TestEventType.CREATE_ROLE, new TestProperty[]{
+                TestProperty.ROLE_TYPE,
         });
-        TTEventProperties.put(TTEventType.GENERATE_LEAD, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.IN_APP_AD_CLICK, new TTProperty[]{
-                TTProperty.AD_TYPE,
+        TTEventProperties.put(TestEventType.GENERATE_LEAD, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.IN_APP_AD_CLICK, new TestProperty[]{
+                TestProperty.AD_TYPE,
         });
-        TTEventProperties.put(TTEventType.IN_APP_AD_IMPR, new TTProperty[]{
-                TTProperty.AD_TYPE,
+        TTEventProperties.put(TestEventType.IN_APP_AD_IMPR, new TestProperty[]{
+                TestProperty.AD_TYPE,
         });
-        TTEventProperties.put(TTEventType.JOIN_GROUP, new TTProperty[]{
-                TTProperty.LEVEL_NUMBER,
+        TTEventProperties.put(TestEventType.JOIN_GROUP, new TestProperty[]{
+                TestProperty.LEVEL_NUMBER,
         });
-        TTEventProperties.put(TTEventType.ACHIEVE_LEVEL, new TTProperty[]{
-                TTProperty.LEVEL_NUMBER,
-                TTProperty.SCORE,
+        TTEventProperties.put(TestEventType.ACHIEVE_LEVEL, new TestProperty[]{
+                TestProperty.LEVEL_NUMBER,
+                TestProperty.SCORE,
         });
-        TTEventProperties.put(TTEventType.LOAN_APPLICATION, new TTProperty[]{
-                TTProperty.LOAN_TYPE,
-                TTProperty.APPLICATION_ID,
+        TTEventProperties.put(TestEventType.LOAN_APPLICATION, new TestProperty[]{
+                TestProperty.LOAN_TYPE,
+                TestProperty.APPLICATION_ID,
         });
-        TTEventProperties.put(TTEventType.LOAN_APPROVAL, new TTProperty[]{
-                TTProperty.VALUE,
+        TTEventProperties.put(TestEventType.LOAN_APPROVAL, new TestProperty[]{
+                TestProperty.VALUE,
         });
-        TTEventProperties.put(TTEventType.LOAN_DISBURSAL, new TTProperty[]{
-                TTProperty.VALUE,
+        TTEventProperties.put(TestEventType.LOAN_DISBURSAL, new TestProperty[]{
+                TestProperty.VALUE,
         });
-        TTEventProperties.put(TTEventType.LOGIN, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.PURCHASE, new TTProperty[]{
-                TTProperty.PAGE_TYPE,
-                TTProperty.SKU_ID,
-                TTProperty.DESCRIPTION,
-                TTProperty.NUMBER_OF_ITEMS,
-                TTProperty.COUPON_USED,
-                TTProperty.CURRENCY,
-                TTProperty.VALUE,
-                TTProperty.GROUP_TYPE,
-                TTProperty.GAME_ITEM_ID,
-                TTProperty.ROOM_TYPE,
-                TTProperty.LOCATION,
-                TTProperty.CHECKIN_DATE,
-                TTProperty.CHECKOUT_DATE,
-                TTProperty.NUMBER_OF_ROOMS,
-                TTProperty.NUMBER_OF_NIGHTS,
-                TTProperty.OUTBOUND_ORIGINATION_CITY,
-                TTProperty.OUTBOUND_DESTINATION_CITY,
-                TTProperty.RETURN_ORIGINATION_CITY,
-                TTProperty.RETURN_DESTINATION_CITY,
-                TTProperty.CLASS,
-                TTProperty.NUMBER_OF_PASSENGER,
-                TTProperty.SERVICE_TYPE,
-                TTProperty.SERVICE_ID,
+        TTEventProperties.put(TestEventType.LOGIN, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.PURCHASE, new TestProperty[]{
+                TestProperty.PAGE_TYPE,
+                TestProperty.SKU_ID,
+                TestProperty.DESCRIPTION,
+                TestProperty.NUMBER_OF_ITEMS,
+                TestProperty.COUPON_USED,
+                TestProperty.CURRENCY,
+                TestProperty.VALUE,
+                TestProperty.GROUP_TYPE,
+                TestProperty.GAME_ITEM_ID,
+                TestProperty.ROOM_TYPE,
+                TestProperty.LOCATION,
+                TestProperty.CHECKIN_DATE,
+                TestProperty.CHECKOUT_DATE,
+                TestProperty.NUMBER_OF_ROOMS,
+                TestProperty.NUMBER_OF_NIGHTS,
+                TestProperty.OUTBOUND_ORIGINATION_CITY,
+                TestProperty.OUTBOUND_DESTINATION_CITY,
+                TestProperty.RETURN_ORIGINATION_CITY,
+                TestProperty.RETURN_DESTINATION_CITY,
+                TestProperty.CLASS,
+                TestProperty.NUMBER_OF_PASSENGER,
+                TestProperty.SERVICE_TYPE,
+                TestProperty.SERVICE_ID,
         });
-        TTEventProperties.put(TTEventType.RATE, new TTProperty[]{
-                TTProperty.PAGE_TYPE,
-                TTProperty.SKU_ID,
-                TTProperty.CONTENT,
-                TTProperty.RATING_VALUE,
-                TTProperty.MAX_RATING_VALUE,
-                TTProperty.RATE,
+        TTEventProperties.put(TestEventType.RATE, new TestProperty[]{
+                TestProperty.PAGE_TYPE,
+                TestProperty.SKU_ID,
+                TestProperty.CONTENT,
+                TestProperty.RATING_VALUE,
+                TestProperty.MAX_RATING_VALUE,
+                TestProperty.RATE,
         });
-        TTEventProperties.put(TTEventType.REGISTRATION, new TTProperty[]{
-                TTProperty.REGISTRATION_METHOD,
+        TTEventProperties.put(TestEventType.REGISTRATION, new TestProperty[]{
+                TestProperty.REGISTRATION_METHOD,
         });
-        TTEventProperties.put(TTEventType.SEARCH, new TTProperty[]{
-                TTProperty.SEARCH_STRING,
-                TTProperty.CHECKIN_DATE,
-                TTProperty.CHECKOUT_DATE,
-                TTProperty.NUMBER_OF_ROOMS,
-                TTProperty.NUMBER_OF_NIGHTS,
-                TTProperty.ORIGINATION_CITY,
-                TTProperty.DESTINATION_CITY,
-                TTProperty.DEPARTURE_DATE,
-                TTProperty.RETURN_DATE,
-                TTProperty.CLASS,
-                TTProperty.NUMBER_OF_PASSENGER,
+        TTEventProperties.put(TestEventType.SEARCH, new TestProperty[]{
+                TestProperty.SEARCH_STRING,
+                TestProperty.CHECKIN_DATE,
+                TestProperty.CHECKOUT_DATE,
+                TestProperty.NUMBER_OF_ROOMS,
+                TestProperty.NUMBER_OF_NIGHTS,
+                TestProperty.ORIGINATION_CITY,
+                TestProperty.DESTINATION_CITY,
+                TestProperty.DEPARTURE_DATE,
+                TestProperty.RETURN_DATE,
+                TestProperty.CLASS,
+                TestProperty.NUMBER_OF_PASSENGER,
         });
-        TTEventProperties.put(TTEventType.SPEND_CREDITS, new TTProperty[]{
-                TTProperty.GAME_ITEM_TYPE,
-                TTProperty.GAME_ITEM_ID,
-                TTProperty.LEVEL_NUMBER,
+        TTEventProperties.put(TestEventType.SPEND_CREDITS, new TestProperty[]{
+                TestProperty.GAME_ITEM_TYPE,
+                TestProperty.GAME_ITEM_ID,
+                TestProperty.LEVEL_NUMBER,
         });
-        TTEventProperties.put(TTEventType.START_TRIAL, new TTProperty[]{
-                TTProperty.ORDER_ID,
-                TTProperty.CURRENCY,
+        TTEventProperties.put(TestEventType.START_TRIAL, new TestProperty[]{
+                TestProperty.ORDER_ID,
+                TestProperty.CURRENCY,
         });
-        TTEventProperties.put(TTEventType.SUBSCRIBE, new TTProperty[]{
-                TTProperty.ORDER_ID,
-                TTProperty.CURRENCY,
+        TTEventProperties.put(TestEventType.SUBSCRIBE, new TestProperty[]{
+                TestProperty.ORDER_ID,
+                TestProperty.CURRENCY,
         });
-        TTEventProperties.put(TTEventType.SHARE, new TTProperty[]{
-                TTProperty.CONTENT_TYPE,
-                TTProperty.CONTENT_ID,
-                TTProperty.SHARED_DESTINATION,
+        TTEventProperties.put(TestEventType.SHARE, new TestProperty[]{
+                TestProperty.CONTENT_TYPE,
+                TestProperty.CONTENT_ID,
+                TestProperty.SHARED_DESTINATION,
         });
-        TTEventProperties.put(TTEventType.CONTACT, new TTProperty[]{});
-        TTEventProperties.put(TTEventType.UNLOCK_ACHIEVEMENT, new TTProperty[]{
-                TTProperty.DESCRIPTION,
-                TTProperty.ACHIEVEMENT_TYPE,
+        TTEventProperties.put(TestEventType.CONTACT, new TestProperty[]{});
+        TTEventProperties.put(TestEventType.UNLOCK_ACHIEVEMENT, new TestProperty[]{
+                TestProperty.DESCRIPTION,
+                TestProperty.ACHIEVEMENT_TYPE,
         });
     }
 }
