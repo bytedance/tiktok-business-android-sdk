@@ -1,5 +1,10 @@
 <resources>
     <string name="app_name">Tiktok Analytics Sample</string>
     <string name="tiktok_business_app_key">api-access-token</string>
-    <string name="trigger_event">Trigger Event</string>
+
+    <string name="send">Send</string>
+    <string name="reset">Reset</string>
+    <string name="event_name">event_name</string>
+    <string name="select_from_saved_events">select from saved events</string>
+    <string name="add_prop">add prop</string>
 </resources>
