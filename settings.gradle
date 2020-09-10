@@ -1,3 +1,4 @@
+include ':samples:AppEventSample'
 include ':business-core'
 
 include ':samples:AnalyticsSample'
