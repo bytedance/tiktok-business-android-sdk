@@ -1,5 +1,6 @@
-package com.example;
+package com.example.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +8,9 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.example.R;
+import com.example.model.Property;
 
 import java.util.ArrayList;
 
@@ -34,16 +38,17 @@ public class PropListAdapter extends BaseAdapter {
         return 0;
     }
 
+    @SuppressLint({"SetTextI18n", "InflateParams"})
     @Override
     public View getView(int position, View view, ViewGroup viewGroup) {
         ViewHolder holder;
         if (view == null) {
             holder = new ViewHolder();
-            view = mLayoutInflater.inflate(R.layout.list_item, null);
-            holder.itemID = (TextView) view.findViewById(R.id.item_id);
-            holder.itemName = (TextView) view.findViewById(R.id.item_text_view);
-            holder.editButton = (ImageButton) view.findViewById(R.id.edit_button);
-            holder.deleteButton = (ImageButton) view.findViewById(R.id.delete_button);
+            view = mLayoutInflater.inflate(R.layout.list_prop, null);
+            holder.itemID = view.findViewById(R.id.item_id);
+            holder.itemName = view.findViewById(R.id.item_text_view);
+            holder.editButton = view.findViewById(R.id.edit_button);
+            holder.deleteButton = view.findViewById(R.id.delete_button);
             view.setTag(holder);
         } else {
             holder = (ViewHolder) view.getTag();

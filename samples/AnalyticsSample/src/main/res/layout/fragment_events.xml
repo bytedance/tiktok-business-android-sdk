@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ui.events.EventFragment">
 
     <LinearLayout
         android:id="@+id/eventNameLayout"
@@ -42,6 +42,23 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/eventNameLayout"
+        android:layout_alignParentLeft="true"
+        android:background="@color/colorAccent"
+        android:layout_marginTop="10dp"
+        android:padding="6dp"
+        android:text="@string/properties"
+        android:textColor="#000"
+        android:textStyle="bold"
+        tools:ignore="MissingConstraints"
+        android:layout_alignParentStart="true"
+        android:paddingStart="20dp"
+        android:paddingLeft="20dp" />
+
     <ScrollView
         android:id="@+id/propsLayout"
         android:layout_width="match_parent"
@@ -50,7 +67,7 @@
         android:layout_marginHorizontal="20dp"
         android:background="@drawable/border"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@+id/eventNameLayout"
+        app:layout_constraintTop_toBottomOf="@+id/header"
         tools:ignore="MissingConstraints">
 
         <TextView
@@ -58,6 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
+            android:scrollbars="vertical"
             android:textSize="18sp"
             android:gravity="start"
             app:drawableRightCompat="@drawable/ic_baseline_edit_24" />

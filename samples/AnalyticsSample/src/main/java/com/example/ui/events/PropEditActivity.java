@@ -1,8 +1,10 @@
-package com.example;
+package com.example.ui.events;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,26 +18,36 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import com.example.R;
+import com.example.model.Property;
+import com.example.utils.PropListAdapter;
+import com.example.utils.SwipeDismissListener;
 
-public class PropEditor extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.Objects;
+
+public class PropEditActivity extends AppCompatActivity {
 
     private ListView myList;
     private ArrayList<Property> props;
     private PropListAdapter adapter;
     private Integer nextPropID = 0;
 
+    @SuppressLint("CutPasteId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_prop_editor);
 
+        Objects.requireNonNull(getSupportActionBar()).setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        getSupportActionBar().setDisplayShowCustomEnabled(true);
+        getSupportActionBar().setCustomView(R.layout.actionbar_layout);
         getSupportActionBar().setTitle("Property Editor");
 
-        myList = (ListView) findViewById(R.id.list);
-        ImageButton fabImageButton = (ImageButton) findViewById(R.id.fab_image_button);
+        myList = findViewById(R.id.list);
+        ImageButton fabImageButton = findViewById(R.id.fab_image_button);
 
-        props = new ArrayList<Property>();
+        props = new ArrayList<>();
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             for (String key : bundle.keySet()) {
@@ -46,10 +58,10 @@ public class PropEditor extends AppCompatActivity {
             }
         }
 
-        SwipeDismissListViewTouchListener touchListener =
-                new SwipeDismissListViewTouchListener(
-                        (ListView) findViewById(R.id.list),
-                        new SwipeDismissListViewTouchListener.DismissCallbacks() {
+        SwipeDismissListener touchListener =
+                new SwipeDismissListener(
+                        findViewById(R.id.list),
+                        new SwipeDismissListener.DismissCallbacks() {
                             @Override
                             public boolean canDismiss(int position) {
                                 return true;
@@ -68,38 +80,34 @@ public class PropEditor extends AppCompatActivity {
                         });
         findViewById(R.id.list).setOnTouchListener(touchListener);
 
-        fabImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                adapter.notifyDataSetChanged();
-                // form to input prop name and value
-                AlertDialog.Builder propBuilder = new AlertDialog.Builder(PropEditor.this);
-                propBuilder.setTitle("Add a new Property");
-                propBuilder.setMessage("Enter property name and value");
+        fabImageButton.setOnClickListener(v -> {
+            adapter.notifyDataSetChanged();
+            AlertDialog.Builder propBuilder = new AlertDialog.Builder(PropEditActivity.this);
+            propBuilder.setTitle("Add a new Property");
+            propBuilder.setMessage("Enter property name and value");
 
-                LinearLayout layout = new LinearLayout(PropEditor.this);
-                layout.setOrientation(LinearLayout.VERTICAL);
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-                lp.setMargins(40, 0, 40, 0);
-                final EditText nameBox = new EditText(PropEditor.this);
-                nameBox.setHint("Prop Name");
-                nameBox.setLayoutParams(lp);
-                layout.addView(nameBox);
-                final EditText valueBox = new EditText(PropEditor.this);
-                valueBox.setHint("Prop Value");
-                valueBox.setLayoutParams(lp);
-                layout.addView(valueBox);
-                propBuilder.setView(layout);
-                propBuilder.setPositiveButton("Add Prop", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        nextPropID++;
-                        props.add(new Property(nextPropID.toString(), nameBox.getText().toString(), valueBox.getText().toString()));
-                    }
-                });
-                propBuilder.setNegativeButton("Cancel", null);
-                propBuilder.create().show();
-            }
+            LinearLayout layout = new LinearLayout(PropEditActivity.this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            lp.setMargins(40, 0, 40, 0);
+            final EditText nameBox = new EditText(PropEditActivity.this);
+            nameBox.setHint("Prop Name");
+            nameBox.setLayoutParams(lp);
+            layout.addView(nameBox);
+            final EditText valueBox = new EditText(PropEditActivity.this);
+            valueBox.setHint("Prop Value");
+            valueBox.setLayoutParams(lp);
+            layout.addView(valueBox);
+            propBuilder.setView(layout);
+            propBuilder.setPositiveButton("Add Prop", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    nextPropID++;
+                    props.add(new Property(nextPropID.toString(), nameBox.getText().toString(), valueBox.getText().toString()));
+                }
+            });
+            propBuilder.setNegativeButton("Cancel", null);
+            propBuilder.create().show();
         });
         updateListUI();
     }
@@ -157,32 +165,27 @@ public class PropEditor extends AppCompatActivity {
             }
         }
         // form to input prop name and value
-        AlertDialog.Builder propBuilder = new AlertDialog.Builder(PropEditor.this);
+        AlertDialog.Builder propBuilder = new AlertDialog.Builder(PropEditActivity.this);
         propBuilder.setTitle("Edit Property");
         propBuilder.setMessage("Enter property name and value");
 
-        LinearLayout layout = new LinearLayout(PropEditor.this);
+        LinearLayout layout = new LinearLayout(PropEditActivity.this);
         layout.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         lp.setMargins(40, 0, 40, 0);
-        final EditText nameBox = new EditText(PropEditor.this);
+        final EditText nameBox = new EditText(PropEditActivity.this);
         nameBox.setHint("Prop Name");
         nameBox.setText(property.key);
         nameBox.setLayoutParams(lp);
         layout.addView(nameBox);
-        final EditText valueBox = new EditText(PropEditor.this);
+        final EditText valueBox = new EditText(PropEditActivity.this);
         valueBox.setHint("Prop Value");
         valueBox.setText(property.value);
         valueBox.setLayoutParams(lp);
         layout.addView(valueBox);
         propBuilder.setView(layout);
         final Property finalProperty = property;
-        propBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                props.set(props.indexOf(finalProperty), new Property(finalProperty._id, nameBox.getText().toString(), valueBox.getText().toString()));
-            }
-        });
+        propBuilder.setPositiveButton("Save", (dialogInterface, i) -> props.set(props.indexOf(finalProperty), new Property(finalProperty._id, nameBox.getText().toString(), valueBox.getText().toString())));
         propBuilder.setNegativeButton("Cancel", null);
         propBuilder.create().show();
     }
