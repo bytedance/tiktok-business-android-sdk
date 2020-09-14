@@ -1,18 +1,14 @@
 package com.example.persistence;
 
 import android.app.Application;
-import android.content.Context;
 import android.os.AsyncTask;
 
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
-import androidx.loader.content.AsyncTaskLoader;
 
 import com.example.model.EventLog;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class EventLogRepo {
     private EventLogDao eventLogDao;
