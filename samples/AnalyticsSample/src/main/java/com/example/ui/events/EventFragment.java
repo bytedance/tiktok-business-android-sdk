@@ -118,12 +118,14 @@ public class EventFragment extends Fragment {
 
         Button sendBtn = root.findViewById(R.id.sendBtn);
         sendBtn.setOnClickListener(view -> {
-            eventViewModel.setEvent(eventTV.getText().toString());
-            assert eventViewModel.getLiveEventName().getValue() != null;
-            eventLogViewModel.save(new EventLog(
-                    eventViewModel.getLiveEventName().getValue(),
-                    Objects.requireNonNull(eventViewModel.getLiveProperties().getValue()).toString()
-            ));
+            String eventName = eventTV.getText().toString();
+            eventViewModel.setEvent(eventName);
+            if (!eventName.equals("")) {
+                eventLogViewModel.save(new EventLog(
+                        eventName,
+                        Objects.requireNonNull(eventViewModel.getLiveProperties().getValue()).toString()
+                ));
+            }
         });
 
         return root;
