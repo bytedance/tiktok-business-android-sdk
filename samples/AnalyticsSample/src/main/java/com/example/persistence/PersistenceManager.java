@@ -24,6 +24,7 @@ public abstract class PersistenceManager extends RoomDatabase {
     private static final int NUMBER_OF_THREADS = 4;
     static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+            // Executors.newSingleThreadExecutor();
 
     static PersistenceManager getDatabase(final Context context) {
         if (INSTANCE == null) {

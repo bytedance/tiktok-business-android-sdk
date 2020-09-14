@@ -20,14 +20,12 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.R;
 import com.example.model.EventLog;
-import com.example.testdata.TestEventType;
 import com.example.testdata.TestEvents;
-import com.example.testdata.TestProperty;
 import com.example.ui.eventlog.EventLogViewModel;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -43,6 +41,25 @@ public class EventFragment extends Fragment {
         eventViewModel = new ViewModelProvider(this).get(EventViewModel.class);
         eventLogViewModel = new ViewModelProvider(this).get(EventLogViewModel.class);
 
+        Bundle bundle = this.getArguments();
+        if (bundle != null) {
+            String eventType = bundle.getString("event_type");
+            String eventProps = bundle.getString("event_props");
+            assert eventType != null;
+            assert eventProps != null;
+            eventViewModel.setEvent(eventType);
+            try {
+                JSONObject object = new JSONObject(eventProps);
+                Iterator iterator = object.keys();
+                while (iterator.hasNext()) {
+                    String prop = (String) iterator.next();
+                    eventViewModel.addProp(prop, object.getString(prop));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
         View root = inflater.inflate(R.layout.fragment_events, container, false);
 
         final TextView propsTV = root.findViewById(R.id.propsPrettyViewer);
@@ -56,7 +73,7 @@ public class EventFragment extends Fragment {
         });
 
         final TextView eventTV = root.findViewById(R.id.eventName);
-        eventViewModel.getLiveEventName().observe(getViewLifecycleOwner(), s -> eventTV.setText(s));
+        eventViewModel.getLiveEventName().observe(getViewLifecycleOwner(), eventTV::setText);
 
         Button resetBtn = root.findViewById(R.id.resetBtn);
         resetBtn.setOnClickListener(view -> {
@@ -87,11 +104,10 @@ public class EventFragment extends Fragment {
             builder.setTitle("Select an event");
             builder.setItems(events, (dialog, selected) -> {
                 eventViewModel.resetProps();
-                TestEventType testEventType = TestEventType.valueOf(events[selected]);
-                eventViewModel.setEvent(testEventType.getEventType());
-                for (TestProperty ttProperty : Objects.requireNonNull(TestEvents.TTEventProperties.get(testEventType))) {
+                eventViewModel.setEvent(events[selected]);
+                for (String ttProperty : Objects.requireNonNull(TestEvents.TTEventProperties.get(events[selected]))) {
                     try {
-                        eventViewModel.addProp(ttProperty.getProperty(), "");
+                        eventViewModel.addProp(ttProperty, "");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -102,10 +118,11 @@ public class EventFragment extends Fragment {
 
         Button sendBtn = root.findViewById(R.id.sendBtn);
         sendBtn.setOnClickListener(view -> {
+            eventViewModel.setEvent(eventTV.getText().toString());
             assert eventViewModel.getLiveEventName().getValue() != null;
             eventLogViewModel.save(new EventLog(
                     eventViewModel.getLiveEventName().getValue(),
-                    eventViewModel.getLiveProperties().getValue().toString()
+                    Objects.requireNonNull(eventViewModel.getLiveProperties().getValue()).toString()
             ));
         });
 

@@ -19,4 +19,7 @@
     <string name="menu_events">Events</string>
     <string name="menu_eventlog">Event Logs</string>
     <string name="properties">Event Properties</string>
+    <string name="clear_log">Clear Log</string>
+    <string name="load_test">Load Test</string>
+    <string name="preload_all_events">Preload All Events</string>
 </resources>

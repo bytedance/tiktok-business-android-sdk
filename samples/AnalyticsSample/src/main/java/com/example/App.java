@@ -1,15 +1,16 @@
 package com.example;
 
 import android.os.Bundle;
-import android.view.View;
+import android.view.MenuItem;
 import android.view.Menu;
 
-import com.example.persistence.PersistenceManager;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import com.example.model.EventLog;
+import com.example.persistence.EventLogRepo;
+import com.example.testdata.TestEvents;
 import com.google.android.material.navigation.NavigationView;
 import com.tiktok.TiktokSdk;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -17,7 +18,12 @@ import androidx.navigation.ui.NavigationUI;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.room.Room;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.List;
+import java.util.Objects;
 
 public class App extends AppCompatActivity {
 
@@ -34,7 +40,7 @@ public class App extends AppCompatActivity {
         NavigationView navigationView = findViewById(R.id.nav_view);
         mAppBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.nav_home, R.id.nav_events, R.id.nav_eventlog)
-                .setDrawerLayout(drawer)
+                .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
@@ -53,6 +59,47 @@ public class App extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.app, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        EventLogRepo eventLogRepo = new EventLogRepo(getApplication());
+        switch (item.getItemId()) {
+            case R.id.action_clearlog:
+                eventLogRepo.clear();
+                break;
+            case R.id.action_preload:
+                for (String event : TestEvents.getAllEvents()) {
+                    JSONObject props = new JSONObject();
+                    try {
+                        for (String prop : Objects.requireNonNull(TestEvents.TTEventProperties.get(event))) {
+                            props.put(prop, "");
+                        }
+                        eventLogRepo.save(new EventLog(event, props.toString()));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            case R.id.action_loadtest:
+                Integer MAX = 1000;
+                int count = 0;
+                List<EventLog> logs = null;
+                try {
+                    logs = eventLogRepo.getLogs();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                while (count < MAX && logs.size() > 0) {
+                    for (EventLog log : Objects.requireNonNull(logs)) {
+                        eventLogRepo.save(new EventLog(log.eventType, log.properties));
+                        count ++;
+                        if (count >= MAX) break;
+                    }
+                }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

@@ -1,21 +1,25 @@
 package com.example.persistence;
 
 import android.app.Application;
-import android.util.Log;
+import android.content.Context;
+import android.os.AsyncTask;
 
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
+import androidx.loader.content.AsyncTaskLoader;
 
 import com.example.model.EventLog;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class EventLogRepo {
     private EventLogDao eventLogDao;
     private LiveData<List<EventLog>> allEventLogs;
 
-    public EventLogRepo(Application application) {
-        PersistenceManager db = PersistenceManager.getDatabase(application);
+    public EventLogRepo(Application ctx) {
+        PersistenceManager db = PersistenceManager.getDatabase(ctx);
         eventLogDao = db.eventLogDao();
         allEventLogs = eventLogDao.getAll();
     }
@@ -24,9 +28,29 @@ public class EventLogRepo {
         return allEventLogs;
     }
 
+    private static class getAllAsyncTask extends AsyncTask<Void, Void, List<EventLog>> {
+
+        private EventLogDao eventLogDao;
+
+        getAllAsyncTask(EventLogDao dao) {
+            eventLogDao = dao;
+        }
+
+        @Override
+        protected List<EventLog> doInBackground(Void... voids) {
+            return eventLogDao.getLogs();
+        }
+    }
+
+    public List<EventLog> getLogs() throws ExecutionException, InterruptedException {
+        return new getAllAsyncTask(eventLogDao).execute().get();
+    }
+
     public void save(final EventLog eventLog) {
-        PersistenceManager.databaseWriteExecutor.execute(() -> {
-            eventLogDao.save(eventLog);
-        });
+        PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.save(eventLog));
+    }
+
+    public void clear() {
+        PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.clear());
     }
 }

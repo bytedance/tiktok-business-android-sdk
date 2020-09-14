@@ -11,12 +11,12 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.R;
 import com.example.model.EventLog;
-import com.example.model.Property;
-import com.example.ui.events.PropEditActivity;
+import com.example.ui.events.EventFragment;
 import com.example.utils.LogListAdapter;
 
 import org.json.JSONException;
@@ -62,8 +62,17 @@ public class EventLogFragment extends Fragment {
             propTV.setLayoutParams(lp);
             layout.addView(propTV);
             showProps.setView(layout);
-            showProps.setPositiveButton("Resend",  (dialogInterface, i) -> {
-                eventLogViewModel.save(new EventLog(eventLog.eventType, eventLog.properties));
+            showProps.setPositiveButton("Edit & Resend",  (dialogInterface, i) -> {
+                EventFragment fragment = new EventFragment();
+                Bundle bundle = new Bundle();
+                bundle.putString("event_type", eventLog.eventType);
+                bundle.putString("event_props", eventLog.properties);
+                fragment.setArguments(bundle);
+                FragmentTransaction ft = getParentFragmentManager().beginTransaction();
+                ft.replace(R.id.nav_host_fragment, fragment);
+                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                ft.addToBackStack(null);
+                ft.commit();
             });
             showProps.setNegativeButton("Close", null);
             showProps.create().show();

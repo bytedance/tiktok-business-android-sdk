@@ -10,7 +10,7 @@ public class HomeViewModel extends ViewModel {
 
     public HomeViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("Tiktok Business SDK Sample");
+        mText.setValue("All docs here");
     }
 
     public LiveData<String> getText() {

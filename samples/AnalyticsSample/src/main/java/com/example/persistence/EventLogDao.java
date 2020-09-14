@@ -15,6 +15,9 @@ public interface EventLogDao {
     @Query("SELECT * FROM event_logs ORDER BY id DESC")
     LiveData<List<EventLog>> getAll();
 
+    @Query("SELECT * FROM event_logs")
+    List<EventLog> getLogs();
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void save(EventLog log);
 
