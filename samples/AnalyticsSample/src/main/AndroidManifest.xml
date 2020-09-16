@@ -11,7 +11,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <meta-data android:name="com.tiktok.business.AppKey" android:value="@string/tiktok_business_app_key"/>
+        <meta-data android:name="com.tiktok.sdk.AppKey"
+            android:value="@string/tiktok_business_app_key" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

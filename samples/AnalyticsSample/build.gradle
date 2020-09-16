@@ -1,8 +1,10 @@
 apply plugin: 'com.android.application'
 
+apply from: rootProject.file('gradle/android.gradle')
+
 android {
     compileSdkVersion 30
-    buildToolsVersion "30.0.0"
+    buildToolsVersion "30.0.2"
 
     defaultConfig {
         applicationId "com.example"
