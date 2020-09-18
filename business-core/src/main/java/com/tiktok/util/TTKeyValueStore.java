@@ -1,4 +1,4 @@
-package com.tiktok;
+package com.tiktok.util;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 import static com.tiktok.util.TTConst.TTSDK_KEY_VALUE_STORE;
 
-class TTKeyValueStore {
+public class TTKeyValueStore {
     private SharedPreferences preferences;
     private HashMap<String, String> store;
 

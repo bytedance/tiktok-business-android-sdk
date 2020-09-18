@@ -3,20 +3,17 @@ package com.tiktok;
 import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.pm.PackageInfoCompat;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.ProcessLifecycleOwner;
 
+import com.tiktok.appevents.TTAppEventLogger;
+import com.tiktok.util.TTKeyValueStore;
+import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTLogger;
 
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.tiktok.util.TTConst.TTSDK_CONFIG_ADVID;
 import static com.tiktok.util.TTConst.TTSDK_CONFIG_APPKEY;
@@ -27,20 +24,13 @@ public class TiktokBusinessSdk {
     static final String TAG = TiktokBusinessSdk.class.getName();
 
     static volatile TiktokBusinessSdk ttSdk = null;
+    static TTAppEventLogger appEventLogger;
 
     final Application application;
     final String appKey;
     final LogLevel logLevel;
-    final boolean lifecycleTrackEnable;
-    final boolean advertiserIDCollectionEnable;
-    final TTLogger logger;
 
-    TTKeyValueStore store;
-    PackageInfo packageInfo;
-    Lifecycle lifecycle;
-    ExecutorService executor;
-    TTIdentifierFactory.AdInfo adInfo;
-    boolean adInfoRun = false;
+    TTLogger logger;
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
         /* no write key exception */
@@ -55,48 +45,26 @@ public class TiktokBusinessSdk {
             logLevel = LogLevel.INFO;
         }
         logger = new TTLogger(TAG, logLevel);
-        lifecycleTrackEnable = ttConfig.lifecycleTrackEnable;
-        advertiserIDCollectionEnable = ttConfig.advertiserIDCollectionEnable;
-        /* SharedPreferences helper */
-        store = new TTKeyValueStore(application.getApplicationContext());
-        try {
-            packageInfo = application.getPackageManager().getPackageInfo(application.getPackageName(), 0);
-        } catch (Exception ignored) {}
-
-        lifecycle = ProcessLifecycleOwner.get().getLifecycle();
-        executor = Executors.newSingleThreadExecutor();
-
-        TTIdentifierFactory.getAdvertisingId(application, logLevel, new TTIdentifierFactory.Listener() {
-            @Override
-            public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
-                adInfoRun = true;
-                adInfo = ad;
-            }
-
-            @Override
-            public void onIdentifierFactoryFail(Exception e) {
-                adInfoRun = true;
-                logger.error(e, "unable to fetch Advertising Id");
-            }
-        });
     }
 
-    public static synchronized void initialize(TTConfig ttConfig) {
+    public static synchronized void startTracking(TTConfig ttConfig) {
         if (ttSdk != null) throw new RuntimeException("TiktokSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
         storeConfig(ttConfig);
-        /* ActivityLifecycleCallbacks & DefaultLifecycleObserver */
-        TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(ttSdk);
-        ttSdk.application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
-        ttSdk.lifecycle.addObserver(activityLifecycleCallbacks);
+        appEventLogger = new TTAppEventLogger(ttSdk,
+                ttSdk.application,
+                ttSdk.appKey,
+                ttSdk.logLevel,
+                ttConfig.lifecycleTrackEnable,
+                ttConfig.advertiserIDCollectionEnable);
     }
 
     public void track(@NonNull String event) {
-        logger.debug(event);
+        appEventLogger.track(event);
     }
 
     public void track(@NonNull String event, @Nullable TTProperty props) {
-        logger.debug(event + " : " + props.get().toString());
+        appEventLogger.track(event, props);
     }
 
     public static TiktokBusinessSdk with(Context context) {
@@ -104,7 +72,7 @@ public class TiktokBusinessSdk {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
             synchronized (TiktokBusinessSdk.class) {
                 if (ttSdk == null) {
-                    ttSdk = new TiktokBusinessSdk(rebuildConfig(context));
+                    startTracking(rebuildConfig(context));
                 }
             }
         }
@@ -135,14 +103,6 @@ public class TiktokBusinessSdk {
             ttConfig.optOutAdvertiserIDCollection();
         }
         return ttConfig;
-    }
-
-    String getVersionName() {
-        return ttSdk.packageInfo.versionName;
-    }
-
-    long getVersionCode() {
-        return PackageInfoCompat.getLongVersionCode(ttSdk.packageInfo);
     }
 
     public static class TTConfig {

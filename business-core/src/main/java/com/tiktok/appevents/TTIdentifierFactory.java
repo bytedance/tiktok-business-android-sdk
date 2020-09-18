@@ -1,4 +1,4 @@
-package com.tiktok;
+package com.tiktok.appevents;
 
 import android.content.ComponentName;
 import android.content.Context;

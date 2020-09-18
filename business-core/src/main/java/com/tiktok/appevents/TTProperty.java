@@ -1,11 +1,7 @@
-package com.tiktok;
-
-import android.os.Bundle;
+package com.tiktok.appevents;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Objects;
 
 public class TTProperty {
     private JSONObject properties;
@@ -21,7 +17,7 @@ public class TTProperty {
         return this;
     }
 
-    JSONObject get() {
+    public JSONObject get() {
         return properties;
     }
 }

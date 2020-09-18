@@ -1,4 +1,4 @@
-package com.tiktok;
+package com.tiktok.appevents;
 
 import android.app.Activity;
 import android.app.Application.ActivityLifecycleCallbacks;
@@ -23,14 +23,14 @@ class TTActivityLifecycleCallbacks
 
     static final String TAG = TTActivityLifecycleCallbacks.class.getCanonicalName();
 
-    private TiktokBusinessSdk ttSdk;
+    private TTAppEventLogger appEventLogger;
 
     private AtomicBoolean trackedAppLifecycleEvents;
     private AtomicInteger numberOfActivities;
     private AtomicBoolean firstLaunch;
 
-    public TTActivityLifecycleCallbacks(TiktokBusinessSdk ttSdk) {
-        this.ttSdk = ttSdk;
+    public TTActivityLifecycleCallbacks(TTAppEventLogger appEventLogger) {
+        this.appEventLogger = appEventLogger;
         this.trackedAppLifecycleEvents = new AtomicBoolean(false);
         this.numberOfActivities = new AtomicInteger(1);
         this.firstLaunch = new AtomicBoolean(false);
@@ -164,11 +164,11 @@ class TTActivityLifecycleCallbacks
             TTProperty properties = new TTProperty();
             if (firstLaunch.get()) {
                 properties
-                        .put("version", ttSdk.getVersionName())
-                        .put("build", ttSdk.getVersionCode());
+                        .put("version", appEventLogger.getVersionName())
+                        .put("build", appEventLogger.getVersionCode());
             }
             properties.put("from_background", !firstLaunch.getAndSet(false));
-            ttSdk.track("LaunchApp", properties);
+            appEventLogger.track("LaunchApp", properties);
         }
     }
 
@@ -193,7 +193,7 @@ class TTActivityLifecycleCallbacks
     }
 
     private boolean shouldTrackAppLifecycleEvents() {
-        return ttSdk.lifecycleTrackEnable;
+        return appEventLogger.lifecycleTrackEnable;
     }
     
     private boolean shouldTrackDeepLinks() {
@@ -202,21 +202,21 @@ class TTActivityLifecycleCallbacks
     }
 
     private void trackApplicationLifecycleEvents() {
-        String currentVersion = ttSdk.getVersionName();
-        String currentBuild = String.valueOf(ttSdk.getVersionCode());
+        String currentVersion = appEventLogger.getVersionName();
+        String currentBuild = String.valueOf(appEventLogger.getVersionCode());
 
         // get the previous recorded version.
-        String previousVersion = ttSdk.store.get(TTSDK_APP_VERSION);
-        String previousBuild = ttSdk.store.get(TTSDK_APP_BUILD);
+        String previousVersion = appEventLogger.store.get(TTSDK_APP_VERSION);
+        String previousBuild = appEventLogger.store.get(TTSDK_APP_BUILD);
 
         // check and track InstallApp or UpdateApp
         if (previousBuild == null) {
-            ttSdk.track("InstallApp",
+            appEventLogger.track("InstallApp",
                     new TTProperty()
                             .put("version", currentVersion)
                             .put("build", currentBuild));
         } else if (!currentBuild.equals(previousBuild)) {
-            ttSdk.track(
+            appEventLogger.track(
                     "UpdateApp",
                     new TTProperty()
                             .put("version", currentVersion)
@@ -229,7 +229,7 @@ class TTActivityLifecycleCallbacks
         HashMap<String, Object> hm = new HashMap<>();
         hm.put(TTSDK_APP_VERSION, currentVersion);
         hm.put(TTSDK_APP_BUILD, currentBuild);
-        ttSdk.store.set(hm);
+        appEventLogger.store.set(hm);
     }
 
     private void trackDeepLink(Activity activity) {
@@ -248,7 +248,7 @@ class TTActivityLifecycleCallbacks
         }
 
         properties.put("url", uri.toString());
-        ttSdk.track("DeepLinkOpened", properties);
+        appEventLogger.track("DeepLinkOpened", properties);
     }
 
 }
