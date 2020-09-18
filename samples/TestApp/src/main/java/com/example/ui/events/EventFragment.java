@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -75,10 +76,7 @@ public class EventFragment extends Fragment {
         eventViewModel.getLiveEventName().observe(getViewLifecycleOwner(), eventTV::setText);
 
         Button resetBtn = root.findViewById(R.id.resetBtn);
-        resetBtn.setOnClickListener(view -> {
-            eventViewModel.resetEvent();
-            eventViewModel.resetProps();
-        });
+        resetBtn.setOnClickListener(view -> reset());
 
         propsTV.setOnClickListener(view -> {
             Intent intent = new Intent(requireContext(), PropEditActivity.class);
@@ -124,6 +122,8 @@ public class EventFragment extends Fragment {
                         eventName,
                         Objects.requireNonNull(eventViewModel.getLiveProperties().getValue()).toString()
                 ));
+                Toast.makeText(requireContext(), eventName + " event triggered", Toast.LENGTH_SHORT).show();
+                reset();
             }
         });
 
@@ -149,6 +149,11 @@ public class EventFragment extends Fragment {
                 }
             }
         }
+    }
+
+    private void reset() {
+        eventViewModel.resetEvent();
+        eventViewModel.resetProps();
     }
 
 }
