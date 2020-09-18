@@ -56,7 +56,7 @@ public class EventLogRepo {
                 String key = (String) iterator.next();
                 ttProperty.put(key, props.get(key));
             }
-            ttSdk.track(eventLog.eventType, ttProperty);
+            ttSdk.trackEvent(eventLog.eventType, ttProperty);
             PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.save(eventLog));
         } catch (Exception ignored) {}
     }

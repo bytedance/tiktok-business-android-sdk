@@ -23,7 +23,7 @@ class TTActivityLifecycleCallbacks
 
     static final String TAG = TTActivityLifecycleCallbacks.class.getCanonicalName();
 
-    private TTAppEventLogger appEventLogger;
+    private final TTAppEventLogger appEventLogger;
 
     private AtomicBoolean trackedAppLifecycleEvents;
     private AtomicInteger numberOfActivities;

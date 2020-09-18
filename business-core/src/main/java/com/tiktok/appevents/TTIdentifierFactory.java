@@ -30,7 +30,7 @@ public class TTIdentifierFactory {
     protected Listener mListener;
     protected Handler  mHandler;
 
-    private TTLogger logger;
+    private final TTLogger logger;
 
     private TTIdentifierFactory(LogLevel ll) {
         this.logger = new TTLogger(TAG, ll);

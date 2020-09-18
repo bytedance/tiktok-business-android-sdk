@@ -4,7 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TTProperty {
-    private JSONObject properties;
+    private final JSONObject properties;
 
     public TTProperty() {
         properties = new JSONObject();

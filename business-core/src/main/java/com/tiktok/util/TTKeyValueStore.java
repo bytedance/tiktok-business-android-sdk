@@ -12,8 +12,8 @@ import java.util.Map;
 import static com.tiktok.util.TTConst.TTSDK_KEY_VALUE_STORE;
 
 public class TTKeyValueStore {
-    private SharedPreferences preferences;
-    private HashMap<String, String> store;
+    private final SharedPreferences preferences;
+    private final HashMap<String, String> store;
 
     public TTKeyValueStore(Context ctx) {
         preferences = ctx.getApplicationContext().getSharedPreferences(TTSDK_KEY_VALUE_STORE, Context.MODE_PRIVATE);

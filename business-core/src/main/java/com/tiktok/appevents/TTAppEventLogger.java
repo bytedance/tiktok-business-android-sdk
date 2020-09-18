@@ -72,7 +72,11 @@ public class TTAppEventLogger {
         logger.debug(event + " : " + props.get().toString());
     }
 
-    void runIdentifierFactory() {
+    public void flush() {
+        logger.verbose("flush called");
+    }
+
+    private void runIdentifierFactory() {
         TTIdentifierFactory.getAdvertisingId(application, logLevel, new TTIdentifierFactory.Listener() {
             @Override
             public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
@@ -96,6 +100,5 @@ public class TTAppEventLogger {
     long getVersionCode() {
         return PackageInfoCompat.getLongVersionCode(packageInfo);
     }
-
 
 }

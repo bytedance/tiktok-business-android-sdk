@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -49,8 +48,9 @@ public class TiktokBusinessSdk {
     }
 
     public static synchronized void startTracking(TTConfig ttConfig) {
-        if (ttSdk != null) throw new RuntimeException("TiktokSdk instance already exists");
+        if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
+        // TODO: 18/09/20 no need to store again for restart
         storeConfig(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
                 ttSdk.application,
@@ -60,11 +60,11 @@ public class TiktokBusinessSdk {
                 ttConfig.advertiserIDCollectionEnable);
     }
 
-    public void track(@NonNull String event) {
+    public void trackEvent(@NonNull String event) {
         appEventLogger.track(event);
     }
 
-    public void track(@NonNull String event, @Nullable TTProperty props) {
+    public void trackEvent(@NonNull String event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 
@@ -78,6 +78,10 @@ public class TiktokBusinessSdk {
             }
         }
         return ttSdk;
+    }
+
+    public void flush() {
+        appEventLogger.flush();
     }
 
     static void storeConfig(TTConfig ttConfig) {
