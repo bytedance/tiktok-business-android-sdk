@@ -8,7 +8,6 @@ import com.example.model.EventLog;
 import com.example.persistence.EventLogRepo;
 import com.example.testdata.TestEvents;
 import com.google.android.material.navigation.NavigationView;
-import com.tiktok.TiktokSdk;
 
 import androidx.annotation.NonNull;
 import androidx.navigation.NavController;
@@ -19,6 +18,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.tiktok.TiktokBusinessSdk;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,11 +47,10 @@ public class App extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         // Tiktok sdk init start
-        TiktokSdk.TTConfig ttConfig = new TiktokSdk.TTConfig(getApplicationContext())
-                .optOutAutoEventTracking()
-                .optOutAdvertiserIDCollection()
+        TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
+                .setAppKey("app-key")
                 .enableDebug();
-        TiktokSdk.initialize(ttConfig);
+        TiktokBusinessSdk.startTracking(ttConfig);
         // Tiktok sdk init end
     }
 
@@ -82,7 +81,7 @@ public class App extends AppCompatActivity {
                 }
                 break;
             case R.id.action_loadtest:
-                Integer MAX = 1000;
+                int MAX = 1000;
                 int count = 0;
                 List<EventLog> logs = null;
                 try {

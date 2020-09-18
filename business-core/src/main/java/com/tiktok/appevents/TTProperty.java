@@ -1,0 +1,23 @@
+package com.tiktok.appevents;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+public class TTProperty {
+    private JSONObject properties;
+
+    public TTProperty() {
+        properties = new JSONObject();
+    }
+
+    public TTProperty put(String key, Object value) {
+        try {
+            properties.put(key, value);
+        } catch (JSONException ignored) {}
+        return this;
+    }
+
+    public JSONObject get() {
+        return properties;
+    }
+}
