@@ -61,7 +61,7 @@ public class TiktokBusinessSdk {
     }
 
     public void trackEvent(@NonNull String event) {
-        appEventLogger.track(event);
+        appEventLogger.track(event, null);
     }
 
     public void trackEvent(@NonNull String event, @Nullable TTProperty props) {
