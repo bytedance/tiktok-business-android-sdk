@@ -13,9 +13,6 @@ import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,7 +33,6 @@ public class TTAppEventLogger {
     ExecutorService executor;
     TTIdentifierFactory.AdInfo adInfo;
     boolean adInfoRun = false;
-    Queue<EventLog> eventLogQueue;
 
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
                             Application application,
@@ -51,7 +47,6 @@ public class TTAppEventLogger {
         logger = new TTLogger(TAG, logLevel);
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
-        this.eventLogQueue = new LinkedList<>();
         /* SharedPreferences helper */
         store = new TTKeyValueStore(application.getApplicationContext());
         try {
@@ -74,8 +69,7 @@ public class TTAppEventLogger {
         TTProperty finalProps = props;
         executor.execute(() -> {
             logger.debug(event + " : " + finalProps.get().toString());
-            eventLogQueue.add(new EventLog(event, finalProps));
-            executeQueue();
+            // call save to file interface
         });
     }
 
@@ -110,22 +104,12 @@ public class TTAppEventLogger {
         return PackageInfoCompat.getLongVersionCode(packageInfo);
     }
 
-    static class EventLog {
-        String eventType;
-        TTProperty property;
-
-        EventLog(@NonNull String et, @Nullable TTProperty props) {
-            this.eventType = et;
-            this.property = props;
-        }
-    }
-
     private boolean loggerInitialized() {
         return this.adInfoRun;
     }
 
     private void executeQueue() {
         if (!loggerInitialized()) return;
-        logger.verbose("queue started");
+        logger.verbose("called after prefetch & async tasks. Run the first batch from disk if any");
     }
 }
