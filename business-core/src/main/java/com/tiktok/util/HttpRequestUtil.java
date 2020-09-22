@@ -14,7 +14,10 @@ import java.util.Map;
 public class HttpRequestUtil {
 
     public static String doPost(String url, Map<String, String> headerParamMap, String jsonStr) {
-        String result = "";
+
+        String result = null;
+
+        OutputStream outputStream = null;
 
         try {
             byte[] writeBytes =jsonStr.getBytes();
@@ -33,26 +36,27 @@ public class HttpRequestUtil {
             for(Map.Entry<String, String> entry: headerParamMap.entrySet()) {
                 connection.setRequestProperty(entry.getKey(), entry.getValue());
             }
-//            connection.setRequestProperty("Content-Type", "application/json");
-//            connection.addRequestProperty("Connection", "Keep-Alive");
-//            connection.addRequestProperty("access-token", "c2424295d21b7f32573ad5ec2a1cbb3ca92e09be");
             connection.setRequestProperty("Content-Length",String.valueOf(writeBytes.length));
 
             connection.connect();
-
-            OutputStream outputStream = connection.getOutputStream();
+            outputStream = connection.getOutputStream();
             outputStream.write(jsonStr.getBytes("UTF-8"));
             outputStream.flush();
-            outputStream.close();
 
             int responseCode = connection.getResponseCode();
             if(responseCode == HttpURLConnection.HTTP_OK) {
                 result = streamToString(connection.getInputStream());
             }
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } finally {
+            if (outputStream!=null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         return result;

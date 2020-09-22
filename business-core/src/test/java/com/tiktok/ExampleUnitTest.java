@@ -1,6 +1,11 @@
 package com.tiktok;
 
+import com.tiktok.model.TTRequest;
+
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -14,4 +19,14 @@ public class ExampleUnitTest {
     public void addition_isCorrect() {
         assertEquals(4, 2 + 2);
     }
+
+    @Test
+    public void test(){
+        List<Integer> aaa = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11);
+
+        System.out.println(aaa);
+
+        System.out.println(TTRequest.averageAssign(aaa, TTRequest.countSplitNum(aaa.size(), 100)));
+    }
+
 }

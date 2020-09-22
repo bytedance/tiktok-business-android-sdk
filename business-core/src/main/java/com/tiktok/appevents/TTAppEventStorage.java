@@ -23,11 +23,27 @@ public class TTAppEventStorage {
 
         TTAppEventPersist appEventPersist = readFromDisk();
 
-        if((appEventList == null || appEventList.size()==0) && appEventPersist.isEmpty()){
+        if(appEventList.isEmpty() && appEventPersist.isEmpty()){
             return;
         }
 
         appEventPersist.addEvents(appEventList);
+
+        saveToDisk(appEventPersist);
+    }
+
+    public static void persistForFLushFailed(List<TTAppEvent> failedEvents){
+        if(failedEvents == null || failedEvents.size()==0) {
+            return;
+        }
+
+        List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
+
+        TTAppEventPersist appEventPersist = readFromDisk();
+
+        appEventPersist.addEvents(appEventList);
+
+        appEventPersist.addEvents(failedEvents);
 
         saveToDisk(appEventPersist);
     }
@@ -63,7 +79,7 @@ public class TTAppEventStorage {
             return new TTAppEventPersist();
         }
 
-        TTAppEventPersist appEventPersist = null;
+        TTAppEventPersist appEventPersist = new TTAppEventPersist();
 
         ObjectInputStream ois = null;
 
