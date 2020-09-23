@@ -28,11 +28,17 @@ public class TTAppEventLogger {
     final boolean lifecycleTrackEnable;
     final boolean advertiserIDCollectionEnable;
 
+    /** Logger util */
     TTLogger logger;
+    /** SharedPreferences util */
     TTKeyValueStore store;
+    /** packageInfo */
     PackageInfo packageInfo;
+    /** Lifecycle */
     Lifecycle lifecycle;
+    /** advertiser id */
     TTIdentifierFactory.AdInfo adInfo;
+    /** this boolean checks the advertiser task ran status */
     boolean adInfoRun = false;
 
     int flushId = 0;
@@ -61,11 +67,13 @@ public class TTAppEventLogger {
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
         eventLoop = Executors.newSingleThreadScheduledExecutor();
-        /* ActivityLifecycleCallbacks & LifecycleObserver */
+
+        /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(this);
         TiktokBusinessSdk.getApplicationContext().registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
+        /** advertiser id fetch */
         this.runIdentifierFactory();
     }
 
