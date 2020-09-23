@@ -8,7 +8,7 @@ import java.util.List;
 
 //@Data
 //@NoArgsConstructor
-public class TTAppEventPersist implements Serializable {
+class TTAppEventPersist implements Serializable {
 
     public static final long serialVersionUID = 1L;
 
