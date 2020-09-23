@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TiktokBusinessSdk.TTConfig;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,7 +48,7 @@ public class App extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         // Tiktok sdk init start
-        TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
+        TTConfig ttConfig = new TTConfig(getApplicationContext())
                 .setAppKey("app-key")
                 .enableDebug();
         TiktokBusinessSdk.startTracking(ttConfig);

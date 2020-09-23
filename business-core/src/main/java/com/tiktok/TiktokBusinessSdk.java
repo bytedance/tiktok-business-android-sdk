@@ -26,9 +26,9 @@ public class TiktokBusinessSdk {
     static volatile TiktokBusinessSdk ttSdk = null;
     static TTAppEventLogger appEventLogger;
 
-    final Application application;
-    final String appKey;
-    final LogLevel logLevel;
+    private static Application applicationContext;
+    private static String appKey;
+    private static LogLevel logLevel;
 
     TTLogger logger;
 
@@ -37,7 +37,7 @@ public class TiktokBusinessSdk {
         if (ttConfig.appKey == null) throw new IllegalArgumentException("app key not found");
         appKey = ttConfig.appKey;
         /* validation done in TTConfig */
-        application = ttConfig.application;
+        applicationContext = ttConfig.application;
         /* sdk logger & loglevel */
         if (ttConfig.debug) {
             logLevel = LogLevel.VERBOSE;
@@ -50,21 +50,17 @@ public class TiktokBusinessSdk {
     public static synchronized void startTracking(TTConfig ttConfig) {
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
-        // TODO: 18/09/20 no need to store again for restart
         storeConfig(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
-                ttSdk.application,
-                ttSdk.appKey,
-                ttSdk.logLevel,
                 ttConfig.lifecycleTrackEnable,
                 ttConfig.advertiserIDCollectionEnable);
     }
 
-    public void trackEvent(@NonNull String event) {
+    public static void trackEvent(@NonNull String event) {
         appEventLogger.track(event, null);
     }
 
-    public void trackEvent(@NonNull String event, @Nullable TTProperty props) {
+    public static void trackEvent(@NonNull String event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 
@@ -82,6 +78,19 @@ public class TiktokBusinessSdk {
 
     public void flush() {
         appEventLogger.flush();
+    }
+
+    public static Application getApplicationContext() {
+        // TODO: 22/09/20 validate if sdk initialised
+        return applicationContext;
+    }
+
+    public static String getAppKey() {
+        return appKey;
+    }
+
+    public static LogLevel getLogLevel() {
+        return logLevel;
     }
 
     static void storeConfig(TTConfig ttConfig) {

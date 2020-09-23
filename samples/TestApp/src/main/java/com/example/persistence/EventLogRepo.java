@@ -17,13 +17,11 @@ import java.util.concurrent.ExecutionException;
 public class EventLogRepo {
     private final EventLogDao eventLogDao;
     private final LiveData<List<EventLog>> allEventLogs;
-    private final TiktokBusinessSdk ttSdk;
 
     public EventLogRepo(Application ctx) {
         PersistenceManager db = PersistenceManager.getDatabase(ctx);
         eventLogDao = db.eventLogDao();
         allEventLogs = eventLogDao.getAll();
-        ttSdk = TiktokBusinessSdk.with(ctx);
     }
 
     public LiveData<List<EventLog>> getAllEventLogs() {
@@ -56,7 +54,7 @@ public class EventLogRepo {
                 String key = (String) iterator.next();
                 ttProperty.put(key, props.get(key));
             }
-            ttSdk.trackEvent(eventLog.eventType, ttProperty);
+            TiktokBusinessSdk.trackEvent(eventLog.eventType, ttProperty);
             PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.save(eventLog));
         } catch (Exception ignored) {}
     }

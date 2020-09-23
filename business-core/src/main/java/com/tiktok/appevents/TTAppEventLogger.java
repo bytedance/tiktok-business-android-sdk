@@ -1,8 +1,8 @@
 package com.tiktok.appevents;
 
-import android.app.Application;
 import android.content.pm.PackageInfo;
 
+import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.pm.PackageInfoCompat;
@@ -19,10 +19,6 @@ import java.util.concurrent.Executors;
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
 
-    final TiktokBusinessSdk ttSdk;
-    final Application application;
-    final String appKey;
-    final TiktokBusinessSdk.LogLevel logLevel;
     final boolean lifecycleTrackEnable;
     final boolean advertiserIDCollectionEnable;
 
@@ -35,22 +31,16 @@ public class TTAppEventLogger {
     boolean adInfoRun = false;
 
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
-                            Application application,
-                            String appKey,
-                            TiktokBusinessSdk.LogLevel logLevel,
                             boolean lifecycleTrackEnable,
                             boolean advertiserIDCollectionEnable) {
-        this.ttSdk = ttSdk;
-        this.appKey = appKey;
-        this.application = application;
-        this.logLevel = logLevel;
-        logger = new TTLogger(TAG, logLevel);
+        logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
         /* SharedPreferences helper */
-        store = new TTKeyValueStore(application.getApplicationContext());
+        store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
         try {
-            packageInfo = application.getPackageManager().getPackageInfo(application.getPackageName(), 0);
+            packageInfo = TiktokBusinessSdk.getApplicationContext().getPackageManager()
+                    .getPackageInfo(TiktokBusinessSdk.getApplicationContext().getPackageName(), 0);
         } catch (Exception ignored) {}
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
@@ -58,10 +48,13 @@ public class TTAppEventLogger {
 
         /* ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(this);
-        this.application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
+        TiktokBusinessSdk.getApplicationContext().registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
         this.runIdentifierFactory();
+
+        String userAgent = new WebView(TiktokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+        logger.verbose(userAgent);
     }
 
     public void track(@NonNull String event, @Nullable TTProperty props) {
@@ -78,7 +71,9 @@ public class TTAppEventLogger {
     }
 
     private void runIdentifierFactory() {
-        TTIdentifierFactory.getAdvertisingId(application, logLevel, new TTIdentifierFactory.Listener() {
+        TTIdentifierFactory.getAdvertisingId(
+                TiktokBusinessSdk.getApplicationContext(), TiktokBusinessSdk.getLogLevel(),
+                new TTIdentifierFactory.Listener() {
             @Override
             public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
                 adInfoRun = true;
