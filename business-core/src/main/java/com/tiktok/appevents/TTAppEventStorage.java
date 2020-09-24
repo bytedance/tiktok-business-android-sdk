@@ -13,43 +13,63 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-class TTAppEventStorage {
+public class TTAppEventStorage {
     private static final String TAG = TTAppEventStorage.class.getCanonicalName();
 
     private static final String EVENT_STORAGE_FILE = "events_cache";
 
-    public static void persist(){
-        List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
+    private static final int MAX_PERSIST_EVENTS_NUM = 10000;
 
-        TTAppEventPersist appEventPersist = readFromDisk();
-
-        if(appEventList.isEmpty() && appEventPersist.isEmpty()){
-            return;
-        }
-
-        appEventPersist.addEvents(appEventList);
-
-        saveToDisk(appEventPersist);
-    }
-
-    public static void persistForFLushFailed(List<TTAppEvent> failedEvents){
-        if(failedEvents == null || failedEvents.size()==0) {
-            return;
-        }
+    /**
+     * write events into file
+     * @param failedEvents if flush failed, failedEvents is not null
+     */
+    public static void persist(List<TTAppEvent> failedEvents){
 
         List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
 
         TTAppEventPersist appEventPersist = readFromDisk();
 
+        if(appEventList.isEmpty() && appEventPersist.isEmpty() &&
+                (failedEvents == null || failedEvents.isEmpty())){
+            return;
+        }
+
+        if(failedEvents != null) {
+            appEventPersist.addEvents(failedEvents);
+        }
+
         appEventPersist.addEvents(appEventList);
 
-        appEventPersist.addEvents(failedEvents);
+        //If end up persisting more than 10,000 events, persist the latest 10,000 events by timestamp
+        slimEvents(appEventPersist);
 
         saveToDisk(appEventPersist);
     }
 
-    // TODO, api level 16 does not support auto try finally
+    /**
+     * events slim
+     * @param ttAppEventPersist
+     */
+    private static void slimEvents(TTAppEventPersist ttAppEventPersist){
+        if(ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {
+            return;
+        }
+
+        List<TTAppEvent> appEvents = ttAppEventPersist.getAppEvents();
+
+        int size = appEvents.size();
+
+        if(size > MAX_PERSIST_EVENTS_NUM) {
+            ttAppEventPersist.setAppEvents(appEvents.subList(size-MAX_PERSIST_EVENTS_NUM, size));
+        }
+    }
+
     private static boolean saveToDisk(TTAppEventPersist appEventPersist) {
+        if(appEventPersist.isEmpty()) {
+            return false;
+        }
+
         Context context = TiktokBusinessSdk.getApplicationContext();
         ObjectOutputStream oos = null;
         try {
@@ -89,6 +109,11 @@ class TTAppEventStorage {
             appEventPersist = (TTAppEventPersist) ois.readObject();
 
             f.delete();
+        } catch (ClassNotFoundException e) {
+            if (f.exists()) {
+                f.delete();
+            }
+            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }finally {

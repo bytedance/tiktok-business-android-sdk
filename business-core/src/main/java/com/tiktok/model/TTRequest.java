@@ -2,6 +2,7 @@ package com.tiktok.model;
 
 import android.util.Log;
 
+import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
 import com.tiktok.util.TimeUtil;
 
@@ -17,26 +18,6 @@ public class TTRequest {
     private static String TAG = TTRequest.class.getCanonicalName();
 
     private static final int MAX_EVENT_SIZE = 1000;
-//    public static void test() {
-//        String url = "https://ads.tiktok.com/open_api/v1.1/advertiser/info/";
-//        JSONObject jsonObject = new JSONObject();
-//
-//        try {
-//            jsonObject.put("advertiser_ids", Arrays.asList(75960823018L));
-//
-//            Map<String, String> map = new HashMap<>();
-//            map.put("Content-Type", "application/json");
-//            map.put("Connection", "Keep-Alive");
-//            map.put("access-token", "c2424295d21b7f32573ad5ec2a1cbb3ca92e09be");
-//
-//            String result = HttpRequestUtil.doPost(url, map, jsonObject.toString());
-//
-//            Log.i(TAG, result);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     public static List<TTAppEvent>  appEventReport(List<TTAppEvent> appEventList, String appId, String context) {
 
@@ -44,13 +25,13 @@ public class TTRequest {
             return new ArrayList<>();
         }
 
-        //TODO appId, context, outer_testing_field 如何获取?
+        //TODO context 如何获取?
         String url = "http://10.231.18.96:9225/open_api/2/app/batch1/";
 
         Map<String, String> headParamMap = new HashMap<>();
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
-        headParamMap.put("access-token", "abcdabcdabcdabcd00509731ca2343bbecb2b846");
+        headParamMap.put("access-token", TiktokBusinessSdk.getAppKey());
 
         JSONObject bodyJson = new JSONObject();
 
@@ -71,7 +52,6 @@ public class TTRequest {
 
                 bodyJson.put("app_id", appId);
                 bodyJson.put("context", context);
-                bodyJson.put("outer_testing_field", 666663);
                 bodyJson.put("batch", batch);
 
                 Log.i(TAG, bodyJson.toString());
@@ -114,9 +94,8 @@ public class TTRequest {
         //TODO 转化时间的时候用默认时区吗？
         jsonObject.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
         jsonObject.put("properties", event.getJsonObject());
-        //TODO context, inner_invalid 如何获取?
+        //TODO context 如何获取?
         jsonObject.put("context", "123");
-        jsonObject.put("inner_invalid", "qgs test");
 
         return jsonObject;
     }

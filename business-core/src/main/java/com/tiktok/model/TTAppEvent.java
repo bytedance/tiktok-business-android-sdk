@@ -3,8 +3,6 @@ package com.tiktok.model;
 import java.io.Serializable;
 import java.util.Date;
 
-//@Data
-//@AllArgsConstructor
 public class TTAppEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -12,10 +10,6 @@ public class TTAppEvent implements Serializable {
     private String eventName;
     private Date timeStamp;
     private String jsonObject;
-
-    public TTAppEvent(String eventName) {
-        this(eventName, new String());
-    }
 
     public TTAppEvent(String eventName, String jsonObject) {
         this(eventName, new Date(), jsonObject);
