@@ -22,7 +22,4 @@ class TTAppEventsQueue {
         return appEvents;
     }
 
-//    public static void clear() {
-//        memory = new ArrayList<>();
-//    }
 }
