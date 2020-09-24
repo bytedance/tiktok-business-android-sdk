@@ -20,8 +20,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static com.tiktok.TiktokBusinessSdk.LogLevel;
 
 /** get advertiser id info using Google Play API, also handles google play is not installed */
-public class TTIdentifierFactory {
-    private static final String TAG = TTIdentifierFactory.class.getSimpleName();
+class TTIdentifierFactory {
+    private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
     public interface Listener {
         void onIdentifierFactoryFinish(AdInfo adInfo);

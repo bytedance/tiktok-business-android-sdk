@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
@@ -39,7 +40,7 @@ public class TTAppEventLogger {
     /** advertiser id */
     TTIdentifierFactory.AdInfo adInfo;
     /** this boolean checks the advertiser task ran status */
-    boolean adInfoRun = false;
+    AtomicBoolean adInfoRun;
 
     int flushId = 0;
 
@@ -55,6 +56,7 @@ public class TTAppEventLogger {
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
                             boolean lifecycleTrackEnable,
                             boolean advertiserIDCollectionEnable) {
+        adInfoRun = new AtomicBoolean(false);
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
@@ -106,14 +108,14 @@ public class TTAppEventLogger {
                 new TTIdentifierFactory.Listener() {
             @Override
             public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
-                adInfoRun = true;
+                adInfoRun.set(true);
                 adInfo = ad;
                 executeQueue();
             }
 
             @Override
             public void onIdentifierFactoryFail(Exception e) {
-                adInfoRun = true;
+                adInfoRun.set(true);
                 adInfo = null;
                 logger.error(e, "unable to fetch Advertising Id");
                 executeQueue();
@@ -130,7 +132,7 @@ public class TTAppEventLogger {
     }
 
     private boolean loggerInitialized() {
-        return this.adInfoRun;
+        return this.adInfoRun.get();
     }
 
     private void executeQueue() {
@@ -161,6 +163,10 @@ public class TTAppEventLogger {
         logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
 
         flushId++;
+    }
+
+    public ScheduledExecutorService getEventLoop() {
+        return eventLoop;
     }
 
     enum FlushReason {
