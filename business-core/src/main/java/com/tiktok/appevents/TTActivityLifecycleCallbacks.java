@@ -30,9 +30,9 @@ class TTActivityLifecycleCallbacks
     private final TTAppEventLogger appEventLogger;
 
     /** This bool checks initial events are triggered */
-    private AtomicBoolean trackedAppLifecycleEvents;
-    private AtomicInteger numberOfActivities;
-    private AtomicBoolean firstLaunch;
+    private final AtomicBoolean trackedAppLifecycleEvents;
+    private final AtomicInteger numberOfActivities;
+    private final AtomicBoolean firstLaunch;
 
     public TTActivityLifecycleCallbacks(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
@@ -175,7 +175,7 @@ class TTActivityLifecycleCallbacks
                 if (today.equals(dateFormat.format(lastOpen.getTime()))) {
                     appEventLogger.track("2Dretention", null);
                 }
-            } catch (ParseException ignored) {}
+            } catch (Exception ignored) {}
             appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, today);
         }
     }

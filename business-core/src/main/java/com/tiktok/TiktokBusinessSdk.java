@@ -31,7 +31,7 @@ public class TiktokBusinessSdk {
     /** app {@link Context} */
     private static Application applicationContext;
     /** access token */
-    private static String appKey;
+    private static String accessToken;
     /** {@link LogLevel} of initialized sdk */
     private static LogLevel logLevel;
 
@@ -40,8 +40,8 @@ public class TiktokBusinessSdk {
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
         /* no write key exception */
-        if (ttConfig.appKey == null) throw new IllegalArgumentException("app key not found");
-        appKey = ttConfig.appKey;
+        if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
+        accessToken = ttConfig.accessToken;
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
         /* sdk logger & loglevel */
@@ -72,18 +72,6 @@ public class TiktokBusinessSdk {
         appEventLogger.track(event, props);
     }
 
-//    public static TiktokBusinessSdk with(Context context) {
-//        if (ttSdk == null) {
-//            if (context == null) throw new IllegalArgumentException("Context must not be null");
-//            synchronized (TiktokBusinessSdk.class) {
-//                if (ttSdk == null) {
-//                    startTracking(rebuildConfig(context));
-//                }
-//            }
-//        }
-//        return ttSdk;
-//    }
-
     public void flush() {
         appEventLogger.flush();
     }
@@ -95,8 +83,8 @@ public class TiktokBusinessSdk {
     }
 
     /** appKey getter */
-    public static String getAppKey() {
-        return appKey;
+    public static String getAccessToken() {
+        return accessToken;
     }
 
     /** logLevel getter */
@@ -108,7 +96,7 @@ public class TiktokBusinessSdk {
     static void storeConfig(TTConfig ttConfig) {
         TTKeyValueStore store = new TTKeyValueStore(ttConfig.application.getApplicationContext());
         HashMap<String, Object> data = new HashMap<>();
-        data.put(TTSDK_CONFIG_APPKEY, ttConfig.appKey);
+        data.put(TTSDK_CONFIG_APPKEY, ttConfig.accessToken);
         data.put(TTSDK_CONFIG_DEBUG, ttConfig.debug);
         data.put(TTSDK_CONFIG_LIFECYCLE, ttConfig.lifecycleTrackEnable);
         data.put(TTSDK_CONFIG_ADVID, ttConfig.advertiserIDCollectionEnable);
@@ -119,7 +107,7 @@ public class TiktokBusinessSdk {
     static TTConfig rebuildConfig(Context ctx) {
         TTKeyValueStore store = new TTKeyValueStore(ctx);
         TTConfig ttConfig = new TTConfig(ctx)
-                .setAppKey(store.get(TTSDK_CONFIG_APPKEY));
+                .setAccessToken(store.get(TTSDK_CONFIG_APPKEY));
         if (store.get(TTSDK_CONFIG_DEBUG).equals("true")) {
             ttConfig.enableDebug();
         }
@@ -137,7 +125,7 @@ public class TiktokBusinessSdk {
         /** application context */
         private final Application application;
         /** Access-Token for api calls */
-        private String appKey;
+        private String accessToken;
         /** to enable logs */
         private boolean debug = false;
         /** to enable auto event tracking */
@@ -153,9 +141,9 @@ public class TiktokBusinessSdk {
             try {
                 ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
-                Object key = appInfo.metaData.get("com.tiktok.sdk.AppKey");
+                Object key = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
                 if (key instanceof String) {
-                    appKey = key.toString();
+                    accessToken = key.toString();
                 }
             } catch (Exception ignored) {}
         }
@@ -167,8 +155,8 @@ public class TiktokBusinessSdk {
         }
 
         /** to set the access token if not in manifest file */
-        public TTConfig setAppKey(String key) {
-            appKey = key;
+        public TTConfig setAccessToken(String key) {
+            accessToken = key;
             return this;
         }
 

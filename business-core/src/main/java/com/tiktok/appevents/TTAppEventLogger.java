@@ -41,7 +41,7 @@ public class TTAppEventLogger {
     /** advertiser id */
     TTIdentifierFactory.AdInfo adInfo;
     /** this boolean checks the advertiser task ran status */
-    AtomicBoolean adInfoRun;
+    final AtomicBoolean adInfoRun;
 
     int flushId = 0;
 
@@ -49,7 +49,7 @@ public class TTAppEventLogger {
 
     ScheduledFuture<?> flushFuture = null;
 
-    private Runnable batchFlush = () -> {
+    private final Runnable batchFlush = () -> {
         flushFuture = null;
         flush(FlushReason.TIMER);
     };

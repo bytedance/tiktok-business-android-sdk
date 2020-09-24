@@ -16,7 +16,7 @@
         <activity android:name=".ui.events.PropEditActivity" android:theme="@style/AppTheme" />
 
         <meta-data
-            android:name="com.tiktok.business.AppKey"
+            android:name="com.tiktok.sdk.AccessToken"
             android:value="@string/tiktok_business_app_key" />
 
         <activity android:name=".App">
