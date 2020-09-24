@@ -26,7 +26,7 @@ public class TTRequest {
         }
 
         //TODO context 如何获取?
-        String url = "http://10.231.18.96:9225/open_api/2/app/batch1/";
+        String url = "http://10.231.18.96:9225/open_api/2/app/batch/";
 
         Map<String, String> headParamMap = new HashMap<>();
         headParamMap.put("Content-Type", "application/json");

@@ -88,7 +88,10 @@ public class TTAppEventLogger {
 
     public void flush() {
         logger.verbose("FORCE_FLUSH called");
-        flush(FlushReason.FORCE_FLUSH);
+        eventLoop.execute(()->{
+            flush(FlushReason.FORCE_FLUSH);
+        });
+
     }
 
     private void runIdentifierFactory() {
@@ -126,8 +129,9 @@ public class TTAppEventLogger {
 
     private void executeQueue() {
         if (!loggerInitialized()) return;
-        logger.verbose("called after prefetch & async tasks. Run the first batch from disk if any");
-        flush(FlushReason.START_UP);
+        eventLoop.execute(()->{
+            flush(FlushReason.START_UP);
+        });
     }
 
     private void flush(FlushReason reason) {
