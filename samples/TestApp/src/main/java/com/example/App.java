@@ -49,7 +49,7 @@ public class App extends AppCompatActivity {
 
         // Tiktok sdk init start
         TTConfig ttConfig = new TTConfig(getApplicationContext())
-                .setAppKey("app-key")
+                .setAppKey("abcdabcdabcdabcd00509731ca2343bbecb2b846")
                 .enableDebug();
         TiktokBusinessSdk.startTracking(ttConfig);
         // Tiktok sdk init end

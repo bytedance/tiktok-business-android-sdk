@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
@@ -74,22 +75,23 @@ public class TTAppEventLogger {
         TTProperty finalProps = props;
         eventLoop.execute(() -> {
             logger.debug(event + " : " + finalProps.get().toString());
-            // call save to file interface
 
             TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.get().toString()));
-            flush(FlushReason.THRESHOLD);
 
-//                if (TTAppEventsQueue.size() > THRESHOLD) {
-//                    flush(FlushReason.THRESHOLD);
-//                } else if (flushFuture == null) {
-//                    flushFuture = eventLoop.schedule(batchFlush, TIME_BUFFER, TimeUnit.SECONDS);
-//                }
+            if (TTAppEventsQueue.size() > THRESHOLD) {
+                flush(FlushReason.THRESHOLD);
+            } else if (flushFuture == null) {
+                flushFuture = eventLoop.schedule(batchFlush, TIME_BUFFER, TimeUnit.SECONDS);
+            }
         });
     }
 
     public void flush() {
         logger.verbose("FORCE_FLUSH called");
-        flush(FlushReason.FORCE_FLUSH);
+        eventLoop.execute(()->{
+            flush(FlushReason.FORCE_FLUSH);
+        });
+
     }
 
     private void runIdentifierFactory() {
@@ -127,8 +129,9 @@ public class TTAppEventLogger {
 
     private void executeQueue() {
         if (!loggerInitialized()) return;
-        logger.verbose("called after prefetch & async tasks. Run the first batch from disk if any");
-        flush(FlushReason.START_UP);
+        eventLoop.execute(()->{
+            flush(FlushReason.START_UP);
+        });
     }
 
     private void flush(FlushReason reason) {
@@ -141,15 +144,14 @@ public class TTAppEventLogger {
 
         appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-        List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), "1211123727", "123456");
+        String appId = TiktokBusinessSdk.getApplicationContext().getPackageName();
 
-        if (eventList.size()>0){//上报失败，保存到文件中
-            TTAppEventStorage.persistForFLushFailed(eventList);
+        List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), appId, "123456");
+
+        if (!eventList.isEmpty()){//flush failed, persist events
+            TTAppEventStorage.persist(eventList);
         }
 
-//        for (TTAppEvent event : appEventPersist.getAppEvents()) {
-//            logger.verbose(TAG, event.toString());
-//        }
         logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
 
         flushId++;
