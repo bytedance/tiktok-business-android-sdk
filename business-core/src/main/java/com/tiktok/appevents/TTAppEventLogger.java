@@ -2,15 +2,13 @@ package com.tiktok.appevents;
 
 import android.content.pm.PackageInfo;
 
+import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.pm.PackageInfoCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.model.TTAppEvent;
-import com.tiktok.model.TTRequest;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
@@ -37,7 +35,7 @@ public class TTAppEventLogger {
     /** SharedPreferences util */
     TTKeyValueStore store;
     /** packageInfo */
-    PackageInfo packageInfo;
+    PackageInfo packageInfo = null;
     /** Lifecycle */
     Lifecycle lifecycle;
     /** advertiser id */
@@ -126,11 +124,21 @@ public class TTAppEventLogger {
     }
 
     String getVersionName() {
+        if (packageInfo == null) {
+            return "";
+        }
         return packageInfo.versionName;
     }
 
-    long getVersionCode() {
-        return PackageInfoCompat.getLongVersionCode(packageInfo);
+    int getVersionCode() {
+        if (packageInfo == null) {
+            return 0;
+        }
+        if (Build.VERSION.SDK_INT >= 28) {
+            return  (int) packageInfo.getLongVersionCode();
+        }
+        // noinspection deprecation
+        return packageInfo.versionCode;
     }
 
     private boolean loggerInitialized() {
