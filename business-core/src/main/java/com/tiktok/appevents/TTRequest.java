@@ -1,4 +1,4 @@
-package com.tiktok.model;
+package com.tiktok.appevents;
 
 import android.util.Log;
 
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TTRequest {
+class TTRequest {
     private static String TAG = TTRequest.class.getCanonicalName();
 
     private static final int MAX_EVENT_SIZE = 1000;

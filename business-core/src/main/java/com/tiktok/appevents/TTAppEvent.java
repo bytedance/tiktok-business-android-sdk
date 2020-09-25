@@ -1,9 +1,9 @@
-package com.tiktok.model;
+package com.tiktok.appevents;
 
 import java.io.Serializable;
 import java.util.Date;
 
-public class TTAppEvent implements Serializable {
+class TTAppEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

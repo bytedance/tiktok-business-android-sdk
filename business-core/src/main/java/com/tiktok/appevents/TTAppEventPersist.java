@@ -1,7 +1,5 @@
 package com.tiktok.appevents;
 
-import com.tiktok.model.TTAppEvent;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,13 +1,11 @@
-package com.tiktok;
-
-import com.tiktok.model.TTRequest;
+package com.tiktok.appevents;
 
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Example local unit test, which will execute on the development machine (host).
