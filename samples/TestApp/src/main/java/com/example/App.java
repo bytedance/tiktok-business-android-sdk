@@ -51,8 +51,6 @@ public class App extends AppCompatActivity {
 
         // Tiktok sdk init start
         TTConfig ttConfig = new TTConfig(getApplication())
-                .setApiId("1211123727")
-                .setAccessToken("abcdabcdabcdabcd00509731ca2343bbecb2b846")
 //                .optOutAdvertiserIDCollection()
 //                .optOutAutoEventTracking()
                 .enableDebug();

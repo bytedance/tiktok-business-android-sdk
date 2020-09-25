@@ -47,6 +47,9 @@ public class TiktokBusinessSdk {
     TTLogger logger;
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
+        /* no app id exception */
+        if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
+        appId = ttConfig.appId;
         /* no write key exception */
         if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
         accessToken = ttConfig.accessToken;
@@ -148,7 +151,7 @@ public class TiktokBusinessSdk {
         /** application context */
         private final Application application;
         /** api_id for api calls */
-        private String apiId;
+        private String appId;
         /** Access-Token for api calls */
         private String accessToken;
         /** to enable logs */
@@ -169,14 +172,10 @@ public class TiktokBusinessSdk {
                 ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
                 Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
-                if (token instanceof String) {
-                    accessToken = token.toString();
-                }
+                accessToken = token.toString();
                 Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.optOutAutoStart");
-                if (autoFlag instanceof String) {
-                    if (autoFlag.equals("true")) {
-                        autoStart = false;
-                    }
+                if (autoFlag.toString().equals("true")) {
+                    autoStart = false;
                 }
             } catch (Exception ignored) {}
         }
@@ -187,8 +186,8 @@ public class TiktokBusinessSdk {
             return this;
         }
 
-        public TTConfig setApiId(String apiId) {
-            this.apiId = apiId;
+        public TTConfig setAppId(String apiId) {
+            this.appId = apiId;
             return this;
         }
 
