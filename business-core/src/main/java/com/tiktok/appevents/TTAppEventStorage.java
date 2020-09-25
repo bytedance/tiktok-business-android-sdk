@@ -3,7 +3,6 @@ package com.tiktok.appevents;
 import android.content.Context;
 
 import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.model.TTAppEvent;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -13,7 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-public class TTAppEventStorage {
+class TTAppEventStorage {
     private static final String TAG = TTAppEventStorage.class.getCanonicalName();
 
     private static final String EVENT_STORAGE_FILE = "events_cache";
