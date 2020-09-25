@@ -14,6 +14,8 @@ import com.tiktok.model.TTRequest;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -150,9 +152,9 @@ public class TTAppEventLogger {
 
         appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-        String appId = TiktokBusinessSdk.getApplicationContext().getPackageName();
+//        String appId = TiktokBusinessSdk.getApplicationContext().getPackageName();
 
-        List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), appId, "123456");
+        List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), "1211123727", new JSONObject());
 
         if (!eventList.isEmpty()){//flush failed, persist events
             TTAppEventStorage.persist(eventList);
