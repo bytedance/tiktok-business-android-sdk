@@ -177,6 +177,8 @@ public class TiktokBusinessSdk {
                 if (autoFlag.toString().equals("true")) {
                     autoStart = false;
                 }
+                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
+                appId = aid.toString();
             } catch (Exception ignored) {}
         }
 
