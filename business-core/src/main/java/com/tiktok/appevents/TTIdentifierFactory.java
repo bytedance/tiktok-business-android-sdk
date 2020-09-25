@@ -19,8 +19,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import static com.tiktok.TiktokBusinessSdk.LogLevel;
 
-public class TTIdentifierFactory {
-    private static final String TAG = TTIdentifierFactory.class.getSimpleName();
+/** get advertiser id info using Google Play API, also handles google play is not installed */
+class TTIdentifierFactory {
+    private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
     public interface Listener {
         void onIdentifierFactoryFinish(AdInfo adInfo);
@@ -93,6 +94,7 @@ public class TTIdentifierFactory {
             return binder;
         }
 
+        /** Returns advertiser id */
         public String getId() throws RemoteException {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
@@ -109,6 +111,7 @@ public class TTIdentifierFactory {
             return id;
         }
 
+        /** get limit ad tracking flag */
         public boolean isLimitAdTrackingEnabled(boolean paramBoolean) throws RemoteException {
 
             Parcel data = Parcel.obtain();
@@ -142,6 +145,7 @@ public class TTIdentifierFactory {
         }
     }
 
+    /** returns advertiser id info */
     private void getAdvertisingIdInfo(Context context) {
         logger.verbose("getAdvertisingIdInfo");
         try {

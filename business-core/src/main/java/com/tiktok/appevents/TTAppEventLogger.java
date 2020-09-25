@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
@@ -29,12 +30,18 @@ public class TTAppEventLogger {
     final boolean lifecycleTrackEnable;
     final boolean advertiserIDCollectionEnable;
 
+    /** Logger util */
     TTLogger logger;
+    /** SharedPreferences util */
     TTKeyValueStore store;
+    /** packageInfo */
     PackageInfo packageInfo;
+    /** Lifecycle */
     Lifecycle lifecycle;
+    /** advertiser id */
     TTIdentifierFactory.AdInfo adInfo;
-    boolean adInfoRun = false;
+    /** this boolean checks the advertiser task ran status */
+    final AtomicBoolean adInfoRun;
 
     int flushId = 0;
 
@@ -42,7 +49,7 @@ public class TTAppEventLogger {
 
     ScheduledFuture<?> flushFuture = null;
 
-    private Runnable batchFlush = () -> {
+    private final Runnable batchFlush = () -> {
         flushFuture = null;
         flush(FlushReason.TIMER);
     };
@@ -50,6 +57,7 @@ public class TTAppEventLogger {
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
                             boolean lifecycleTrackEnable,
                             boolean advertiserIDCollectionEnable) {
+        adInfoRun = new AtomicBoolean(false);
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
@@ -62,11 +70,13 @@ public class TTAppEventLogger {
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
         eventLoop = Executors.newSingleThreadScheduledExecutor();
-        /* ActivityLifecycleCallbacks & LifecycleObserver */
+
+        /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(this);
         TiktokBusinessSdk.getApplicationContext().registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
+        /** advertiser id fetch */
         this.runIdentifierFactory();
     }
 
@@ -88,9 +98,7 @@ public class TTAppEventLogger {
 
     public void flush() {
         logger.verbose("FORCE_FLUSH called");
-        eventLoop.execute(()->{
-            flush(FlushReason.FORCE_FLUSH);
-        });
+        eventLoop.execute(()-> flush(FlushReason.FORCE_FLUSH));
 
     }
 
@@ -100,14 +108,14 @@ public class TTAppEventLogger {
                 new TTIdentifierFactory.Listener() {
             @Override
             public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
-                adInfoRun = true;
+                adInfoRun.set(true);
                 adInfo = ad;
                 executeQueue();
             }
 
             @Override
             public void onIdentifierFactoryFail(Exception e) {
-                adInfoRun = true;
+                adInfoRun.set(true);
                 adInfo = null;
                 logger.error(e, "unable to fetch Advertising Id");
                 executeQueue();
@@ -124,14 +132,12 @@ public class TTAppEventLogger {
     }
 
     private boolean loggerInitialized() {
-        return this.adInfoRun;
+        return this.adInfoRun.get();
     }
 
     private void executeQueue() {
         if (!loggerInitialized()) return;
-        eventLoop.execute(()->{
-            flush(FlushReason.START_UP);
-        });
+        eventLoop.execute(()-> flush(FlushReason.START_UP));
     }
 
     private void flush(FlushReason reason) {
@@ -155,6 +161,10 @@ public class TTAppEventLogger {
         logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
 
         flushId++;
+    }
+
+    public ScheduledExecutorService getEventLoop() {
+        return eventLoop;
     }
 
     enum FlushReason {

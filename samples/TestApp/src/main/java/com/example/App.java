@@ -48,8 +48,10 @@ public class App extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         // Tiktok sdk init start
-        TTConfig ttConfig = new TTConfig(getApplicationContext())
-                .setAppKey("abcdabcdabcdabcd00509731ca2343bbecb2b846")
+        TTConfig ttConfig = new TTConfig(getApplication())
+//                .setAccessToken("abcdabcdabcdabcd00509731ca2343bbecb2b846")
+//                .optOutAdvertiserIDCollection()
+//                .optOutAutoEventTracking()
                 .enableDebug();
         TiktokBusinessSdk.startTracking(ttConfig);
         // Tiktok sdk init end

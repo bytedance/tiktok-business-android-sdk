@@ -31,7 +31,7 @@ public class TTRequest {
         Map<String, String> headParamMap = new HashMap<>();
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
-        headParamMap.put("access-token", TiktokBusinessSdk.getAppKey());
+        headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
 
         JSONObject bodyJson = new JSONObject();
 

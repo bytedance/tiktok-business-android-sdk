@@ -3,6 +3,7 @@ package com.tiktok.appevents;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/** JSONObject wrapper for custom event properties */
 public class TTProperty {
     private final JSONObject properties;
 

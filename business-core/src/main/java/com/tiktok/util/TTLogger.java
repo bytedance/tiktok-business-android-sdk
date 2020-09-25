@@ -6,9 +6,12 @@ import com.tiktok.TiktokBusinessSdk.LogLevel;
 
 import static com.tiktok.util.TTConst.DEFAULT_TAG;
 
+/** Logger util class */
 public final class TTLogger {
 
+    /** loglevel */
     public final LogLevel logLevel;
+    /** log TAG */
     private final String tag;
 
     public TTLogger(String tag, LogLevel logLevel) {
