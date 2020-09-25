@@ -30,6 +30,8 @@ public class TiktokBusinessSdk {
 
     /** app {@link Context} */
     private static Application applicationContext;
+    /** app_id */
+    private static String appId;
     /** access token */
     private static String accessToken;
     /** {@link LogLevel} of initialized sdk */
@@ -92,6 +94,11 @@ public class TiktokBusinessSdk {
         return logLevel;
     }
 
+    /** returns api_id */
+    public static String getAppId() {
+        return appId;
+    }
+
     /** stores the config in SharedPreferences */
     static void storeConfig(TTConfig ttConfig) {
         TTKeyValueStore store = new TTKeyValueStore(ttConfig.application.getApplicationContext());
@@ -124,6 +131,8 @@ public class TiktokBusinessSdk {
     public static class TTConfig {
         /** application context */
         private final Application application;
+        /** api_id for api calls */
+        private String apiId;
         /** Access-Token for api calls */
         private String accessToken;
         /** to enable logs */
@@ -150,7 +159,12 @@ public class TiktokBusinessSdk {
 
         /** Enables debug logs */
         public TTConfig enableDebug() {
-            debug = true;
+            this.debug = true;
+            return this;
+        }
+
+        public TTConfig setApiId(String apiId) {
+            this.apiId = apiId;
             return this;
         }
 
@@ -162,13 +176,13 @@ public class TiktokBusinessSdk {
 
         /** to disable auto event tracking & lifecycle listeners */
         public TTConfig optOutAutoEventTracking() {
-            lifecycleTrackEnable = false;
+            this.lifecycleTrackEnable = false;
             return this;
         }
 
         /** to disable gaid in tracking */
         public TTConfig optOutAdvertiserIDCollection() {
-            advertiserIDCollectionEnable = false;
+            this.advertiserIDCollectionEnable = false;
             return this;
         }
     }
