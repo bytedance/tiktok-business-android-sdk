@@ -1,6 +1,8 @@
 package com.example;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MenuItem;
 import android.view.Menu;
 
@@ -49,12 +51,15 @@ public class App extends AppCompatActivity {
 
         // Tiktok sdk init start
         TTConfig ttConfig = new TTConfig(getApplication())
-//                .setAccessToken("abcdabcdabcdabcd00509731ca2343bbecb2b846")
 //                .optOutAdvertiserIDCollection()
 //                .optOutAutoEventTracking()
                 .enableDebug();
-        TiktokBusinessSdk.startTracking(ttConfig);
+        TiktokBusinessSdk.initializeSdk(ttConfig);
         // Tiktok sdk init end
+
+        // testing delay tracking, implementing a 60 sec delay manually
+        // ideally has to be after accepting tracking permission
+        new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTracking, 60000);
     }
 
     @Override

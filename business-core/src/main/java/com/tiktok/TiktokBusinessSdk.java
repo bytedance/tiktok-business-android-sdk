@@ -13,7 +13,11 @@ import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTLogger;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.tiktok.util.TTConst.TTSDK_CONFIG_ADVID;
 import static com.tiktok.util.TTConst.TTSDK_CONFIG_APPKEY;
@@ -30,15 +34,22 @@ public class TiktokBusinessSdk {
 
     /** app {@link Context} */
     private static Application applicationContext;
+    /** app_id */
+    private static String appId;
     /** access token */
     private static String accessToken;
     /** {@link LogLevel} of initialized sdk */
     private static LogLevel logLevel;
 
+    private static AtomicBoolean sdkInit;
+
     /** logger util */
     TTLogger logger;
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
+        /* no app id exception */
+        if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
+        appId = ttConfig.appId;
         /* no write key exception */
         if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
         accessToken = ttConfig.accessToken;
@@ -51,15 +62,21 @@ public class TiktokBusinessSdk {
             logLevel = LogLevel.INFO;
         }
         logger = new TTLogger(TAG, logLevel);
+        sdkInit = new AtomicBoolean(ttConfig.autoStart);
     }
 
-    public static synchronized void startTracking(TTConfig ttConfig) {
+    public static synchronized void initializeSdk(TTConfig ttConfig) {
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
         storeConfig(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
                 ttConfig.lifecycleTrackEnable,
                 ttConfig.advertiserIDCollectionEnable);
+    }
+
+    public static void startTracking() {
+        sdkInit.set(true);
+        appEventLogger.flush();
     }
 
     /** public interface for tracking Event without custom properties */
@@ -87,9 +104,18 @@ public class TiktokBusinessSdk {
         return accessToken;
     }
 
+    public static boolean isSdkFullyInitialized() {
+        return sdkInit.get();
+    }
+
     /** logLevel getter */
     public static LogLevel getLogLevel() {
         return logLevel;
+    }
+
+    /** returns api_id */
+    public static String getAppId() {
+        return appId;
     }
 
     /** stores the config in SharedPreferences */
@@ -124,6 +150,8 @@ public class TiktokBusinessSdk {
     public static class TTConfig {
         /** application context */
         private final Application application;
+        /** api_id for api calls */
+        private String appId;
         /** Access-Token for api calls */
         private String accessToken;
         /** to enable logs */
@@ -132,6 +160,8 @@ public class TiktokBusinessSdk {
         private boolean lifecycleTrackEnable = true;
         /** confirmation to read gaid */
         private boolean advertiserIDCollectionEnable = true;
+        /** auto init flag check in manifest */
+        private boolean autoStart = true;
 
         public TTConfig(Context context) {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
@@ -141,16 +171,23 @@ public class TiktokBusinessSdk {
             try {
                 ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
-                Object key = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
-                if (key instanceof String) {
-                    accessToken = key.toString();
+                Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
+                accessToken = token.toString();
+                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.optOutAutoStart");
+                if (autoFlag.toString().equals("true")) {
+                    autoStart = false;
                 }
             } catch (Exception ignored) {}
         }
 
         /** Enables debug logs */
         public TTConfig enableDebug() {
-            debug = true;
+            this.debug = true;
+            return this;
+        }
+
+        public TTConfig setAppId(String apiId) {
+            this.appId = apiId;
             return this;
         }
 
@@ -162,13 +199,13 @@ public class TiktokBusinessSdk {
 
         /** to disable auto event tracking & lifecycle listeners */
         public TTConfig optOutAutoEventTracking() {
-            lifecycleTrackEnable = false;
+            this.lifecycleTrackEnable = false;
             return this;
         }
 
         /** to disable gaid in tracking */
         public TTConfig optOutAdvertiserIDCollection() {
-            advertiserIDCollectionEnable = false;
+            this.advertiserIDCollectionEnable = false;
             return this;
         }
     }
