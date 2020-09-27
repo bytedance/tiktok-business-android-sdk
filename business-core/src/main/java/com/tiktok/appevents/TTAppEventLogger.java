@@ -210,23 +210,26 @@ public class TTAppEventLogger {
 
         if (!loggerInitialized()) return;
 
-        logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
+        if (TiktokBusinessSdk.isSdkFullyInitialized()) {
+            logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
 
-        TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
+            TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
 
-        appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
+            appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-//        String appId = TiktokBusinessSdk.getApplicationContext().getPackageName();
+            List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), "1211123727", new JSONObject());
 
-        List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), "1211123727", new JSONObject());
+            if (!eventList.isEmpty()) {//flush failed, persist events
+                TTAppEventStorage.persist(eventList);
+            }
+            logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
 
-        if (!eventList.isEmpty()) {//flush failed, persist events
-            TTAppEventStorage.persist(eventList);
+            flushId++;
+        } else {
+            logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be send in batches only after startTracking");
+            TTAppEventStorage.persist(null);
         }
 
-        logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
-
-        flushId++;
     }
 
     public ScheduledExecutorService getEventLoop() {
