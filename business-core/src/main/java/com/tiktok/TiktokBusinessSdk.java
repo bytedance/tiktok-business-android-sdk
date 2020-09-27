@@ -89,6 +89,18 @@ public class TiktokBusinessSdk {
         appEventLogger.track(event, props);
     }
 
+    /** cache sku details */
+    public static void cacheSkuDetails(@Nullable Object skuDetailsList) {
+        assert skuDetailsList != null;
+        appEventLogger.cacheSkuDetails(Collections.singletonList(skuDetailsList));
+    }
+
+    /** process purchases from PurchasesUpdatedListener */
+    public static void onPurchasesUpdated(@Nullable Object purchases) {
+        assert purchases != null;
+        appEventLogger.trackPurchase(Collections.singletonList(purchases));
+    }
+
     public void flush() {
         appEventLogger.flush();
     }

@@ -13,4 +13,6 @@ public class TTConst {
     public static final String TTSDK_APP_LAST_LAUNCH = "com.tiktok.sdk.lastLaunch";
 
     public static final String DEFAULT_TAG = "TiktokBusinessSdk";
+
+    public static final String TTSDK_SKU_DETAILS = "com.tiktok.sdk.skuDetails";
 }

@@ -15,10 +15,10 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.billingclient.api.*;
 import com.example.R;
+import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.appevents.TTProperty;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class HomeFragment extends Fragment {
     private static final String TAG = HomeFragment.class.getCanonicalName();
@@ -44,6 +44,19 @@ public class HomeFragment extends Fragment {
                 BillingFlowParams billingFlowParams = BillingFlowParams.newBuilder()
                         .setSkuDetails(skuDetails)
                         .build();
+
+                /** cache single sku details */
+                TiktokBusinessSdk.cacheSkuDetails(skuDetails);
+
+                /** trigger StartCheckOut before launchBillingFlow */
+                TTProperty props = new TTProperty()
+                        .put("content_type", skuDetails.getType())
+                        .put("content_id", skuDetails.getSku())
+                        .put("description", skuDetails.getDescription())
+                        .put("currency", skuDetails.getPriceCurrencyCode())
+                        .put("value", skuDetails.getPrice());
+                TiktokBusinessSdk.trackEvent("StartCheckOut", props);
+
                 int responseCode = billingClient.launchBillingFlow(activity, billingFlowParams).getResponseCode();
                 homeViewModel.setText("BillingResponseCode: "+responseCode);
             } else {
@@ -52,8 +65,13 @@ public class HomeFragment extends Fragment {
         });
 
         PurchasesUpdatedListener purchaseUpdateListener = (billingResult, purchases) -> {
+
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                     && purchases != null) {
+
+                /** tiktok track purchase */
+                TiktokBusinessSdk.onPurchasesUpdated(purchases);
+
                 purchase = purchases.get(0);
                 homeViewModel.setText("purchase success, sku: " + purchase.getSku() + ". click to consume");
             } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
@@ -79,11 +97,24 @@ public class HomeFragment extends Fragment {
         SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder();
         params.setSkusList(skuList).setType(BillingClient.SkuType.INAPP);
         billingClient.querySkuDetailsAsync(params.build(), (billingResult1, skuDetailsList) -> {
-            if (billingResult1.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                assert skuDetailsList != null;
+            if (billingResult1.getResponseCode() == BillingClient.BillingResponseCode.OK
+                    && skuDetailsList != null) {
+
+                /** local cache sku details in TiktokBusinessSdk */
+                TiktokBusinessSdk.cacheSkuDetails(skuDetailsList);
+
                 if (skuDetailsList.size() > 0) {
                     skuDetails = skuDetailsList.get(0);
                     homeViewModel.setText("launchBillingFlow: " + skuDetails.getSku());
+
+                    /** trigger ViewContent before buy click */
+                    TTProperty props = new TTProperty()
+                            .put("content_type", skuDetails.getType())
+                            .put("content_id", skuDetails.getSku())
+                            .put("description", skuDetails.getDescription())
+                            .put("currency", skuDetails.getPriceCurrencyCode())
+                            .put("value", skuDetails.getPrice());
+                    TiktokBusinessSdk.trackEvent("ViewContent", props);
                 }
             }
         });
@@ -130,6 +161,7 @@ public class HomeFragment extends Fragment {
             }
             @Override
             public void onBillingServiceDisconnected() {
+                homeViewModel.setText("onBillingServiceDisconnected");
                 new Handler(Looper.getMainLooper()).postDelayed(() -> startBilling(), 5000);
             }
         });

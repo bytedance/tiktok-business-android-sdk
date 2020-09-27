@@ -11,6 +11,20 @@ public class TTProperty {
         properties = new JSONObject();
     }
 
+    public TTProperty(JSONObject jsonObject) {
+        properties = jsonObject;
+    }
+
+    public TTProperty(String jsonString) {
+        JSONObject properties1;
+        try {
+            properties1 = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            properties1 = new JSONObject();
+        }
+        properties = properties1;
+    }
+
     public TTProperty put(String key, Object value) {
         try {
             properties.put(key, value);
