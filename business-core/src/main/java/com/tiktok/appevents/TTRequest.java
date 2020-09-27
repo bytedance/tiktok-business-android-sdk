@@ -19,13 +19,14 @@ class TTRequest {
 
     private static final int MAX_EVENT_SIZE = 1000;
 
-    public static List<TTAppEvent>  appEventReport(List<TTAppEvent> appEventList, String appId, JSONObject context) {
+    public static List<TTAppEvent>  appEventReport(List<TTAppEvent> appEventList) {
 
         if(appEventList == null || appEventList.size() == 0) {
             return new ArrayList<>();
         }
 
-        //TODO context 如何获取?
+        String appId = TiktokBusinessSdk.getAppId();
+        JSONObject context = new JSONObject();  //TODO context 如何获取?
         String url = "http://10.231.18.38:9496/open_api/2/app/batch/";
 
         Map<String, String> headParamMap = new HashMap<>();

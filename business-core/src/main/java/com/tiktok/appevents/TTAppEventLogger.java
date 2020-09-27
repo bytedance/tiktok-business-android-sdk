@@ -217,7 +217,7 @@ public class TTAppEventLogger {
 
             appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-            List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents(), "1211123727", new JSONObject());
+            List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents());
 
             if (!eventList.isEmpty()) {//flush failed, persist events
                 TTAppEventStorage.persist(eventList);
