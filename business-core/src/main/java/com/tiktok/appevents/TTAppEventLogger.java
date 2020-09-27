@@ -229,7 +229,6 @@ public class TTAppEventLogger {
             logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be send in batches only after startTracking");
             TTAppEventStorage.persist(null);
         }
-
     }
 
     public ScheduledExecutorService getEventLoop() {
