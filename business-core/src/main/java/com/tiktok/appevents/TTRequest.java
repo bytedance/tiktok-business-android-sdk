@@ -1,10 +1,12 @@
 package com.tiktok.appevents;
 
-import android.util.Log;
+import android.content.Context;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
+import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTLogger;
+import com.tiktok.util.TTUtil;
 import com.tiktok.util.TimeUtil;
 
 import org.json.JSONException;
@@ -14,11 +16,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 class TTRequest {
     private static String TAG = TTRequest.class.getCanonicalName();
 
-    private static final int MAX_EVENT_SIZE = 1000;
+    private static final int MAX_EVENT_SIZE = 50;
+
+    // stats for the current batch
+    private static int toBeSentRequests = 0;
+    private static int failedRequests = 0;
+    private static int successfulRequests = 0;
+
+    // stats for the whole lifecycle
+    private static TreeSet<Long> allRequestIds = new TreeSet<Long>();
+    private static List<TTAppEvent> successfullySentRequests = new ArrayList<>();
 
     private static Map<String, String> headParamMap = new HashMap<>();
 
@@ -27,6 +39,11 @@ class TTRequest {
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
         headParamMap.put("x-tt-env", "jianyi");
+    }
+
+    // for debugging purpose
+    public static synchronized List<TTAppEvent> getSuccessfullySentRequests() {
+        return successfullySentRequests;
     }
 
     /**
@@ -38,7 +55,8 @@ class TTRequest {
      * @param appEventList
      * @return the accumulation of all failed events
      */
-    public static List<TTAppEvent> appEventReport(List<TTAppEvent> appEventList) {
+    public static synchronized List<TTAppEvent> appEventReport(Context context, List<TTAppEvent> appEventList) {
+        TTUtil.checkThread(TAG);
         // access-token might change during runtime
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
 
@@ -46,17 +64,23 @@ class TTRequest {
             return new ArrayList<>();
         }
 
+        toBeSentRequests = appEventList.size();
+        for (TTAppEvent event : appEventList) {
+            allRequestIds.add(event.getUniqueId());
+        }
+        failedRequests = 0;
+        successfulRequests = 0;
+        notifyChange();
+
         TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         String appId = TiktokBusinessSdk.getAppId();
-        JSONObject context = new JSONObject();  //TODO context 如何获取?
-        String url = "http://10.231.18.38:9496/open_api/2/app/batch/";
-
+        String url = "https://ads.tiktok.com/open_api/v1.1/app/track/";
 
         JSONObject bodyJson = new JSONObject();
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 
-        List<List<TTAppEvent>> chunks = averageAssign(appEventList, countSplitNum(appEventList.size(), MAX_EVENT_SIZE));
+        List<List<TTAppEvent>> chunks = averageAssign(appEventList, MAX_EVENT_SIZE);
 
         for (List<TTAppEvent> currentBatch : chunks) {
             List<JSONObject> batch = new ArrayList<>();
@@ -70,7 +94,7 @@ class TTRequest {
 
             try {
                 bodyJson.put("app_id", appId);
-                bodyJson.put("context", context);
+                bodyJson.put("context", getContextForApi(context));
                 bodyJson.put("batch", batch);
             } catch (Exception e) {
                 failedEvents.addAll(currentBatch);
@@ -78,31 +102,86 @@ class TTRequest {
                 continue;
             }
 
-            logger.verbose("To Api:\n" + bodyJson.toString());
+            String bodyStr = bodyJson.toString();
+            logger.verbose("To Api:\n" + bodyStr);
 
             String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
             if (result == null) {
                 failedEvents.addAll(currentBatch);
+                failedRequests += currentBatch.size();
             } else {
                 try {
                     JSONObject resultJson = new JSONObject(result);
-
                     Integer code = (Integer) resultJson.get("code");
 
                     if (code != 0) {
                         failedEvents.addAll(currentBatch);
+                        failedRequests += currentBatch.size();
+                    } else {
+                        successfulRequests += currentBatch.size();
+                        successfullySentRequests.addAll(currentBatch);
                     }
                 } catch (JSONException e) {
+                    failedRequests += currentBatch.size();
                     failedEvents.addAll(currentBatch);
                     TTCrashHandler.handleCrash(TAG, e);
                 }
                 logger.verbose(result);
             }
+            notifyChange();
+        }
+        toBeSentRequests = 0;
+        failedRequests = 0;
+        successfulRequests = 0;
+        notifyChange();
+        return failedEvents;
+    }
 
+    private static void notifyChange() {
+        if (TiktokBusinessSdk.networkListener != null) {
+            TiktokBusinessSdk.networkListener.onNetworkChange(toBeSentRequests, successfulRequests,
+                    failedRequests, allRequestIds.size() + TTAppEventsQueue.size(), successfullySentRequests.size());
+        }
+    }
+
+    private static JSONObject contextCache;
+
+    /**
+     * get the context info for api call as per https://ads.tiktok.com/marketing_api/docs?id=1679472066464769,
+     * not the android context
+     *
+     * @param context Android context
+     * @return
+     */
+    private static JSONObject getContextForApi(Context context) {
+
+        if (contextCache != null) {
+            return contextCache;
         }
 
-        return failedEvents;
+        JSONObject result = new JSONObject();
+
+        JSONObject app = new JSONObject();
+        try {
+            app.put("name", SystemInfoUtil.getAppName());
+            app.put("namespace", SystemInfoUtil.getPackageName());
+            app.put("version", SystemInfoUtil.getVersionName());
+            app.put("build", SystemInfoUtil.getVersionCode());
+
+            JSONObject device = new JSONObject();
+            device.put("platform", "Android");
+//            TTIdentifierFactory.AdInfo info = TTIdentifierFactory.getAdvertisingIdInfo(context);
+//            device.put("gaid", info.getGaid());
+
+            result.put("app", app);
+            result.put("device", device);
+            result.put("ip", SystemInfoUtil.getLocalIpAddress());
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
+        }
+        contextCache = result;
+        return result;
     }
 
     private static JSONObject transferJson(TTAppEvent event) {
@@ -116,25 +195,11 @@ class TTRequest {
             //TODO 转化时间的时候用默认时区吗？
             jsonObject.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
             jsonObject.put("properties", event.getJsonObject());
-            //TODO context 如何获取?
-            jsonObject.put("context", "123");
             return jsonObject;
         } catch (JSONException e) {
             TTCrashHandler.handleCrash(TAG, e);
             return null;
         }
-    }
-
-
-    /**
-     * 计算切分份数
-     *
-     * @param totalCount 总数
-     * @param partition  每个子列表的数量
-     * @return
-     */
-    public static int countSplitNum(int totalCount, int partition) {
-        return (totalCount + partition - 1) / partition;
     }
 
     /**
@@ -143,30 +208,17 @@ class TTRequest {
      * @param sourceList 列表
      * @param splitNum   切分份数
      * @param <T>
-     * @return
      */
     public static <T> List<List<T>> averageAssign(List<T> sourceList, int splitNum) {
         List<List<T>> result = new ArrayList<>();
 
-        //余数
-        int remainder = sourceList.size() % splitNum;
-        //商
-        int number = sourceList.size() / splitNum;
-        //偏移
-        int offset = 0;
-
-        for (int i = 0; i < splitNum; i++) {
-            List<T> list;
-            if (remainder > 0) {
-                list = new ArrayList<>(sourceList.subList(i * number + offset, (i + 1) * number + offset + 1));
-                remainder--;
-                offset++;
-            } else {
-                list = new ArrayList<>(sourceList.subList(i * number + offset, (i + 1) * number + offset));
-            }
-            result.add(list);
+        int size = sourceList.size();
+        int times = size % splitNum == 0 ? size / splitNum : size / splitNum + 1;
+        for (int i = 0; i < times; i++) {
+            int start = i * splitNum;
+            int end = i * splitNum + splitNum;
+            result.add(new ArrayList<>(sourceList.subList(i * splitNum, Math.min(size, end))));
         }
-
         return result;
     }
 }

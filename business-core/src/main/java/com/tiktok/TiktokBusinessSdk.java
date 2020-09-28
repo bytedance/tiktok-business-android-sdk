@@ -9,32 +9,50 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.TTAppEventLogger;
+import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTLogger;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TiktokBusinessSdk {
     static final String TAG = TiktokBusinessSdk.class.getName();
 
-    /** Singleton instance for {@link TiktokBusinessSdk} */
+    /**
+     * Singleton instance for {@link TiktokBusinessSdk}
+     */
     static volatile TiktokBusinessSdk ttSdk = null;
-    /** {@link TTAppEventLogger} package singleton */
+    /**
+     * {@link TTAppEventLogger} package singleton
+     */
     static TTAppEventLogger appEventLogger;
 
-    /** app {@link Context} */
+    /**
+     * app {@link Context}
+     */
     private static Application applicationContext;
-    /** app_id */
+    /**
+     * app_id
+     */
     private static String appId;
-    /** access token */
+    /**
+     * access token
+     */
     private static String accessToken;
-    /** {@link LogLevel} of initialized sdk */
-    private static LogLevel logLevel;
-    /** optOutAutoStart flag */
-    private static AtomicBoolean sdkFullyInitialized;
+    /**
+     * {@link LogLevel} of initialized sdk
+     */
+    private static LogLevel logLevel = LogLevel.INFO;
+    /**
+     * if set to false, only save to memory and disk, no api request will be sent
+     */
+    private static AtomicBoolean networkSwitch;
 
-    /** logger util */
+    /**
+     * logger util
+     */
     TTLogger logger;
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
@@ -42,7 +60,8 @@ public class TiktokBusinessSdk {
         if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
         appId = ttConfig.appId;
         /* no write key exception */
-        if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
+        if (ttConfig.accessToken == null)
+            throw new IllegalArgumentException("access token not found");
         accessToken = ttConfig.accessToken;
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
@@ -53,78 +72,168 @@ public class TiktokBusinessSdk {
             logLevel = LogLevel.INFO;
         }
         logger = new TTLogger(TAG, logLevel);
-        sdkFullyInitialized = new AtomicBoolean(ttConfig.autoStart);
+        networkSwitch = new AtomicBoolean(ttConfig.autoStart);
     }
 
-    /** initializeSdk */
+    /**
+     * initializeSdk
+     */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
+        Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
+                TTCrashHandler.handleCrash(TAG, e);
+            }
+        });
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
-                ttConfig.lifecycleTrackEnable,
+                ttConfig.autoEvent,
                 ttConfig.advertiserIDCollectionEnable);
     }
 
-    /** startTracking if optOutAutoStart enabled */
-    public static void startTracking() {
-        sdkFullyInitialized.set(true);
+    /**
+     * startTracking if turnOffAutoTracking enabled
+     */
+    public static void startTrack() {
+        networkSwitch.set(true);
         appEventLogger.forceFlush();
     }
 
-    /** public interface for tracking Event without custom properties */
+    public static synchronized void initializeSdkWithListeners(
+            TTConfig ttConfig,
+            MemoryListener ml,
+            DiskStatusListener dl,
+            NetworkListener nl,
+            NextTimeFlushListener nfl
+    ) {
+        initializeSdk(ttConfig);
+        if (ml != null) {
+            memoryListener = ml;
+        }
+        if (dl != null) {
+            diskListener = dl;
+        }
+        if (nl != null) {
+            networkListener = nl;
+        }
+        if (nfl != null) {
+            nextTimeFlushListener = nfl;
+        }
+    }
+
+    // inner status listeners, for debugging purpose
+    public interface DiskStatusListener {
+        public void onDiskChange(int diskSize, boolean read);
+
+        public void onDumped(int dumped);
+    }
+
+    public interface NextTimeFlushListener {
+        // how many seconds until next auto flush
+        public void timeLeft(int timeLeft);
+
+        // how many until threshold
+        // i.e. threshold is 100, current in memory is 80, then left will be 100 - 80 = 20
+        public void thresholdLeft(int threshold, int left);
+    }
+
+    public interface MemoryListener {
+        void onMemoryChange(int size);
+    }
+
+    public interface NetworkListener {
+        void onNetworkChange(int toBeSentRequests, int successfulRequest, int failedRequests,
+                             int totalRequests, int totalSuccessRequests);
+    }
+
+    public static DiskStatusListener diskListener;
+    public static MemoryListener memoryListener;
+    public static NetworkListener networkListener;
+    public static NextTimeFlushListener nextTimeFlushListener;
+
+    /**
+     * public interface for tracking Event without custom properties
+     */
     public static void trackEvent(@NonNull String event) {
         appEventLogger.track(event, null);
     }
 
-    /** public interface for tracking Event with custom properties */
+    /**
+     * public interface for tracking Event with custom properties
+     */
     public static void trackEvent(@NonNull String event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 
-    /** cache sku details */
+    /**
+     * cache sku details
+     */
     public static void cacheSkuDetails(@Nullable Object skuDetailsList) {
         assert skuDetailsList != null;
         appEventLogger.cacheSkuDetails(Collections.singletonList(skuDetailsList));
     }
 
-    /** process purchases from PurchasesUpdatedListener */
+    /**
+     * process purchases from PurchasesUpdatedListener
+     */
     public static void onPurchasesUpdated(@Nullable Object purchases) {
         assert purchases != null;
         appEventLogger.trackPurchase(Collections.singletonList(purchases));
     }
 
-    /** FORCE_FLUSH */
-    public void flush() {
+    /**
+     * FORCE_FLUSH
+     */
+    public static void flush() {
+        System.out.println("Flush " + new Date().getTime());
         appEventLogger.forceFlush();
     }
 
-    /** applicationContext getter */
+    public static void clearAll() {
+        appEventLogger.clearAll();
+    }
+
+    /**
+     * applicationContext getter
+     */
     public static Application getApplicationContext() {
-        if (ttSdk == null) throw new RuntimeException("TiktokBusinessSdk instance is not initialized");
+        if (ttSdk == null)
+            throw new RuntimeException("TiktokBusinessSdk instance is not initialized");
         return applicationContext;
     }
 
-    /** appKey getter */
+    /**
+     * appKey getter
+     */
     public static String getAccessToken() {
         return accessToken;
     }
 
-    /** sdkInit getter */
-    public static boolean isSdkFullyInitialized() {
-        return sdkFullyInitialized.get();
+    /**
+     * sdkInit getter
+     */
+    public static boolean getNetworkSwitch() {
+        return networkSwitch.get();
     }
 
-    /** logLevel getter */
+    /**
+     * logLevel getter
+     */
     public static LogLevel getLogLevel() {
         return logLevel;
     }
 
-    /** returns api_id */
+    /**
+     * returns api_id
+     */
     public static String getAppId() {
         return appId;
     }
 
-    /** To get config and permissions from the app */
+    /**
+     * To get config and permissions from the app
+     */
     public static class TTConfig {
         /* application context */
         private final Application application;
@@ -135,7 +244,7 @@ public class TiktokBusinessSdk {
         /* to enable logs */
         private boolean debug = false;
         /* to enable auto event tracking */
-        private boolean lifecycleTrackEnable = true;
+        private boolean autoEvent = true;
         /* confirmation to read gaid */
         private boolean advertiserIDCollectionEnable = true;
         /* auto init flag check in manifest */
@@ -150,48 +259,82 @@ public class TiktokBusinessSdk {
                 ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
                 Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
+                if (token == null) {
+                    accessToken = token.toString();
+                }
+
+                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
+                if (aid != null) {
+                    appId = aid.toString();
+                }
+
                 accessToken = token.toString();
-                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.optOutAutoStart");
-                if (autoFlag.toString().equals("true")) {
+                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoTracking");
+                if (autoFlag != null && autoFlag.toString().equals("true")) {
                     autoStart = false;
                 }
-                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
-                appId = aid.toString();
-            } catch (Exception ignored) {}
+
+                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoEvents");
+                if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
+                    autoEvent = false;
+                }
+            } catch (Exception e) {
+                TTCrashHandler.handleCrash(TAG, e);
+            }
         }
 
-        /** Enables debug logs */
+        /**
+         * Enables debug logs
+         */
         public TTConfig enableDebug() {
             this.debug = true;
             return this;
         }
 
-        /** set app id */
+        /**
+         * set app id
+         */
         public TTConfig setAppId(String apiId) {
             this.appId = apiId;
             return this;
         }
 
-        /** to set the access token if not in manifest file */
+        /**
+         * to set the access token if not in manifest file
+         */
         public TTConfig setAccessToken(String key) {
             accessToken = key;
             return this;
         }
 
-        /** to disable auto event tracking & lifecycle listeners */
-        public TTConfig optOutAutoEventTracking() {
-            this.lifecycleTrackEnable = false;
+        /**
+         * to disable auto event tracking & lifecycle listeners
+         */
+        public TTConfig turnOffAutoTracking() {
+            this.autoStart = false;
             return this;
         }
 
-        /** to disable gaid in tracking */
+        /**
+         * to disable auto event tracking & lifecycle listeners
+         */
+        public TTConfig turnOffAutoEvents() {
+            this.autoEvent = false;
+            return this;
+        }
+
+        /**
+         * to disable gaid in tracking
+         */
         public TTConfig optOutAdvertiserIDCollection() {
             this.advertiserIDCollectionEnable = false;
             return this;
         }
     }
 
-    /** Controls the level of logging. */
+    /**
+     * Controls the level of logging.
+     */
     public enum LogLevel {
         /* No logging. */
         NONE,
@@ -202,6 +345,7 @@ public class TiktokBusinessSdk {
         DEBUG,
         /* Same as DEBUG, and log transformations in bundled integrations. */
         VERBOSE;
+
         public boolean log() {
             return this != NONE;
         }

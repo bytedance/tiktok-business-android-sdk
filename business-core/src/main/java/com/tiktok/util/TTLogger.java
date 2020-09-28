@@ -4,12 +4,18 @@ import android.util.Log;
 
 import com.tiktok.TiktokBusinessSdk.LogLevel;
 
-/** Logger util class */
+/**
+ * Logger util class
+ */
 public final class TTLogger {
 
-    /** loglevel */
+    /**
+     * loglevel
+     */
     public final LogLevel logLevel;
-    /** log TAG */
+    /**
+     * log TAG
+     */
     private final String tag;
 
     public TTLogger(String tag, LogLevel logLevel) {
@@ -17,33 +23,38 @@ public final class TTLogger {
         this.logLevel = logLevel;
     }
 
+    private String resolvedStr(String format, Object... extra) {
+        return extra.length == 0 ? format : String.format(format, extra);
+
+    }
+
     public void verbose(String format, Object... extra) {
         if (shouldLog(LogLevel.VERBOSE)) {
-            Log.v(tag, String.format(format, extra));
+            Log.v(tag, resolvedStr(format, extra));
         }
     }
 
     public void info(String format, Object... extra) {
         if (shouldLog(LogLevel.INFO)) {
-            Log.i(tag, String.format(format, extra));
+            Log.i(tag, resolvedStr(format, extra));
         }
     }
 
     public void warn(String format, Object... extra) {
         if (shouldLog(LogLevel.WARN)) {
-            Log.w(tag, String.format(format, extra));
+            Log.w(tag, resolvedStr(format, extra));
         }
     }
 
     public void debug(String format, Object... extra) {
         if (shouldLog(LogLevel.DEBUG)) {
-            Log.d(tag, String.format(format, extra));
+            Log.d(tag, resolvedStr(format, extra));
         }
     }
 
     public void error(Throwable error, String format, Object... extra) {
         if (shouldLog(LogLevel.INFO)) {
-            Log.e(tag, String.format(format, extra), error);
+            Log.e(tag, resolvedStr(format, extra), error);
         }
     }
 

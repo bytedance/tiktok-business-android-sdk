@@ -1,3 +1,4 @@
+include ':samples:internalmonitor'
 include ':business-core'
 
 include ':samples:TestApp'

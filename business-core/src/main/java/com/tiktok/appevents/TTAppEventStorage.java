@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTLogger;
+import com.tiktok.util.TTUtil;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -21,7 +22,7 @@ class TTAppEventStorage {
 
     private static final String EVENT_STORAGE_FILE = "events_cache";
 
-    private static final int MAX_PERSIST_EVENTS_NUM = 10;
+    private static final int MAX_PERSIST_EVENTS_NUM = 500;
 
     /**
      * write events into file
@@ -29,6 +30,7 @@ class TTAppEventStorage {
      * @param failedEvents if flush failed, failedEvents is not null
      */
     public synchronized static void persist(List<TTAppEvent> failedEvents) {
+        TTUtil.checkThread(TAG);
 
         List<TTAppEvent> eventsFromMemory = TTAppEventsQueue.exportAllEvents();
 
@@ -53,12 +55,14 @@ class TTAppEventStorage {
         saveToDisk(toBeSaved);
     }
 
+    private static int totalDumped = 0;
+
     /**
      * events slim
      *
      * @param ttAppEventPersist
      */
-    static void slimEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
+    private static void slimEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
         if (ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {
             return;
         }
@@ -69,6 +73,8 @@ class TTAppEventStorage {
 
         if (size > maxPersistNum) {
             logger.verbose("Way too many events(%d), slim it!", size);
+            totalDumped += size - maxPersistNum;
+            TiktokBusinessSdk.diskListener.onDumped(totalDumped);
             ttAppEventPersist.setAppEvents(new ArrayList<>(appEvents.subList(size - maxPersistNum, size)));
         }
     }
@@ -82,6 +88,9 @@ class TTAppEventStorage {
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)))) {
             oos.writeObject(appEventPersist);
+            if (TiktokBusinessSdk.diskListener != null) {
+                TiktokBusinessSdk.diskListener.onDiskChange(appEventPersist.getAppEvents().size(), false);
+            }
             return true;
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
@@ -96,6 +105,8 @@ class TTAppEventStorage {
     }
 
     public synchronized static TTAppEventPersist readFromDisk() {
+        TTUtil.checkThread(TAG);
+
         Context context = TiktokBusinessSdk.getApplicationContext();
         File f = new File(context.getFilesDir(), EVENT_STORAGE_FILE);
         if (!f.exists()) {
@@ -108,6 +119,9 @@ class TTAppEventStorage {
                 new BufferedInputStream(context.openFileInput(EVENT_STORAGE_FILE)))) {
             appEventPersist = (TTAppEventPersist) ois.readObject();
             deleteFile(f);
+            if (TiktokBusinessSdk.diskListener != null) {
+                TiktokBusinessSdk.diskListener.onDiskChange(0, true);
+            }
         } catch (ClassNotFoundException e) {
             deleteFile(f);
             TTCrashHandler.handleCrash(TAG, e);
@@ -118,4 +132,14 @@ class TTAppEventStorage {
         return appEventPersist;
     }
 
+    public synchronized static void clearAll() {
+        TTUtil.checkThread(TAG);
+
+        Context context = TiktokBusinessSdk.getApplicationContext();
+        File f = new File(context.getFilesDir(), EVENT_STORAGE_FILE);
+        deleteFile(f);
+        if (TiktokBusinessSdk.diskListener != null) {
+            TiktokBusinessSdk.diskListener.onDiskChange(0, true);
+        }
+    }
 }

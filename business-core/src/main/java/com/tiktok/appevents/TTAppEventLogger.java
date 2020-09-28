@@ -13,14 +13,15 @@ import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
+import com.tiktok.util.TTUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,7 +29,7 @@ public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
 
     private static final int TIME_BUFFER = 15;
-    private static final int THRESHOLD = 100;
+    static final int THRESHOLD = 100;
 
     final boolean lifecycleTrackEnable;
     final boolean advertiserIDCollectionEnable;
@@ -49,35 +50,31 @@ public class TTAppEventLogger {
      * Lifecycle
      */
     Lifecycle lifecycle;
-    /**
-     * advertiser id
-     */
-    TTIdentifierFactory.AdInfo adInfo;
-    /**
-     * this boolean checks the advertiser task ran status
-     */
-    final AtomicBoolean adInfoRun;
+
+    private boolean isGlobalSwitchOn = false;
 
     int flushId = 0;
 
     static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor();
+    static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor();
     ScheduledFuture<?> future = null;
+    ScheduledFuture<?> timeFuture = null;
     private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
+
+    private TTAutoEventsManager autoEventsManager;
+
+    public static List<TTAppEvent> getSuccessfulEvents() {
+        return TTRequest.getSuccessfullySentRequests();
+    }
 
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
                             boolean lifecycleTrackEnable,
                             boolean advertiserIDCollectionEnable) {
-        adInfoRun = new AtomicBoolean(false);
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
         /* SharedPreferences helper */
         store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
-        try {
-            packageInfo = TiktokBusinessSdk.getApplicationContext().getPackageManager()
-                    .getPackageInfo(TiktokBusinessSdk.getApplicationContext().getPackageName(), 0);
-        } catch (Exception ignored) {
-        }
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
 
@@ -87,8 +84,11 @@ public class TTAppEventLogger {
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
         /** advertiser id fetch */
-        this.runIdentifierFactory();
-        startScheduler();
+        autoEventsManager = new TTAutoEventsManager(this);
+
+        //fetch global switch here
+        isGlobalSwitchOn = true;
+        activateApp();
     }
 
     public void persistEvents() {
@@ -118,6 +118,9 @@ public class TTAppEventLogger {
      * track purchase after PurchasesUpdatedListener
      */
     public void trackPurchase(List<Object> purchases) {
+        if (!isSystemActivated()) {
+            return;
+        }
         Runnable task = () -> {
             for (Object purchase : purchases) {
                 JSONObject purchaseJson = extractJsonFromString(purchase.toString());
@@ -134,13 +137,29 @@ public class TTAppEventLogger {
         addToQ(task);
     }
 
+    int counter = 15;
+
     /**
      * Try to flush to network every {@link TTAppEventLogger#TIME_BUFFER} seconds
      * Like setTimeInterval in js
      */
     void startScheduler() {
+        doStartScheduler(TIME_BUFFER);
+    }
+
+    // for the sake of simplicity of unit tests
+    private void doStartScheduler(int interval) {
         if (future == null) {
-            future = eventLoop.scheduleAtFixedRate(batchFlush, TIME_BUFFER, TIME_BUFFER, TimeUnit.SECONDS);
+            future = eventLoop.scheduleAtFixedRate(batchFlush, 0, interval, TimeUnit.SECONDS);
+        }
+        if (timeFuture == null && TiktokBusinessSdk.nextTimeFlushListener != null) {
+            timeFuture = timerService.scheduleAtFixedRate(() -> {
+                TiktokBusinessSdk.nextTimeFlushListener.timeLeft(counter);
+                if (counter == 0) {
+                    counter = interval;
+                }
+                counter--;
+            }, 0, 1, TimeUnit.SECONDS);
         }
     }
 
@@ -148,8 +167,14 @@ public class TTAppEventLogger {
      * Stop the recurrent task when the user interface is no longer interactive
      */
     void stopScheduler() {
-        future.cancel(false);
-        future = null;
+        if (future != null) {
+            future.cancel(false);
+            future = null;
+        }
+        if (timeFuture != null) {
+            timeFuture.cancel(false);
+            timeFuture = null;
+        }
     }
 
     /**
@@ -159,6 +184,10 @@ public class TTAppEventLogger {
      * @param props
      */
     public void track(@NonNull String event, @Nullable TTProperty props) {
+        if (!isSystemActivated()) {
+            return;
+        }
+        System.out.println(new Date().getTime());
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
         Runnable task = () -> {
@@ -173,86 +202,62 @@ public class TTAppEventLogger {
         addToQ(task);
     }
 
+
     public void forceFlush() {
         logger.verbose("FORCE_FLUSH called");
         addToQ(() -> flush(FlushReason.FORCE_FLUSH));
     }
 
-    private void runIdentifierFactory() {
-        TTIdentifierFactory.getAdvertisingId(
-                TiktokBusinessSdk.getApplicationContext(), TiktokBusinessSdk.getLogLevel(),
-                new TTIdentifierFactory.Listener() {
-                    @Override
-                    public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
-                        adInfoRun.set(true);
-                        adInfo = ad;
-                        flushOnStartUp();
-                    }
-
-                    @Override
-                    public void onIdentifierFactoryFail(Exception e) {
-                        adInfoRun.set(true);
-                        adInfo = null;
-                        logger.error(e, "unable to fetch Advertising Id");
-                        flushOnStartUp();
-                    }
-                });
-    }
-
-    String getVersionName() {
-        if (packageInfo == null) {
-            return "";
-        }
-        return packageInfo.versionName;
-    }
-
-    int getVersionCode() {
-        if (packageInfo == null) {
-            return 0;
-        }
-        if (Build.VERSION.SDK_INT >= 28) {
-            return (int) packageInfo.getLongVersionCode();
-        }
-        // noinspection deprecation
-        return packageInfo.versionCode;
-    }
-
-    private boolean loggerInitialized() {
-        return this.adInfoRun.get();
+    // only when this method is called will the whole sdk be activated
+    private void activateApp() {
+        addToQ(() -> {
+            autoEventsManager.trackOnAppOpenEvents();
+            startScheduler();
+            flush(FlushReason.START_UP);
+        });
     }
 
     /**
-     * Do a start up flush after everything is setup
+     * if globalSwitch request is sent to network, but the network returns error, activate the app regardless
+     * if globalSwitch request is sent to network and api returns false, then sdk will not be activated
+     * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
      */
-    private void flushOnStartUp() {
-        if (!loggerInitialized()) return;
-
-        addToQ(() -> flush(FlushReason.START_UP));
+    private boolean isSystemActivated() {
+        if (!isGlobalSwitchOn) {
+            logger.verbose("Global switch is off, ignore all operations");
+        }
+        return this.isGlobalSwitchOn;
     }
+
 
     private void flush(FlushReason reason) {
 
-        if (!loggerInitialized()) return;
+        if (!isSystemActivated()) return;
+        TTUtil.checkThread(TAG);
 
-        if (TiktokBusinessSdk.isSdkFullyInitialized()) {
-            logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
+        try {
+            if (TiktokBusinessSdk.getNetworkSwitch()) {
+                logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
 
-            TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
+                TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
 
-            appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
+                appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-            List<TTAppEvent> failedEvents = TTRequest.appEventReport(appEventPersist.getAppEvents());
+                List<TTAppEvent> failedEvents = TTRequest.appEventReport(TiktokBusinessSdk.getApplicationContext(), appEventPersist.getAppEvents());
 
-            if (!failedEvents.isEmpty()) {//flush failed, persist events
-                logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
-                TTAppEventStorage.persist(failedEvents);
+                if (!failedEvents.isEmpty()) {//flush failed, persist events
+                    logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
+                    TTAppEventStorage.persist(failedEvents);
+                }
+                logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
+
+                flushId++;
+            } else {
+                logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking");
+                TTAppEventStorage.persist(null);
             }
-            logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
-
-            flushId++;
-        } else {
-            logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking");
-            TTAppEventStorage.persist(null);
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
         }
     }
 
@@ -385,8 +390,16 @@ public class TTAppEventLogger {
     private void addToQ(Runnable task) {
         try {
             eventLoop.execute(task);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
         }
+    }
+
+    public void clearAll() {
+        addToQ(() -> {
+            TTAppEventsQueue.clearAll();
+            TTAppEventStorage.clearAll();
+        });
     }
 
 }

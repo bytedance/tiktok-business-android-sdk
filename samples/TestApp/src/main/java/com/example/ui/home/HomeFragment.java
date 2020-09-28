@@ -71,7 +71,7 @@ public class HomeFragment extends Fragment {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
                     && purchases != null) {
 
-                /** tiktok track purchase */
+                /** tiktok.monitor track purchase */
                 TiktokBusinessSdk.onPurchasesUpdated(purchases);
 
                 purchase = purchases.get(0);

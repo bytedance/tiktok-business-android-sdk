@@ -2,23 +2,27 @@ package com.tiktok.appevents;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 
-class TTAppEvent implements Serializable {
+public class TTAppEvent implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private String eventName;
     private Date timeStamp;
     private String jsonObject;
+    private static AtomicLong counter = new AtomicLong(new Date().getTime() + 0L);
+    private Long uniqueId;
 
-    public TTAppEvent(String eventName, String jsonObject) {
+    TTAppEvent(String eventName, String jsonObject) {
         this(eventName, new Date(), jsonObject);
     }
 
-    public TTAppEvent(String eventName, Date timeStamp, String jsonObject) {
+    TTAppEvent(String eventName, Date timeStamp, String jsonObject) {
         this.eventName = eventName;
         this.timeStamp = timeStamp;
         this.jsonObject = jsonObject;
+        this.uniqueId = TTAppEvent.counter.getAndIncrement();
     }
 
     public String getEventName() {
@@ -43,5 +47,9 @@ class TTAppEvent implements Serializable {
 
     public void setJsonObject(String jsonObject) {
         this.jsonObject = jsonObject;
+    }
+
+    public Long getUniqueId() {
+        return this.uniqueId;
     }
 }

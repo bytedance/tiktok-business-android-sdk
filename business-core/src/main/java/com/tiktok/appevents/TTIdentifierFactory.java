@@ -5,53 +5,36 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.IInterface;
-import android.os.Looper;
 import android.os.Parcel;
 import android.os.RemoteException;
-import android.text.TextUtils;
 
-import com.tiktok.util.TTLogger;
+import com.tiktok.util.TTUtil;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import static com.tiktok.TiktokBusinessSdk.LogLevel;
-
-/** get advertiser id info using Google Play API, also handles google play is not installed */
+/**
+ * get advertiser id info using Google Play API, also handles google play is not installed
+ */
 class TTIdentifierFactory {
     private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
-    public interface Listener {
-        void onIdentifierFactoryFinish(AdInfo adInfo);
-        void onIdentifierFactoryFail(Exception exception);
-    }
-
-    protected Listener mListener;
-    protected Handler  mHandler;
-
-    private final TTLogger logger;
-
-    private TTIdentifierFactory(LogLevel ll) {
-        this.logger = new TTLogger(TAG, ll);
-    }
-
-    public static synchronized void getAdvertisingId(Context context, LogLevel logLevel, Listener listener) {
-        new TTIdentifierFactory(logLevel).start(context, listener);
+    private TTIdentifierFactory() {
     }
 
     public static class AdInfo {
 
-        private final String  mAdvertisingId;
+        private final String mAdvertisingId;
         private final boolean mLimitAdTrackingEnabled;
 
         AdInfo(String advertisingId, boolean limitAdTrackingEnabled) {
             mAdvertisingId = advertisingId;
             mLimitAdTrackingEnabled = limitAdTrackingEnabled;
+            // fetch global switch here
         }
 
-        public String getId() {
+        public String getGaid() {
             return mAdvertisingId;
         }
 
@@ -69,14 +52,18 @@ class TTIdentifierFactory {
 
             try {
                 this.queue.put(service);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
 
-        public void onServiceDisconnected(ComponentName name) {}
+        public void onServiceDisconnected(ComponentName name) {
+        }
 
         public IBinder getBinder() throws InterruptedException {
 
-            if (this.retrieved) { throw new IllegalStateException(); }
+            if (this.retrieved) {
+                throw new IllegalStateException();
+            }
             this.retrieved = true;
             return (IBinder) this.queue.take();
         }
@@ -94,7 +81,9 @@ class TTIdentifierFactory {
             return binder;
         }
 
-        /** Returns advertiser id */
+        /**
+         * Returns advertiser id
+         */
         public String getId() throws RemoteException {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
@@ -111,7 +100,9 @@ class TTIdentifierFactory {
             return id;
         }
 
-        /** get limit ad tracking flag */
+        /**
+         * get limit ad tracking flag
+         */
         public boolean isLimitAdTrackingEnabled(boolean paramBoolean) throws RemoteException {
 
             Parcel data = Parcel.obtain();
@@ -131,22 +122,16 @@ class TTIdentifierFactory {
         }
     }
 
-    protected void start(final Context context, final Listener listener) {
-        if (listener == null) {
-            logger.error(null,"getAdvertisingId - Error: null listener, dropping call");
-        } else {
-            mHandler = new Handler(Looper.getMainLooper());
-            mListener = listener;
-            if (context == null) {
-                invokeFail(new Exception(TAG + " - Error: context null"));
-            } else {
-                new Thread(() -> getAdvertisingIdInfo(context)).start();
-            }
-        }
-    }
+    private static AdInfo adInfoCache;
 
-    /** returns advertiser id info */
-    private void getAdvertisingIdInfo(Context context) {
+    /**
+     * returns advertiser id info
+     */
+    public static synchronized AdInfo getAdvertisingIdInfo(Context context) {
+        TTUtil.checkThread(TAG);
+        if (adInfoCache != null) {
+            return adInfoCache;
+        }
         try {
             PackageManager pm = context.getPackageManager();
             pm.getPackageInfo("com.android.vending", 0);
@@ -157,38 +142,18 @@ class TTIdentifierFactory {
                 if (context.bindService(intent, connection, Context.BIND_AUTO_CREATE)) {
                     AdvertisingInterface adInterface = new AdvertisingInterface(connection.getBinder());
                     String id = adInterface.getId();
-                    if(TextUtils.isEmpty(id)) {
-                        logger.verbose("getAdvertisingIdInfo - Error: ID Not available");
-                        invokeFail(new Exception("Advertising ID extraction Error: ID Not available"));
-                    } else {
-                        invokeFinish(new AdInfo(id, adInterface.isLimitAdTrackingEnabled(true)));
-                    }
+                    adInfoCache = new AdInfo(id, adInterface.isLimitAdTrackingEnabled(true));
+                    return adInfoCache;
                 }
             } catch (Exception exception) {
-                logger.verbose("getAdvertisingIdInfo - Error: " + exception);
-                invokeFail(exception);
+                TTCrashHandler.handleCrash(TAG, exception);
             } finally {
                 context.unbindService(connection);
             }
         } catch (Exception exception) {
-            logger.verbose("getAdvertisingIdInfo - Error: " + exception);
-            invokeFail(exception);
+            TTCrashHandler.handleCrash(TAG, exception);
         }
+        return null;
     }
 
-    protected void invokeFinish(final AdInfo adInfo) {
-        mHandler.post(() -> {
-            if (mListener != null) {
-                mListener.onIdentifierFactoryFinish(adInfo);
-            }
-        });
-    }
-
-    protected void invokeFail(final Exception exception) {
-        mHandler.post(() -> {
-            if (mListener != null) {
-                mListener.onIdentifierFactoryFail(exception);
-            }
-        });
-    }
 }

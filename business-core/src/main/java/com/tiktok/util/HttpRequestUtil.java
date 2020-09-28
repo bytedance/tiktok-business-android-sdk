@@ -18,6 +18,7 @@ public class HttpRequestUtil {
     private static final String TAG = HttpRequestUtil.class.getCanonicalName();
 
     public static String doPost(String url, Map<String, String> headerParamMap, String jsonStr) {
+        TTUtil.checkThread(TAG);
 
         String result = null;
 

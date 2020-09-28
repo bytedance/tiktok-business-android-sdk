@@ -3,8 +3,8 @@ package com.example;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.MenuItem;
 import android.view.Menu;
+import android.view.MenuItem;
 
 import com.example.model.EventLog;
 import com.example.persistence.EventLogRepo;
@@ -22,6 +22,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.TiktokBusinessSdk.TTConfig;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -49,7 +50,7 @@ public class App extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             // Tiktok sdk init start
             TTConfig ttConfig = new TTConfig(getApplication())
 //                .optOutAdvertiserIDCollection()
@@ -60,7 +61,7 @@ public class App extends AppCompatActivity {
 
             // testing delay tracking, implementing a 60 sec delay manually
             // ideally has to be after accepting tracking permission
-            new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTracking, 1000);
+            new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTrack, 6000);
         }
     }
 
@@ -102,7 +103,7 @@ public class App extends AppCompatActivity {
                 while (count < MAX && logs.size() > 0) {
                     for (EventLog log : Objects.requireNonNull(logs)) {
                         eventLogRepo.save(new EventLog(log.eventType, log.properties));
-                        count ++;
+                        count++;
                         if (count >= MAX) break;
                     }
                 }

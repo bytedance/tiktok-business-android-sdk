@@ -12,22 +12,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-
-        <activity android:name=".ui.events.PropEditActivity" android:theme="@style/AppTheme" />
+        <activity
+            android:name=".ui.events.PropEditActivity"
+            android:theme="@style/AppTheme" />
 
         <meta-data
             android:name="com.tiktok.sdk.AccessToken"
             android:value="@string/tiktok_business_app_key" />
-
         <meta-data
-                android:name="com.tiktok.sdk.AppId"
-                android:value="@string/tiktok_business_app_id" />
-
+            android:name="com.tiktok.sdk.AppId"
+            android:value="@string/tiktok_business_app_id" />
         <meta-data
-                android:name="com.tiktok.sdk.optOutAutoStart"
-                android:value="true" />
+            android:name="com.tiktok.sdk.turnOffAutoTracking"
+            android:value="true" />
 
-        <activity android:name=".App">
+        <activity
+            android:name=".App"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
