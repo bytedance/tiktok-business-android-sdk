@@ -63,7 +63,7 @@ public class TTAppEventLogger {
 
     int flushId = 0;
 
-    ScheduledExecutorService eventLoop;
+    static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor();;
 
     ScheduledFuture<?> flushFuture = null;
 
@@ -88,7 +88,6 @@ public class TTAppEventLogger {
         }
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
-        eventLoop = Executors.newSingleThreadScheduledExecutor();
 
         /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(this);
@@ -97,6 +96,12 @@ public class TTAppEventLogger {
 
         /** advertiser id fetch */
         this.runIdentifierFactory();
+    }
+
+    public void persistEvents() {
+        eventLoop.execute(()->{
+            TTAppEventStorage.persist(null);
+        });
     }
 
     /**

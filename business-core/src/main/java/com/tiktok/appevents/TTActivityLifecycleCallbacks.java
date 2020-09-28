@@ -107,7 +107,6 @@ class TTActivityLifecycleCallbacks
 
     @Override
     public void onActivityStopped(@NonNull Activity activity) {
-        TTAppEventStorage.persist(null);
     }
 
     @Override
@@ -191,7 +190,7 @@ class TTActivityLifecycleCallbacks
 
     @Override
     public void onStop(@NonNull LifecycleOwner owner) {
-        // App in background
+        appEventLogger.persistEvents();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.tiktok.appevents;
 import android.content.Context;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTLogger;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -15,6 +16,8 @@ import java.util.List;
 class TTAppEventStorage {
     private static final String TAG = TTAppEventStorage.class.getCanonicalName();
 
+    private static final TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+
     private static final String EVENT_STORAGE_FILE = "events_cache";
 
     private static final int MAX_PERSIST_EVENTS_NUM = 10000;
@@ -23,7 +26,8 @@ class TTAppEventStorage {
      * write events into file
      * @param failedEvents if flush failed, failedEvents is not null
      */
-    public static void persist(List<TTAppEvent> failedEvents){
+    public synchronized static void persist(List<TTAppEvent> failedEvents){
+        logger.verbose("persist call!!!!!!!!!!!!!");
 
         List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
 
@@ -91,7 +95,7 @@ class TTAppEventStorage {
         }
     }
 
-    public static TTAppEventPersist readFromDisk() {
+    public synchronized static TTAppEventPersist readFromDisk() {
         Context context = TiktokBusinessSdk.getApplicationContext();
         File f = new File(context.getFilesDir(), EVENT_STORAGE_FILE);
         if (!f.exists()) {
@@ -128,88 +132,4 @@ class TTAppEventStorage {
         return appEventPersist;
     }
 
-//    public static boolean saveToDisk() {
-//        Context context = TiktokSdk.getConfig().getContext();
-//        FileOutputStream fos = null;
-//        try {
-//            fos = context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_APPEND);
-//            PrintStream ps = new PrintStream(fos);
-//            JSONArray events = new JSONArray();
-//            synchronized (AppEventsQueue.class) {
-//                List<AppEvent> appEvents = AppEventsQueue.accumulatedEvents();
-//
-//                for (AppEvent event : appEvents) {
-//                    JSONObject obj = new JSONObject();
-//                    obj.put("n", event.getEventName());
-//                    obj.put("d", event.getTimeStamp().toString());
-//                    obj.put("o", event.getJsonObject());
-//                    events.put(obj);
-//                }
-//            }
-//            JSONObject root = new JSONObject();
-//            root.put("events", events);
-//            ps.println(root.toString(2));
-//            Log.v(TAG, "Saved " + events.length() + " to disk");
-//            AppEventsQueue.clear();
-//            return true;
-//        } catch (JSONException | IOException e) {
-//            e.printStackTrace();
-//            return false;
-//        } finally {
-//            if (fos != null) {
-//                try {
-//                    fos.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    return false;
-//                }
-//            }
-//        }
-//    }
-
-//    public static List<AppEvent> readFromDisk() {
-//        Context context = TiktokSdk.getConfig().getContext();
-//        FileInputStream fis = null;
-//        try {
-//            File f = new File(context.getFilesDir(), EVENT_STORAGE_FILE);
-//            if (!f.exists()) {
-//                return new ArrayList<AppEvent>();
-//            }
-//            fis = new FileInputStream(f);
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-//            StringBuffer buffer = new StringBuffer();
-//            String str = "";
-//            while ((str = reader.readLine()) != null) {
-//                buffer.append(str + "\n");
-//            }
-//            JSONObject root = new JSONObject(buffer.toString());
-//
-//            JSONArray events = root.getJSONArray("events");
-//            int eventLength = events.length();
-//            List<AppEvent> results = new ArrayList<>();
-//            for (int i = 0; i < eventLength; i++) {
-//                JSONObject eventObj = (JSONObject) events.get(i);
-//                AppEvent appEvent = new AppEvent(
-//                        eventObj.getString("n"),
-//                        new Date(eventObj.getString("d")),
-//                        eventObj.getJSONObject("o")
-//                );
-//                results.add(appEvent);
-//            }
-//            f.delete();
-//            return results;
-//        } catch (JSONException | IOException e) {
-//            e.printStackTrace();
-//            return new ArrayList<AppEvent>();
-//        } finally {
-//            if (fis != null) {
-//                try {
-//                    fis.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    return new ArrayList<AppEvent>();
-//                }
-//            }
-//        }
-//    }
 }

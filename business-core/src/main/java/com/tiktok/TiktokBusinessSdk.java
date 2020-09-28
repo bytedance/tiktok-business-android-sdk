@@ -9,14 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.TTAppEventLogger;
-import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.appevents.TTProperty;
+import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.tiktok.util.TTConst.TTSDK_CONFIG_ADVID;
