@@ -109,7 +109,6 @@ public class TTAppEventLogger {
                 JSONObject skuJson = extractJsonFromString(skuDetail.toString());
                 try {
                     String productId = skuJson.getString("productId");
-                    logger.verbose(skuJson.toString());
                     allSkus.put(productId, skuJson);
                 } catch (JSONException ignored) {
                 }
@@ -137,6 +136,11 @@ public class TTAppEventLogger {
         });
     }
 
+    /**
+     * interface exposed to {@link TiktokBusinessSdk}
+     * @param event
+     * @param props
+     */
     public void track(@NonNull String event, @Nullable TTProperty props) {
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
@@ -235,6 +239,9 @@ public class TTAppEventLogger {
         return eventLoop;
     }
 
+    /**
+     * flush reasons
+     */
     enum FlushReason {
         THRESHOLD, // when reaching the threshold of the event queue
         TIMER, // triggered every 15 seconds
@@ -242,6 +249,13 @@ public class TTAppEventLogger {
         FORCE_FLUSH, // when developer calls flush from app
     }
 
+    /**
+     * purchase data and sku details are passed as list of objects
+     * tries to find json substring in the string and
+     * safe returns JSONObject
+     * @param objString
+     * @return
+     */
     private JSONObject extractJsonFromString(String objString) {
         JSONObject jsonObject = null;
         int start = objString.indexOf("{");
@@ -278,6 +292,10 @@ public class TTAppEventLogger {
         store.set(TTConst.TTSDK_SKU_DETAILS, skuJson.toString());
     }
 
+    /**
+     * returns purchase TTProperty from sku cache
+     * returns content_id -> sku always
+     */
     private TTProperty getPurchaseProperties(String sku) {
         JSONObject skuDetails = getSkuDetailsFromStore(sku);
         TTProperty props = new TTProperty().put("content_id", sku);
@@ -296,13 +314,18 @@ public class TTAppEventLogger {
                         price = matcher.group(1);
                     }
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) {}
             props.put("value", price);
         }
         return props;
     }
 
+    /**
+     * safe get key from jsonobject
+     * @param jsonObject
+     * @param key
+     * @return
+     */
     private String safeJsonGetString(JSONObject jsonObject, String key) {
         try {
             return jsonObject.get(key).toString();
@@ -311,6 +334,11 @@ public class TTAppEventLogger {
         }
     }
 
+    /**
+     * get sku data from TTSDK_SKU_DETAILS cache
+     * @param sku
+     * @return
+     */
     private JSONObject getSkuDetailsFromStore(String sku) {
         JSONObject skuJson = null;
         if (sku == null) {

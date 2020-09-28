@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
+import com.tiktok.util.TTLogger;
 import com.tiktok.util.TimeUtil;
 
 import org.json.JSONException;
@@ -25,6 +26,7 @@ class TTRequest {
             return new ArrayList<>();
         }
 
+        TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         String appId = TiktokBusinessSdk.getAppId();
         JSONObject context = new JSONObject();  //TODO context 如何获取?
         String url = "http://10.231.18.38:9496/open_api/2/app/batch/";
@@ -56,7 +58,7 @@ class TTRequest {
                 bodyJson.put("context", context);
                 bodyJson.put("batch", batch);
 
-                Log.i(TAG, bodyJson.toString());
+                logger.verbose(bodyJson.toString());
 
                 String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
@@ -75,7 +77,7 @@ class TTRequest {
                         failedEvents.addAll(eventList);
                         e.printStackTrace();
                     }
-                    Log.i(TAG, result);
+                    logger.verbose(result);
                 }
 
             } catch (JSONException e) {
