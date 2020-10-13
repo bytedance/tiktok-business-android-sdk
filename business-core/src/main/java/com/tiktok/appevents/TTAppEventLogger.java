@@ -262,6 +262,12 @@ public class TTAppEventLogger {
      * @return
      */
     private JSONObject extractJsonFromString(String objString) {
+        /**
+         * JSON string not passed for new api
+         * egs: [Purchase. Json: {"packageName":"com.example","acknowledged":false,"orderId":"transactionId.android.test.purchased","productId":"android.test.purchased","developerPayload":"","purchaseTime":0,"purchaseState":0,"purchaseToken":"inapp:com.example:android.test.purchased"}]
+         * SkuDetails: {"skuDetailsToken":"AEuhp4Lu4HAdf3nvnusEjwhfJQemFbKGuSQ37wM_7UJcce89YnZiBA6HJVz5vFMFbMPq","productId":"android.test.purchased","type":"inapp","price":"₹72.41","price_amount_micros":72407614,"price_currency_code":"INR","title":"Sample Title","description":"Sample description for product: android.test.purchased."}
+         * this function tries to find start { and end } of json string in objString
+         * */
         JSONObject jsonObject = null;
         int start = objString.indexOf("{");
         int end = objString.indexOf("}");
