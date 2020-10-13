@@ -26,8 +26,7 @@ class TTAppEventStorage {
      * write events into file
      * @param failedEvents if flush failed, failedEvents is not null
      */
-    public synchronized static void persist(List<TTAppEvent> failedEvents){
-        logger.verbose("persist call!!!!!!!!!!!!!");
+    public synchronized static void persist(List<TTAppEvent> failedEvents) {
 
         List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
 

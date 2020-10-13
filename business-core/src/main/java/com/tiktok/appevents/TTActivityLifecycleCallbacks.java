@@ -28,15 +28,11 @@ class TTActivityLifecycleCallbacks
 
     private final TTAppEventLogger appEventLogger;
 
-    /** This bool checks initial events are triggered */
-    private final AtomicBoolean trackedAppLifecycleEvents;
-    private final AtomicInteger numberOfActivities;
+    /* This bool checks initial events are triggered */
     private final AtomicBoolean firstLaunch;
 
     public TTActivityLifecycleCallbacks(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
-        this.trackedAppLifecycleEvents = new AtomicBoolean(false);
-        this.numberOfActivities = new AtomicInteger(1);
         this.firstLaunch = new AtomicBoolean(false);
     }
 
@@ -147,11 +143,9 @@ class TTActivityLifecycleCallbacks
     @Override
     public void onCreate(@NonNull LifecycleOwner owner) {
         // App created
-        if (!trackedAppLifecycleEvents.getAndSet(true)
+        if (!firstLaunch.getAndSet(true)
                 && shouldTrackAppLifecycleEvents()) {
 
-            numberOfActivities.set(0);
-            firstLaunch.set(true);
             trackApplicationLifecycleEvents();
         }
     }
@@ -161,31 +155,33 @@ class TTActivityLifecycleCallbacks
         // App in foreground
         if (shouldTrackAppLifecycleEvents()) {
             if (firstLaunch.getAndSet(false)) {
+                // app open, track LaunchApp
                 appEventLogger.track("LaunchApp", null);
+                // check 2Dretention
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                String today = dateFormat.format(new Date());
+                String dateFromStore = appEventLogger.store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
+                try {
+                    Calendar lastOpen = Calendar.getInstance();
+                    lastOpen.setTime(dateFormat.parse(dateFromStore));
+                    lastOpen.add(Calendar.DATE, 1);
+                    if (today.equals(dateFormat.format(lastOpen.getTime()))) {
+                        appEventLogger.track("2Dretention", null);
+                    }
+                } catch (Exception ignored) {}
+                appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, today);
             }
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            String today = dateFormat.format(new Date());
-            String dateFromStore = appEventLogger.store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
-            try {
-                Calendar lastOpen = Calendar.getInstance();
-                lastOpen.setTime(dateFormat.parse(dateFromStore));
-                lastOpen.add(Calendar.DATE, 1);
-                if (today.equals(dateFormat.format(lastOpen.getTime()))) {
-                    appEventLogger.track("2Dretention", null);
-                }
-            } catch (Exception ignored) {}
-            appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, today);
         }
     }
 
     @Override
     public void onResume(@NonNull LifecycleOwner owner) {
-
+        appEventLogger.startScheduler();
     }
 
     @Override
     public void onPause(@NonNull LifecycleOwner owner) {
-
+        appEventLogger.stopScheduler();
     }
 
     @Override
@@ -203,22 +199,22 @@ class TTActivityLifecycleCallbacks
     }
 
     private void trackApplicationLifecycleEvents() {
-        /** gets current app version & build */
+        /* gets current app version & build */
         String currentVersion = appEventLogger.getVersionName();
         String currentBuild = String.valueOf(appEventLogger.getVersionCode());
 
-        /** get the previous recorded version. */
+        /* get the previous recorded version. */
         String previousVersion = appEventLogger.store.get(TTSDK_APP_VERSION);
         String previousBuild = appEventLogger.store.get(TTSDK_APP_BUILD);
 
-        /** check and track InstallApp. */
+        /* check and track InstallApp. */
         if (previousBuild == null) {
             appEventLogger.track("InstallApp", null);
         } else if (!currentBuild.equals(previousBuild)) {
             // app updated
         }
 
-        /** update store with existing version. */
+        /* update store with existing version. */
         HashMap<String, Object> hm = new HashMap<>();
         hm.put(TTSDK_APP_VERSION, currentVersion);
         hm.put(TTSDK_APP_BUILD, currentBuild);

@@ -147,7 +147,6 @@ class TTIdentifierFactory {
 
     /** returns advertiser id info */
     private void getAdvertisingIdInfo(Context context) {
-        logger.verbose("getAdvertisingIdInfo");
         try {
             PackageManager pm = context.getPackageManager();
             pm.getPackageInfo("com.android.vending", 0);
@@ -178,7 +177,6 @@ class TTIdentifierFactory {
     }
 
     protected void invokeFinish(final AdInfo adInfo) {
-        logger.verbose( "invokeFinish");
         mHandler.post(() -> {
             if (mListener != null) {
                 mListener.onIdentifierFactoryFinish(adInfo);
@@ -187,7 +185,6 @@ class TTIdentifierFactory {
     }
 
     protected void invokeFail(final Exception exception) {
-        logger.verbose( "invokeFail: " + exception);
         mHandler.post(() -> {
             if (mListener != null) {
                 mListener.onIdentifierFactoryFail(exception);

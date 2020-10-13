@@ -10,17 +10,10 @@ import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTProperty;
-import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.tiktok.util.TTConst.TTSDK_CONFIG_ADVID;
-import static com.tiktok.util.TTConst.TTSDK_CONFIG_APPKEY;
-import static com.tiktok.util.TTConst.TTSDK_CONFIG_DEBUG;
-import static com.tiktok.util.TTConst.TTSDK_CONFIG_LIFECYCLE;
 
 public class TiktokBusinessSdk {
     static final String TAG = TiktokBusinessSdk.class.getName();
@@ -38,7 +31,7 @@ public class TiktokBusinessSdk {
     private static String accessToken;
     /** {@link LogLevel} of initialized sdk */
     private static LogLevel logLevel;
-
+    /** optOutAutoStart flag */
     private static AtomicBoolean sdkInit;
 
     /** logger util */
@@ -63,15 +56,16 @@ public class TiktokBusinessSdk {
         sdkInit = new AtomicBoolean(ttConfig.autoStart);
     }
 
+    /** initializeSdk */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
-        storeConfig(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
                 ttConfig.lifecycleTrackEnable,
                 ttConfig.advertiserIDCollectionEnable);
     }
 
+    /** startTracking if optOutAutoStart enabled */
     public static void startTracking() {
         sdkInit.set(true);
         appEventLogger.flush();
@@ -99,6 +93,7 @@ public class TiktokBusinessSdk {
         appEventLogger.trackPurchase(Collections.singletonList(purchases));
     }
 
+    /** FORCE_FLUSH */
     public void flush() {
         appEventLogger.flush();
     }
@@ -114,6 +109,7 @@ public class TiktokBusinessSdk {
         return accessToken;
     }
 
+    /** sdkInit getter */
     public static boolean isSdkFullyInitialized() {
         return sdkInit.get();
     }
@@ -128,56 +124,28 @@ public class TiktokBusinessSdk {
         return appId;
     }
 
-    /** stores the config in SharedPreferences */
-    static void storeConfig(TTConfig ttConfig) {
-        TTKeyValueStore store = new TTKeyValueStore(ttConfig.application.getApplicationContext());
-        HashMap<String, Object> data = new HashMap<>();
-        data.put(TTSDK_CONFIG_APPKEY, ttConfig.accessToken);
-        data.put(TTSDK_CONFIG_DEBUG, ttConfig.debug);
-        data.put(TTSDK_CONFIG_LIFECYCLE, ttConfig.lifecycleTrackEnable);
-        data.put(TTSDK_CONFIG_ADVID, ttConfig.advertiserIDCollectionEnable);
-        store.set(data);
-    }
-
-    /** rebuilds TTConfig obj from SharedPreferences */
-    static TTConfig rebuildConfig(Context ctx) {
-        TTKeyValueStore store = new TTKeyValueStore(ctx);
-        TTConfig ttConfig = new TTConfig(ctx)
-                .setAccessToken(store.get(TTSDK_CONFIG_APPKEY));
-        if (store.get(TTSDK_CONFIG_DEBUG).equals("true")) {
-            ttConfig.enableDebug();
-        }
-        if (store.get(TTSDK_CONFIG_LIFECYCLE).equals("false")) {
-            ttConfig.optOutAutoEventTracking();
-        }
-        if (store.get(TTSDK_CONFIG_ADVID).equals("false")) {
-            ttConfig.optOutAdvertiserIDCollection();
-        }
-        return ttConfig;
-    }
-
     /** To get config and permissions from the app */
     public static class TTConfig {
-        /** application context */
+        /* application context */
         private final Application application;
-        /** api_id for api calls */
+        /* api_id for api calls */
         private String appId;
-        /** Access-Token for api calls */
+        /* Access-Token for api calls */
         private String accessToken;
-        /** to enable logs */
+        /* to enable logs */
         private boolean debug = false;
-        /** to enable auto event tracking */
+        /* to enable auto event tracking */
         private boolean lifecycleTrackEnable = true;
-        /** confirmation to read gaid */
+        /* confirmation to read gaid */
         private boolean advertiserIDCollectionEnable = true;
-        /** auto init flag check in manifest */
+        /* auto init flag check in manifest */
         private boolean autoStart = true;
 
         public TTConfig(Context context) {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
             application = (Application) context.getApplicationContext();
 
-            /** try fetch app key from AndroidManifest file first */
+            /* try fetch app key from AndroidManifest file first */
             try {
                 ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
@@ -198,6 +166,7 @@ public class TiktokBusinessSdk {
             return this;
         }
 
+        /** set app id */
         public TTConfig setAppId(String apiId) {
             this.appId = apiId;
             return this;
@@ -224,13 +193,13 @@ public class TiktokBusinessSdk {
 
     /** Controls the level of logging. */
     public enum LogLevel {
-        /** No logging. */
+        /* No logging. */
         NONE,
-        /** Log exceptions only. */
+        /* Log exceptions only. */
         INFO,
-        /** Log exceptions and print debug output. */
+        /* Log exceptions and print debug output. */
         DEBUG,
-        /** Same as {@link LogLevel#DEBUG}, and log transformations in bundled integrations. */
+        /* Same as DEBUG, and log transformations in bundled integrations. */
         VERBOSE;
         public boolean log() {
             return this != NONE;

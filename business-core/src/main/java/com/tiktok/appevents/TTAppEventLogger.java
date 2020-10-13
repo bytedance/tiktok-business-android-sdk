@@ -19,11 +19,8 @@ import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,14 +60,9 @@ public class TTAppEventLogger {
 
     int flushId = 0;
 
-    static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor();;
-
-    ScheduledFuture<?> flushFuture = null;
-
-    private final Runnable batchFlush = () -> {
-        flushFuture = null;
-        flush(FlushReason.TIMER);
-    };
+    static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor();
+    ScheduledFuture<?> future = null;
+    private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
 
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
                             boolean lifecycleTrackEnable,
@@ -96,19 +88,18 @@ public class TTAppEventLogger {
 
         /** advertiser id fetch */
         this.runIdentifierFactory();
+        startScheduler();
     }
 
     public void persistEvents() {
-        eventLoop.execute(()->{
-            TTAppEventStorage.persist(null);
-        });
+        addToQ(()-> TTAppEventStorage.persist(null));
     }
 
     /**
      * local cache sku details for future track purchase
      */
     public void cacheSkuDetails(List<Object> skuDetails) {
-        eventLoop.execute(() -> {
+        Runnable task = () -> {
             JSONObject allSkus = new JSONObject();
             for (Object skuDetail : skuDetails) {
                 JSONObject skuJson = extractJsonFromString(skuDetail.toString());
@@ -119,14 +110,15 @@ public class TTAppEventLogger {
                 }
             }
             saveSkuDetails(allSkus);
-        });
+        };
+        addToQ(task);
     }
 
     /**
      * track purchase after PurchasesUpdatedListener
      */
     public void trackPurchase(List<Object> purchases) {
-        eventLoop.execute(() -> {
+        Runnable task = () -> {
             for (Object purchase : purchases) {
                 JSONObject purchaseJson = extractJsonFromString(purchase.toString());
                 TTProperty props = new TTProperty();
@@ -138,7 +130,19 @@ public class TTAppEventLogger {
                 }
                 track("Purchase", props);
             }
-        });
+        };
+        addToQ(task);
+    }
+
+    void startScheduler() {
+        if (future == null) {
+            future = eventLoop.scheduleAtFixedRate(batchFlush, TIME_BUFFER, TIME_BUFFER, TimeUnit.SECONDS);
+        }
+    }
+
+    void stopScheduler() {
+        future.cancel(false);
+        future = null;
     }
 
     /**
@@ -149,22 +153,21 @@ public class TTAppEventLogger {
     public void track(@NonNull String event, @Nullable TTProperty props) {
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
-        eventLoop.execute(() -> {
+        Runnable task = () -> {
             logger.debug(event + " : " + finalProps.get().toString());
 
             TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.get().toString()));
 
             if (TTAppEventsQueue.size() > THRESHOLD) {
                 flush(FlushReason.THRESHOLD);
-            } else if (flushFuture == null) {
-                flushFuture = eventLoop.schedule(batchFlush, TIME_BUFFER, TimeUnit.SECONDS);
             }
-        });
+        };
+        addToQ(task);
     }
 
     public void flush() {
         logger.verbose("FORCE_FLUSH called");
-        eventLoop.execute(() -> flush(FlushReason.FORCE_FLUSH));
+        addToQ(() -> flush(FlushReason.FORCE_FLUSH));
     }
 
     private void runIdentifierFactory() {
@@ -212,7 +215,8 @@ public class TTAppEventLogger {
 
     private void executeQueue() {
         if (!loggerInitialized()) return;
-        eventLoop.execute(() -> flush(FlushReason.START_UP));
+
+        addToQ(() -> flush(FlushReason.START_UP));
     }
 
     private void flush(FlushReason reason) {
@@ -238,10 +242,6 @@ public class TTAppEventLogger {
             logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be send in batches only after startTracking");
             TTAppEventStorage.persist(null);
         }
-    }
-
-    public ScheduledExecutorService getEventLoop() {
-        return eventLoop;
     }
 
     /**
@@ -358,6 +358,13 @@ public class TTAppEventLogger {
             }
         }
         return skuJson;
+    }
+
+    private void addToQ(Runnable task) {
+        try {
+            eventLoop.execute(task);
+        } catch (Exception ignored) {
+        }
     }
 
 }
