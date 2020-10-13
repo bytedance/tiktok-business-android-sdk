@@ -49,17 +49,19 @@ public class App extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
 
-        // Tiktok sdk init start
-        TTConfig ttConfig = new TTConfig(getApplication())
+        if(savedInstanceState == null) {
+            // Tiktok sdk init start
+            TTConfig ttConfig = new TTConfig(getApplication())
 //                .optOutAdvertiserIDCollection()
 //                .optOutAutoEventTracking()
-                .enableDebug();
-        TiktokBusinessSdk.initializeSdk(ttConfig);
-        // Tiktok sdk init end
+                    .enableDebug();
+            TiktokBusinessSdk.initializeSdk(ttConfig);
+            // Tiktok sdk init end
 
-        // testing delay tracking, implementing a 60 sec delay manually
-        // ideally has to be after accepting tracking permission
-        new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTracking, 60000);
+            // testing delay tracking, implementing a 60 sec delay manually
+            // ideally has to be after accepting tracking permission
+            new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTracking, 1000);
+        }
     }
 
     @Override

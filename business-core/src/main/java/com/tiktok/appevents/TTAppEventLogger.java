@@ -82,7 +82,7 @@ public class TTAppEventLogger {
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
 
         /** ActivityLifecycleCallbacks & LifecycleObserver */
-        TTActivityLifecycleCallbacks activityLifecycleCallbacks = new TTActivityLifecycleCallbacks(this);
+        TTActivityLifecycleCallbacksListener activityLifecycleCallbacks = new TTActivityLifecycleCallbacksListener(this);
         TiktokBusinessSdk.getApplicationContext().registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
@@ -92,7 +92,7 @@ public class TTAppEventLogger {
     }
 
     public void persistEvents() {
-        addToQ(()-> TTAppEventStorage.persist(null));
+        addToQ(() -> TTAppEventStorage.persist(null));
     }
 
     /**
@@ -134,12 +134,19 @@ public class TTAppEventLogger {
         addToQ(task);
     }
 
+    /**
+     * Try to flush to network every {@link TTAppEventLogger#TIME_BUFFER} seconds
+     * Like setTimeInterval in js
+     */
     void startScheduler() {
         if (future == null) {
             future = eventLoop.scheduleAtFixedRate(batchFlush, TIME_BUFFER, TIME_BUFFER, TimeUnit.SECONDS);
         }
     }
 
+    /**
+     * Stop the recurrent task when the user interface is no longer interactive
+     */
     void stopScheduler() {
         future.cancel(false);
         future = null;
@@ -147,6 +154,7 @@ public class TTAppEventLogger {
 
     /**
      * interface exposed to {@link TiktokBusinessSdk}
+     *
      * @param event
      * @param props
      */
@@ -165,7 +173,7 @@ public class TTAppEventLogger {
         addToQ(task);
     }
 
-    public void flush() {
+    public void forceFlush() {
         logger.verbose("FORCE_FLUSH called");
         addToQ(() -> flush(FlushReason.FORCE_FLUSH));
     }
@@ -178,7 +186,7 @@ public class TTAppEventLogger {
                     public void onIdentifierFactoryFinish(TTIdentifierFactory.AdInfo ad) {
                         adInfoRun.set(true);
                         adInfo = ad;
-                        executeQueue();
+                        flushOnStartUp();
                     }
 
                     @Override
@@ -186,7 +194,7 @@ public class TTAppEventLogger {
                         adInfoRun.set(true);
                         adInfo = null;
                         logger.error(e, "unable to fetch Advertising Id");
-                        executeQueue();
+                        flushOnStartUp();
                     }
                 });
     }
@@ -213,7 +221,10 @@ public class TTAppEventLogger {
         return this.adInfoRun.get();
     }
 
-    private void executeQueue() {
+    /**
+     * Do a start up flush after everything is setup
+     */
+    private void flushOnStartUp() {
         if (!loggerInitialized()) return;
 
         addToQ(() -> flush(FlushReason.START_UP));
@@ -230,16 +241,17 @@ public class TTAppEventLogger {
 
             appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-            List<TTAppEvent> eventList = TTRequest.appEventReport(appEventPersist.getAppEvents());
+            List<TTAppEvent> failedEvents = TTRequest.appEventReport(appEventPersist.getAppEvents());
 
-            if (!eventList.isEmpty()) {//flush failed, persist events
-                TTAppEventStorage.persist(eventList);
+            if (!failedEvents.isEmpty()) {//flush failed, persist events
+                logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
+                TTAppEventStorage.persist(failedEvents);
             }
             logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
 
             flushId++;
         } else {
-            logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be send in batches only after startTracking");
+            logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking");
             TTAppEventStorage.persist(null);
         }
     }
@@ -258,6 +270,7 @@ public class TTAppEventLogger {
      * purchase data and sku details are passed as list of objects
      * tries to find json substring in the string and
      * safe returns JSONObject
+     *
      * @param objString
      * @return
      */
@@ -270,7 +283,7 @@ public class TTAppEventLogger {
          * */
         JSONObject jsonObject = null;
         int start = objString.indexOf("{");
-        int end = objString.indexOf("}");
+        int end = objString.lastIndexOf("}");
         if ((start >= 0) && (end > start) && (end + 1 <= objString.length())) {
             try {
                 jsonObject = new JSONObject(objString.substring(start, end + 1));
@@ -325,7 +338,8 @@ public class TTAppEventLogger {
                         price = matcher.group(1);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             props.put("value", price);
         }
         return props;
@@ -333,6 +347,7 @@ public class TTAppEventLogger {
 
     /**
      * safe get key from jsonobject
+     *
      * @param jsonObject
      * @param key
      * @return
@@ -347,6 +362,7 @@ public class TTAppEventLogger {
 
     /**
      * get sku data from TTSDK_SKU_DETAILS cache
+     *
      * @param sku
      * @return
      */

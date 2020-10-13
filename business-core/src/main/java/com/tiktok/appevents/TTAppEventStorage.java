@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 class TTAppEventStorage {
@@ -20,41 +21,45 @@ class TTAppEventStorage {
 
     private static final String EVENT_STORAGE_FILE = "events_cache";
 
-    private static final int MAX_PERSIST_EVENTS_NUM = 10000;
+    private static final int MAX_PERSIST_EVENTS_NUM = 10;
 
     /**
      * write events into file
+     *
      * @param failedEvents if flush failed, failedEvents is not null
      */
     public synchronized static void persist(List<TTAppEvent> failedEvents) {
 
-        List<TTAppEvent> appEventList = TTAppEventsQueue.exportAllEvents();
+        List<TTAppEvent> eventsFromMemory = TTAppEventsQueue.exportAllEvents();
 
-        TTAppEventPersist appEventPersist = readFromDisk();
+        TTAppEventPersist eventsFromDisk = readFromDisk();
 
-        if(appEventList.isEmpty() && appEventPersist.isEmpty() &&
-                (failedEvents == null || failedEvents.isEmpty())){
+        if (eventsFromMemory.isEmpty() && eventsFromDisk.isEmpty() &&
+                (failedEvents == null || failedEvents.isEmpty())) {
             return;
         }
 
-        if(failedEvents != null) {
-            appEventPersist.addEvents(failedEvents);
+        TTAppEventPersist toBeSaved = new TTAppEventPersist();
+        // maintain events ordering, the events in the network should be earlier than the
+        // events on the disk, finally come the events in the memory
+        if (failedEvents != null) {
+            toBeSaved.addEvents(failedEvents);
         }
-
-        appEventPersist.addEvents(appEventList);
+        toBeSaved.addEvents(eventsFromDisk.getAppEvents());
+        eventsFromDisk.addEvents(eventsFromMemory);
 
         //If end up persisting more than 10,000 events, persist the latest 10,000 events by timestamp
-        slimEvents(appEventPersist);
-
-        saveToDisk(appEventPersist);
+        slimEvents(toBeSaved, MAX_PERSIST_EVENTS_NUM);
+        saveToDisk(toBeSaved);
     }
 
     /**
      * events slim
+     *
      * @param ttAppEventPersist
      */
-    private static void slimEvents(TTAppEventPersist ttAppEventPersist){
-        if(ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {
+    static void slimEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
+        if (ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {
             return;
         }
 
@@ -62,35 +67,31 @@ class TTAppEventStorage {
 
         int size = appEvents.size();
 
-        if(size > MAX_PERSIST_EVENTS_NUM) {
-            ttAppEventPersist.setAppEvents(appEvents.subList(size-MAX_PERSIST_EVENTS_NUM, size));
+        if (size > maxPersistNum) {
+            logger.verbose("Way too many events(%d), slim it!", size);
+            ttAppEventPersist.setAppEvents(new ArrayList<>(appEvents.subList(size - maxPersistNum, size)));
         }
     }
 
     private static boolean saveToDisk(TTAppEventPersist appEventPersist) {
-        if(appEventPersist.isEmpty()) {
+        if (appEventPersist.isEmpty()) {
             return false;
         }
 
         Context context = TiktokBusinessSdk.getApplicationContext();
-        ObjectOutputStream oos = null;
-        try {
-            oos = new ObjectOutputStream(
-                    new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)));
+        try (ObjectOutputStream oos = new ObjectOutputStream(
+                new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)))) {
             oos.writeObject(appEventPersist);
             return true;
-        }catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
             return false;
-        }finally {
-            if (oos != null) {
-                try {
-                    oos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
+        }
+    }
+
+    private static void deleteFile(File f) {
+        if (f.exists()) {
+            f.delete();
         }
     }
 
@@ -103,31 +104,17 @@ class TTAppEventStorage {
 
         TTAppEventPersist appEventPersist = new TTAppEventPersist();
 
-        ObjectInputStream ois = null;
-
-        try {
-            ois = new ObjectInputStream(new BufferedInputStream(context.openFileInput(EVENT_STORAGE_FILE)));
-
+        try (ObjectInputStream ois = new ObjectInputStream(
+                new BufferedInputStream(context.openFileInput(EVENT_STORAGE_FILE)))) {
             appEventPersist = (TTAppEventPersist) ois.readObject();
-
-            f.delete();
+            deleteFile(f);
         } catch (ClassNotFoundException e) {
-            if (f.exists()) {
-                f.delete();
-            }
-            e.printStackTrace();
+            deleteFile(f);
+            TTCrashHandler.handleCrash(TAG, e);
         } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
-            try {
-                if(ois != null) {
-                    ois.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            deleteFile(f);
+            TTCrashHandler.handleCrash(TAG, e);
         }
-
         return appEventPersist;
     }
 

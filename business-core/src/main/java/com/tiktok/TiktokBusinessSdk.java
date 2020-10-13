@@ -32,7 +32,7 @@ public class TiktokBusinessSdk {
     /** {@link LogLevel} of initialized sdk */
     private static LogLevel logLevel;
     /** optOutAutoStart flag */
-    private static AtomicBoolean sdkInit;
+    private static AtomicBoolean sdkFullyInitialized;
 
     /** logger util */
     TTLogger logger;
@@ -53,7 +53,7 @@ public class TiktokBusinessSdk {
             logLevel = LogLevel.INFO;
         }
         logger = new TTLogger(TAG, logLevel);
-        sdkInit = new AtomicBoolean(ttConfig.autoStart);
+        sdkFullyInitialized = new AtomicBoolean(ttConfig.autoStart);
     }
 
     /** initializeSdk */
@@ -67,8 +67,8 @@ public class TiktokBusinessSdk {
 
     /** startTracking if optOutAutoStart enabled */
     public static void startTracking() {
-        sdkInit.set(true);
-        appEventLogger.flush();
+        sdkFullyInitialized.set(true);
+        appEventLogger.forceFlush();
     }
 
     /** public interface for tracking Event without custom properties */
@@ -95,12 +95,12 @@ public class TiktokBusinessSdk {
 
     /** FORCE_FLUSH */
     public void flush() {
-        appEventLogger.flush();
+        appEventLogger.forceFlush();
     }
 
     /** applicationContext getter */
     public static Application getApplicationContext() {
-        // TODO: 22/09/20 validate if sdk initialised
+        if (ttSdk == null) throw new RuntimeException("TiktokBusinessSdk instance is not initialized");
         return applicationContext;
     }
 
@@ -111,7 +111,7 @@ public class TiktokBusinessSdk {
 
     /** sdkInit getter */
     public static boolean isSdkFullyInitialized() {
-        return sdkInit.get();
+        return sdkFullyInitialized.get();
     }
 
     /** logLevel getter */
@@ -197,6 +197,7 @@ public class TiktokBusinessSdk {
         NONE,
         /* Log exceptions only. */
         INFO,
+        WARN,
         /* Log exceptions and print debug output. */
         DEBUG,
         /* Same as DEBUG, and log transformations in bundled integrations. */

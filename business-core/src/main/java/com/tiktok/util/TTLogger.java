@@ -4,8 +4,6 @@ import android.util.Log;
 
 import com.tiktok.TiktokBusinessSdk.LogLevel;
 
-import static com.tiktok.util.TTConst.DEFAULT_TAG;
-
 /** Logger util class */
 public final class TTLogger {
 
@@ -31,6 +29,12 @@ public final class TTLogger {
         }
     }
 
+    public void warn(String format, Object... extra) {
+        if (shouldLog(LogLevel.WARN)) {
+            Log.w(tag, String.format(format, extra));
+        }
+    }
+
     public void debug(String format, Object... extra) {
         if (shouldLog(LogLevel.DEBUG)) {
             Log.d(tag, String.format(format, extra));
@@ -41,14 +45,6 @@ public final class TTLogger {
         if (shouldLog(LogLevel.INFO)) {
             Log.e(tag, String.format(format, extra), error);
         }
-    }
-
-    public TTLogger subLog(String tag) {
-        return new TTLogger(DEFAULT_TAG + "-" + tag, logLevel);
-    }
-
-    public static TTLogger with(LogLevel level) {
-        return new TTLogger(DEFAULT_TAG, level);
     }
 
     private boolean shouldLog(LogLevel level) {

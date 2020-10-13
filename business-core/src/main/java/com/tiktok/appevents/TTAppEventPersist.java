@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A simple container which makes serialization easier
+ */
 class TTAppEventPersist implements Serializable {
 
     public static final long serialVersionUID = 1L;
@@ -11,7 +14,7 @@ class TTAppEventPersist implements Serializable {
     private List<TTAppEvent> appEvents = new ArrayList<>();
 
     public void addEvents(List<TTAppEvent> appEventList) {
-        if(appEventList == null || appEventList.isEmpty()) {
+        if (appEventList == null || appEventList.isEmpty()) {
             return;
         }
 
@@ -26,7 +29,7 @@ class TTAppEventPersist implements Serializable {
         this.appEvents = appEvents;
     }
 
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return appEvents.isEmpty();
     }
 }
