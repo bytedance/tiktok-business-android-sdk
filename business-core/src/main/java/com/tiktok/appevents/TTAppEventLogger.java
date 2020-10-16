@@ -55,8 +55,8 @@ public class TTAppEventLogger {
 
     int flushId = 0;
 
-    static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor();
-    static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor();
+    static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor(new TTThreadFactory());
+    static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor(new TTThreadFactory());
     ScheduledFuture<?> future = null;
     ScheduledFuture<?> timeFuture = null;
     private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
@@ -187,7 +187,6 @@ public class TTAppEventLogger {
         if (!isSystemActivated()) {
             return;
         }
-        System.out.println(new Date().getTime());
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
         Runnable task = () -> {
@@ -388,6 +387,7 @@ public class TTAppEventLogger {
     }
 
     private void addToQ(Runnable task) {
+        // http://www.javabyexamples.com/handling-exceptions-from-executorservice-tasks
         try {
             eventLoop.execute(task);
         } catch (Exception e) {

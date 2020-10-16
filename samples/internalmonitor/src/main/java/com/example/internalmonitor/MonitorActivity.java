@@ -22,24 +22,27 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public class MonitorActivity extends AppCompatActivity implements TiktokBusinessSdk.NetworkListener,
-        TiktokBusinessSdk.MemoryListener, TiktokBusinessSdk.DiskStatusListener, TiktokBusinessSdk.NextTimeFlushListener {
+public class MonitorActivity extends AppCompatActivity {
 
-    private SDKEventHandler handler;
-    private boolean inited = false;
+    private static boolean inited = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!inited) {
             inited = true;
-            setContentView(R.layout.activity_monitor);
-            handler = new SDKEventHandler(this);
             TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
                     .enableDebug();
-            TiktokBusinessSdk.initializeSdkWithListeners(ttConfig, this, this, this, this);
-            setUpHandlers();
+            TiktokBusinessSdk.initializeSdk(ttConfig);
         }
+
+        SDKEventHandler handler = new SDKEventHandler(this);
+        // TODO, use ViewModel to keep activity state
+        setContentView(R.layout.activity_monitor);
+        handler = new SDKEventHandler(this);
+        TTSDKMonitor monitor = new TTSDKMonitor(handler);
+        TiktokBusinessSdk.setUpSdkListeners(monitor, monitor, monitor, monitor);
+        setUpHandlers();
     }
 
     private void sendEvent() {
@@ -108,52 +111,4 @@ public class MonitorActivity extends AppCompatActivity implements TiktokBusiness
         return true;
     }
 
-    @Override
-    public void onDiskChange(int diskSize, boolean read) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.UPDATE_DISK;
-        msg.obj = diskSize + "";
-        handler.sendMessage(msg);
-    }
-
-    @Override
-    public void onDumped(int dumped) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.DUMPED;
-        msg.obj = dumped + "";
-        handler.sendMessage(msg);
-    }
-
-    @Override
-    public void onMemoryChange(int size) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.UPDATE_MEMORY;
-        msg.obj = size + "";
-        handler.sendMessage(msg);
-    }
-
-    @Override
-    public void onNetworkChange(int toBeSentRequests, int successfulRequest,
-                                int failedRequests, int totalRequests, int totalSuccessfulRequests) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.UPDATE_NETWORK;
-        msg.obj = toBeSentRequests + "," + successfulRequest + "," + failedRequests + ',' + totalRequests + ',' + totalSuccessfulRequests;
-        handler.sendMessage(msg);
-    }
-
-    @Override
-    public void timeLeft(int timeLeft) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.UPDATE_TIMER;
-        msg.obj = timeLeft + "";
-        handler.sendMessage(msg);
-    }
-
-    @Override
-    public void thresholdLeft(int threshold, int left) {
-        Message msg = new Message();
-        msg.what = SDKEventHandler.UPDATE_THRESHOLD;
-        msg.obj = threshold + "," + left;
-        handler.sendMessage(msg);
-    }
 }

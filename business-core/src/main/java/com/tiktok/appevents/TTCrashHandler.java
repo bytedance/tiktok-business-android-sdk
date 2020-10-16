@@ -10,8 +10,6 @@ public class TTCrashHandler {
     private static volatile TTCrashHandler instance = new TTCrashHandler();
 
     public static void handleCrash(String originTag, Throwable t) {
-        // will connect to online error reporting system in the future
-        // suppress errors locally for the time being
         ttLogger.error(t, "Error caused by sdk at " + originTag + "\n" + t.getMessage() + "\n"
                 + getStackTrace(t)
         );

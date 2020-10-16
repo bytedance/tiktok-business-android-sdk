@@ -100,14 +100,12 @@ public class TiktokBusinessSdk {
         appEventLogger.forceFlush();
     }
 
-    public static synchronized void initializeSdkWithListeners(
-            TTConfig ttConfig,
+    public static synchronized void setUpSdkListeners(
             MemoryListener ml,
             DiskStatusListener dl,
             NetworkListener nl,
             NextTimeFlushListener nfl
     ) {
-        initializeSdk(ttConfig);
         if (ml != null) {
             memoryListener = ml;
         }
@@ -186,7 +184,6 @@ public class TiktokBusinessSdk {
      * FORCE_FLUSH
      */
     public static void flush() {
-        System.out.println("Flush " + new Date().getTime());
         appEventLogger.forceFlush();
     }
 
