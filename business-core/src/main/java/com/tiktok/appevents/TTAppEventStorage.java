@@ -48,7 +48,7 @@ class TTAppEventStorage {
             toBeSaved.addEvents(failedEvents);
         }
         toBeSaved.addEvents(eventsFromDisk.getAppEvents());
-        eventsFromDisk.addEvents(eventsFromMemory);
+        toBeSaved.addEvents(eventsFromMemory);
 
         //If end up persisting more than 10,000 events, persist the latest 10,000 events by timestamp
         slimEvents(toBeSaved, MAX_PERSIST_EVENTS_NUM);
