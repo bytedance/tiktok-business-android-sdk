@@ -118,6 +118,7 @@ class TTAppEventStorage {
         try (ObjectInputStream ois = new ObjectInputStream(
                 new BufferedInputStream(context.openFileInput(EVENT_STORAGE_FILE)))) {
             appEventPersist = (TTAppEventPersist) ois.readObject();
+            logger.verbose("disk read data: %s", appEventPersist);
             deleteFile(f);
             if (TiktokBusinessSdk.diskListener != null) {
                 TiktokBusinessSdk.diskListener.onDiskChange(0, true);

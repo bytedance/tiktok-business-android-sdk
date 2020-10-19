@@ -52,4 +52,14 @@ public class TTAppEvent implements Serializable {
     public Long getUniqueId() {
         return this.uniqueId;
     }
+
+    @Override
+    public String toString() {
+        return "TTAppEvent{" +
+                "eventName='" + eventName + '\'' +
+                ", timeStamp=" + timeStamp +
+                ", jsonObject='" + jsonObject + '\'' +
+                ", uniqueId=" + uniqueId +
+                '}';
+    }
 }

@@ -32,4 +32,11 @@ class TTAppEventPersist implements Serializable {
     public boolean isEmpty() {
         return appEvents.isEmpty();
     }
+
+    @Override
+    public String toString() {
+        return "TTAppEventPersist{" +
+                "appEvents=" + appEvents +
+                '}';
+    }
 }
