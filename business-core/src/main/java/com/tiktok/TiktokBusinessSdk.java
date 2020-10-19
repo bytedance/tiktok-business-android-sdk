@@ -14,7 +14,6 @@ import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTLogger;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TiktokBusinessSdk {
@@ -33,6 +32,8 @@ public class TiktokBusinessSdk {
      * app {@link Context}
      */
     private static Application applicationContext;
+
+    private static boolean gaidCollectionEnabled = true;
     /**
      * app_id
      */
@@ -65,6 +66,7 @@ public class TiktokBusinessSdk {
         accessToken = ttConfig.accessToken;
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
+        gaidCollectionEnabled = ttConfig.advertiserIDCollectionEnable;
         /* sdk logger & loglevel */
         if (ttConfig.debug) {
             logLevel = LogLevel.VERBOSE;
@@ -79,25 +81,21 @@ public class TiktokBusinessSdk {
      * initializeSdk
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
-        Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
-                TTCrashHandler.handleCrash(TAG, e);
-            }
-        });
+        Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
         appEventLogger = new TTAppEventLogger(ttSdk,
-                ttConfig.autoEvent,
-                ttConfig.advertiserIDCollectionEnable);
+                ttConfig.autoEvent);
     }
 
     /**
      * startTracking if turnOffAutoTracking enabled
      */
     public static void startTrack() {
-        networkSwitch.set(true);
-        appEventLogger.forceFlush();
+        if (!networkSwitch.get()) {
+            networkSwitch.set(true);
+            appEventLogger.forceFlush();
+        }
     }
 
     public static synchronized void setUpSdkListeners(
@@ -214,6 +212,10 @@ public class TiktokBusinessSdk {
         return networkSwitch.get();
     }
 
+    public static boolean isGaidCollectionEnabled() {
+        return gaidCollectionEnabled;
+    }
+
     /**
      * logLevel getter
      */
@@ -323,7 +325,7 @@ public class TiktokBusinessSdk {
         /**
          * to disable gaid in tracking
          */
-        public TTConfig optOutAdvertiserIDCollection() {
+        public TTConfig turnOffAdvertiserIDCollection() {
             this.advertiserIDCollectionEnable = false;
             return this;
         }

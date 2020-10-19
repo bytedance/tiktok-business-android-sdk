@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.webkit.WebView;
 
 import com.tiktok.TiktokBusinessSdk;
 
@@ -73,6 +74,17 @@ public class SystemInfoUtil {
 
     public static String getLocale() {
         return Locale.getDefault().getLanguage();
+    }
+
+    private static String userAgent;
+
+    // invoke it in the mainThread
+    public static void initUserAgent(){
+        userAgent = new WebView(TiktokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+    }
+
+    public static String getUserAgent() {
+        return userAgent;
     }
 
 }

@@ -2,14 +2,13 @@ package com.tiktok.appevents;
 
 import android.content.pm.PackageInfo;
 
-import android.os.Build;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
@@ -18,7 +17,6 @@ import com.tiktok.util.TTUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
@@ -32,7 +30,6 @@ public class TTAppEventLogger {
     static final int THRESHOLD = 100;
 
     final boolean lifecycleTrackEnable;
-    final boolean advertiserIDCollectionEnable;
 
     /**
      * Logger util
@@ -68,11 +65,9 @@ public class TTAppEventLogger {
     }
 
     public TTAppEventLogger(TiktokBusinessSdk ttSdk,
-                            boolean lifecycleTrackEnable,
-                            boolean advertiserIDCollectionEnable) {
+                            boolean lifecycleTrackEnable) {
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
-        this.advertiserIDCollectionEnable = advertiserIDCollectionEnable;
         /* SharedPreferences helper */
         store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
 
@@ -88,6 +83,7 @@ public class TTAppEventLogger {
 
         //fetch global switch here
         isGlobalSwitchOn = true;
+
         activateApp();
     }
 
@@ -150,7 +146,7 @@ public class TTAppEventLogger {
     // for the sake of simplicity of unit tests
     private void doStartScheduler(int interval) {
         if (future == null) {
-            future = eventLoop.scheduleAtFixedRate(batchFlush, 0, interval, TimeUnit.SECONDS);
+            future = eventLoop.scheduleAtFixedRate(batchFlush, interval, interval, TimeUnit.SECONDS);
         }
         if (timeFuture == null && TiktokBusinessSdk.nextTimeFlushListener != null) {
             timeFuture = timerService.scheduleAtFixedRate(() -> {
@@ -209,6 +205,7 @@ public class TTAppEventLogger {
 
     // only when this method is called will the whole sdk be activated
     private void activateApp() {
+        SystemInfoUtil.initUserAgent();
         addToQ(() -> {
             autoEventsManager.trackOnAppOpenEvents();
             startScheduler();
@@ -242,9 +239,12 @@ public class TTAppEventLogger {
 
                 appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-                List<TTAppEvent> failedEvents = TTRequest.appEventReport(TiktokBusinessSdk.getApplicationContext(), appEventPersist.getAppEvents());
+                List<TTAppEvent> failedEvents = TTRequest.appEventReport(TTRequestBuilder.getBasePayload(
+                        TiktokBusinessSdk.getApplicationContext(),
+                        TiktokBusinessSdk.isGaidCollectionEnabled()
+                        ), appEventPersist.getAppEvents());
 
-                if (!failedEvents.isEmpty()) {//flush failed, persist events
+                if (!failedEvents.isEmpty()) { // flush failed, persist events
                     logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
                     TTAppEventStorage.persist(failedEvents);
                 }

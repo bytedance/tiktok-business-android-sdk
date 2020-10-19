@@ -52,10 +52,7 @@ public class App extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // Tiktok sdk init start
-            TTConfig ttConfig = new TTConfig(getApplication())
-//                .optOutAdvertiserIDCollection()
-//                .optOutAutoEventTracking()
-                    .enableDebug();
+            TTConfig ttConfig = new TTConfig(getApplication()).enableDebug();
             TiktokBusinessSdk.initializeSdk(ttConfig);
             // Tiktok sdk init end
 

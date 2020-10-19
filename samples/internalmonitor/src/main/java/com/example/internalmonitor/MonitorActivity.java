@@ -33,6 +33,7 @@ public class MonitorActivity extends AppCompatActivity {
             inited = true;
             TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
                     .enableDebug();
+//                    .turnOffAdvertiserIDCollection();
             TiktokBusinessSdk.initializeSdk(ttConfig);
         }
 
@@ -49,7 +50,7 @@ public class MonitorActivity extends AppCompatActivity {
         TTProperty property = new TTProperty();
         JSONObject inner = new JSONObject();
         try {
-            inner.put("attr1", "attr1");
+            inner.put("attr1", "someValue");
             inner.put("time", new Date());
             property.put("code", "123")
                     .put("data", inner);

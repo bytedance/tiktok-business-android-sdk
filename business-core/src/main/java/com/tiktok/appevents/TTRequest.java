@@ -1,10 +1,7 @@
 package com.tiktok.appevents;
 
-import android.content.Context;
-
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
-import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 import com.tiktok.util.TimeUtil;
@@ -55,7 +52,7 @@ class TTRequest {
      * @param appEventList
      * @return the accumulation of all failed events
      */
-    public static synchronized List<TTAppEvent> appEventReport(Context context, List<TTAppEvent> appEventList) {
+    public static synchronized List<TTAppEvent> appEventReport(JSONObject basePayload, List<TTAppEvent> appEventList) {
         TTUtil.checkThread(TAG);
         // access-token might change during runtime
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
@@ -73,10 +70,7 @@ class TTRequest {
         notifyChange();
 
         TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
-        String appId = TiktokBusinessSdk.getAppId();
         String url = "https://ads.tiktok.com/open_api/v1.1/app/track/";
-
-        JSONObject bodyJson = new JSONObject();
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 
@@ -92,9 +86,8 @@ class TTRequest {
                 batch.add(jsonObject);
             }
 
+            JSONObject bodyJson = basePayload;
             try {
-                bodyJson.put("app_id", appId);
-                bodyJson.put("context", getContextForApi(context));
                 bodyJson.put("batch", batch);
             } catch (Exception e) {
                 failedEvents.addAll(currentBatch);
@@ -143,45 +136,6 @@ class TTRequest {
             TiktokBusinessSdk.networkListener.onNetworkChange(toBeSentRequests, successfulRequests,
                     failedRequests, allRequestIds.size() + TTAppEventsQueue.size(), successfullySentRequests.size());
         }
-    }
-
-    private static JSONObject contextCache;
-
-    /**
-     * get the context info for api call as per https://ads.tiktok.com/marketing_api/docs?id=1679472066464769,
-     * not the android context
-     *
-     * @param context Android context
-     * @return
-     */
-    private static JSONObject getContextForApi(Context context) {
-
-        if (contextCache != null) {
-            return contextCache;
-        }
-
-        JSONObject result = new JSONObject();
-
-        JSONObject app = new JSONObject();
-        try {
-            app.put("name", SystemInfoUtil.getAppName());
-            app.put("namespace", SystemInfoUtil.getPackageName());
-            app.put("version", SystemInfoUtil.getVersionName());
-            app.put("build", SystemInfoUtil.getVersionCode());
-
-            JSONObject device = new JSONObject();
-            device.put("platform", "Android");
-//            TTIdentifierFactory.AdInfo info = TTIdentifierFactory.getAdvertisingIdInfo(context);
-//            device.put("gaid", info.getGaid());
-
-            result.put("app", app);
-            result.put("device", device);
-            result.put("ip", SystemInfoUtil.getLocalIpAddress());
-        } catch (Exception e) {
-            TTCrashHandler.handleCrash(TAG, e);
-        }
-        contextCache = result;
-        return result;
     }
 
     private static JSONObject transferJson(TTAppEvent event) {
