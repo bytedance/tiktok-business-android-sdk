@@ -1,6 +1,7 @@
-include ':samples:internalmonitor'
 include ':business-core'
 
+include ':samples:iabtest'
+include ':samples:internalmonitor'
 include ':samples:TestApp'
 
 rootProject.name = "Tiktok Business SDK"

@@ -163,19 +163,10 @@ public class TiktokBusinessSdk {
     }
 
     /**
-     * cache sku details
-     */
-    public static void cacheSkuDetails(@Nullable Object skuDetailsList) {
-        assert skuDetailsList != null;
-        appEventLogger.cacheSkuDetails(Collections.singletonList(skuDetailsList));
-    }
-
-    /**
      * process purchases from PurchasesUpdatedListener
      */
-    public static void onPurchasesUpdated(@Nullable Object purchases) {
-        assert purchases != null;
-        appEventLogger.trackPurchase(Collections.singletonList(purchases));
+    public static void trackPurchase(@Nullable Object purchases, @Nullable Object skuDetailsList) {
+        appEventLogger.trackPurchase(Collections.singletonList(purchases), Collections.singletonList(skuDetailsList));
     }
 
     /**
@@ -254,31 +245,47 @@ public class TiktokBusinessSdk {
             application = (Application) context.getApplicationContext();
 
             /* try fetch app key from AndroidManifest file first */
+
+            ApplicationInfo appInfo = null;
             try {
-                ApplicationInfo appInfo = application.getPackageManager().getApplicationInfo(
+                appInfo = application.getPackageManager().getApplicationInfo(
                         application.getPackageName(), PackageManager.GET_META_DATA);
+            } catch (Exception e) {
+                TTCrashHandler.handleCrash(TAG, e);
+            }
+
+            if (appInfo == null) return;
+
+            try {
                 Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
-                if (token == null) {
+                if (token != null) {
                     accessToken = token.toString();
                 }
+            } catch (Exception ignored) {
+            }
 
+            try {
                 Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
                 if (aid != null) {
                     appId = aid.toString();
                 }
+            } catch (Exception ignored) {
+            }
 
-                accessToken = token.toString();
+            try {
                 Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoTracking");
                 if (autoFlag != null && autoFlag.toString().equals("true")) {
                     autoStart = false;
                 }
+            } catch (Exception ignored) {
+            }
 
+            try {
                 Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoEvents");
                 if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
                     autoEvent = false;
                 }
-            } catch (Exception e) {
-                TTCrashHandler.handleCrash(TAG, e);
+            } catch (Exception ignored) {
             }
         }
 

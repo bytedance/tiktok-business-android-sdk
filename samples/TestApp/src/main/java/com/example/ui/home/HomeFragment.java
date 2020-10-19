@@ -47,18 +47,6 @@ public class HomeFragment extends Fragment {
                         .setSkuDetails(skuDetails)
                         .build();
 
-                /** cache single sku details */
-                TiktokBusinessSdk.cacheSkuDetails(skuDetails);
-
-                /** trigger StartCheckOut before launchBillingFlow */
-                TTProperty props = new TTProperty()
-                        .put("content_type", skuDetails.getType())
-                        .put("content_id", skuDetails.getSku())
-                        .put("description", skuDetails.getDescription())
-                        .put("currency", skuDetails.getPriceCurrencyCode())
-                        .put("value", skuDetails.getPrice());
-                TiktokBusinessSdk.trackEvent("StartCheckOut", props);
-
                 int responseCode = billingClient.launchBillingFlow(activity, billingFlowParams).getResponseCode();
                 homeViewModel.setText("BillingResponseCode: "+responseCode);
             } else {
@@ -72,7 +60,7 @@ public class HomeFragment extends Fragment {
                     && purchases != null) {
 
                 /** tiktok.monitor track purchase */
-                TiktokBusinessSdk.onPurchasesUpdated(purchases);
+                TiktokBusinessSdk.trackPurchase(purchases, skuDetails);
 
                 purchase = purchases.get(0);
                 homeViewModel.setText("purchase success, sku: " + purchase.getSku() + ". click to consume");
@@ -102,21 +90,9 @@ public class HomeFragment extends Fragment {
             if (billingResult1.getResponseCode() == BillingClient.BillingResponseCode.OK
                     && skuDetailsList != null) {
 
-                /** local cache sku details in TiktokBusinessSdk */
-                TiktokBusinessSdk.cacheSkuDetails(skuDetailsList);
-
                 if (skuDetailsList.size() > 0) {
                     skuDetails = skuDetailsList.get(0);
                     homeViewModel.setText("launchBillingFlow: " + skuDetails.getSku());
-
-                    /** trigger ViewContent before buy click */
-                    TTProperty props = new TTProperty()
-                            .put("content_type", skuDetails.getType())
-                            .put("content_id", skuDetails.getSku())
-                            .put("description", skuDetails.getDescription())
-                            .put("currency", skuDetails.getPriceCurrencyCode())
-                            .put("value", skuDetails.getPrice());
-                    TiktokBusinessSdk.trackEvent("ViewContent", props);
                 }
             }
         });

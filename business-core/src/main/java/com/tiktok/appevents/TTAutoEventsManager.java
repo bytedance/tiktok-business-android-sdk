@@ -3,6 +3,7 @@ package com.tiktok.appevents;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
+import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 
 import java.text.SimpleDateFormat;
@@ -30,9 +31,11 @@ class TTAutoEventsManager {
     }
 
     private TTAppEventLogger appEventLogger;
+    private TTKeyValueStore store;
 
     public TTAutoEventsManager(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
+        store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
     }
 
@@ -60,13 +63,13 @@ class TTAutoEventsManager {
         String currentBuild = String.valueOf(SystemInfoUtil.getVersionCode());
 
         /* get the previous recorded version. */
-        String previousVersion = appEventLogger.store.get(TTSDK_APP_VERSION);
-        String previousBuild = appEventLogger.store.get(TTSDK_APP_BUILD);
+        String previousVersion = store.get(TTSDK_APP_VERSION);
+        String previousBuild = store.get(TTSDK_APP_BUILD);
 
         /* check and track InstallApp. */
         if (previousBuild == null) {
             appEventLogger.track("InstallApp", null);
-            appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
+            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
         } else if (!currentBuild.equals(previousBuild)) {
             // app updated
         }
@@ -75,21 +78,21 @@ class TTAutoEventsManager {
         HashMap<String, Object> hm = new HashMap<>();
         hm.put(TTSDK_APP_VERSION, currentVersion);
         hm.put(TTSDK_APP_BUILD, currentBuild);
-        appEventLogger.store.set(hm);
+        store.set(hm);
     }
 
     // extract into a single method to simplify writing unit test
     private boolean isSatisfyRetention(long duration) {
-        String isLogged = appEventLogger.store.get(TTConst.TTSDK_APP_2DRENTION_LOGGED);
+        String isLogged = store.get(TTConst.TTSDK_APP_2DRENTION_LOGGED);
         if (isLogged != null && isLogged.equals("true")) {
             return false;
         }
         // check 2Dretention
         Date now = new Date();
-        String dateFromStore = appEventLogger.store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
+        String dateFromStore = store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
         if (dateFromStore == null) {
             logger.warn("First Launch Date should already been set in the trackFirstInstallEvent, could be a bug");
-            appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
+            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
             return false;
         }
         try {
@@ -98,7 +101,7 @@ class TTAutoEventsManager {
         } catch (Exception e) {
             logger.info("Failed to check 2day retention %s", e.getMessage());
             // if failed to parse the date, try to set it to now
-            appEventLogger.store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
+            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
             return false;
         }
     }
@@ -106,7 +109,7 @@ class TTAutoEventsManager {
     private void track2DayRetentionEvent() {
         if (isSatisfyRetention(TWO_DAYS)) {
             appEventLogger.track("2Dretention", null);
-            appEventLogger.store.set(TTConst.TTSDK_APP_2DRENTION_LOGGED, "true");
+            store.set(TTConst.TTSDK_APP_2DRENTION_LOGGED, "true");
         }
     }
 

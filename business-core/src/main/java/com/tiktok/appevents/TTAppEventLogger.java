@@ -1,7 +1,5 @@
 package com.tiktok.appevents;
 
-import android.content.pm.PackageInfo;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
@@ -9,19 +7,12 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
-import com.tiktok.util.TTConst;
-import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
@@ -35,14 +26,6 @@ public class TTAppEventLogger {
      * Logger util
      */
     TTLogger logger;
-    /**
-     * SharedPreferences util
-     */
-    TTKeyValueStore store;
-    /**
-     * packageInfo
-     */
-    PackageInfo packageInfo = null;
     /**
      * Lifecycle
      */
@@ -68,8 +51,6 @@ public class TTAppEventLogger {
                             boolean lifecycleTrackEnable) {
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
-        /* SharedPreferences helper */
-        store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
 
@@ -92,45 +73,23 @@ public class TTAppEventLogger {
     }
 
     /**
-     * local cache sku details for future track purchase
-     */
-    public void cacheSkuDetails(List<Object> skuDetails) {
-        Runnable task = () -> {
-            JSONObject allSkus = new JSONObject();
-            for (Object skuDetail : skuDetails) {
-                JSONObject skuJson = extractJsonFromString(skuDetail.toString());
-                try {
-                    String productId = skuJson.getString("productId");
-                    allSkus.put(productId, skuJson);
-                } catch (JSONException ignored) {
-                }
-            }
-            saveSkuDetails(allSkus);
-        };
-        addToQ(task);
-    }
-
-    /**
      * track purchase after PurchasesUpdatedListener
      */
-    public void trackPurchase(List<Object> purchases) {
+    public void trackPurchase(List<Object> purchases, List<Object> skuDetails) {
         if (!isSystemActivated()) {
             return;
         }
-        Runnable task = () -> {
-            for (Object purchase : purchases) {
-                JSONObject purchaseJson = extractJsonFromString(purchase.toString());
-                TTProperty props = new TTProperty();
-                try {
-                    String productId = purchaseJson.getString("productId");
-                    /** trying to get other props from cached sku store */
-                    props = getPurchaseProperties(productId);
-                } catch (JSONException ignored) {
-                }
-                track("Purchase", props);
+        addToQ(() -> {
+            JSONObject allSkuMap = null;
+            if (!skuDetails.isEmpty()) {
+                allSkuMap = TTInAppPurchaseManager.getSkuDetailsMap(skuDetails);
             }
-        };
-        addToQ(task);
+            if (!purchases.isEmpty()) {
+                for (Object purchase : purchases) {
+                    track("Purchase", TTInAppPurchaseManager.getPurchaseProps(purchase, allSkuMap));
+                }
+            }
+        });
     }
 
     int counter = 15;
@@ -268,122 +227,6 @@ public class TTAppEventLogger {
         TIMER, // triggered every 15 seconds
         START_UP, // when app is started, flush all the accumulated events
         FORCE_FLUSH, // when developer calls flush from app
-    }
-
-    /**
-     * purchase data and sku details are passed as list of objects
-     * tries to find json substring in the string and
-     * safe returns JSONObject
-     *
-     * @param objString
-     * @return
-     */
-    private JSONObject extractJsonFromString(String objString) {
-        /**
-         * JSON string not passed for new api
-         * egs: [Purchase. Json: {"packageName":"com.example","acknowledged":false,"orderId":"transactionId.android.test.purchased","productId":"android.test.purchased","developerPayload":"","purchaseTime":0,"purchaseState":0,"purchaseToken":"inapp:com.example:android.test.purchased"}]
-         * SkuDetails: {"skuDetailsToken":"AEuhp4Lu4HAdf3nvnusEjwhfJQemFbKGuSQ37wM_7UJcce89YnZiBA6HJVz5vFMFbMPq","productId":"android.test.purchased","type":"inapp","price":"₹72.41","price_amount_micros":72407614,"price_currency_code":"INR","title":"Sample Title","description":"Sample description for product: android.test.purchased."}
-         * this function tries to find start { and end } of json string in objString
-         * */
-        JSONObject jsonObject = null;
-        int start = objString.indexOf("{");
-        int end = objString.lastIndexOf("}");
-        if ((start >= 0) && (end > start) && (end + 1 <= objString.length())) {
-            try {
-                jsonObject = new JSONObject(objString.substring(start, end + 1));
-            } catch (JSONException ignored) {
-                jsonObject = new JSONObject();
-            }
-        }
-        return jsonObject;
-    }
-
-    /**
-     * overrides sku details in store
-     */
-    private void saveSkuDetails(JSONObject newSkus) {
-        JSONObject skuJson = null;
-        String cachedSkuData = store.get(TTConst.TTSDK_SKU_DETAILS);
-        if (cachedSkuData != null) {
-            try {
-                skuJson = new JSONObject(cachedSkuData);
-                for (Iterator<String> it = newSkus.keys(); it.hasNext(); ) {
-                    String sku = it.next();
-                    skuJson.put(sku, newSkus.get(sku));
-                }
-            } catch (JSONException ignored) {
-            }
-        }
-        if (skuJson == null) {
-            skuJson = newSkus;
-        }
-        store.set(TTConst.TTSDK_SKU_DETAILS, skuJson.toString());
-    }
-
-    /**
-     * returns purchase TTProperty from sku cache
-     * returns content_id -> sku always
-     */
-    private TTProperty getPurchaseProperties(String sku) {
-        JSONObject skuDetails = getSkuDetailsFromStore(sku);
-        TTProperty props = new TTProperty().put("content_id", sku);
-        if (skuDetails != null) {
-            props.put("content_type", safeJsonGetString(skuDetails, "type"));
-            String currencyCode = safeJsonGetString(skuDetails, "price_currency_code");
-            props.put("currency", currencyCode);
-            props.put("description", safeJsonGetString(skuDetails, "description"));
-            String price = safeJsonGetString(skuDetails, "price");
-            try {
-                // trying to remove the currency symbol from price
-                if (!currencyCode.equals("") && !price.equals("")) {
-                    Pattern regex = Pattern.compile("(\\d+(?:\\.\\d+)?)");
-                    Matcher matcher = regex.matcher(price);
-                    if (matcher.find()) {
-                        price = matcher.group(1);
-                    }
-                }
-            } catch (Exception ignored) {
-            }
-            props.put("value", price);
-        }
-        return props;
-    }
-
-    /**
-     * safe get key from jsonobject
-     *
-     * @param jsonObject
-     * @param key
-     * @return
-     */
-    private String safeJsonGetString(JSONObject jsonObject, String key) {
-        try {
-            return jsonObject.get(key).toString();
-        } catch (JSONException e) {
-            return "";
-        }
-    }
-
-    /**
-     * get sku data from TTSDK_SKU_DETAILS cache
-     *
-     * @param sku
-     * @return
-     */
-    private JSONObject getSkuDetailsFromStore(String sku) {
-        JSONObject skuJson = null;
-        if (sku == null) {
-            return null;
-        }
-        String cachedSkuData = store.get(TTConst.TTSDK_SKU_DETAILS);
-        if (cachedSkuData != null) {
-            try {
-                JSONObject allSkuJson = new JSONObject(cachedSkuData);
-                skuJson = allSkuJson.getJSONObject(sku);
-            } catch (JSONException ignored) {
-            }
-        }
-        return skuJson;
     }
 
     private void addToQ(Runnable task) {
