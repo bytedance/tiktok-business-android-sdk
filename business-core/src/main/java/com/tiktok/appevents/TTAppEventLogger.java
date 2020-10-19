@@ -9,10 +9,15 @@ import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
@@ -30,8 +35,6 @@ public class TTAppEventLogger {
      * Lifecycle
      */
     Lifecycle lifecycle;
-
-    private boolean isGlobalSwitchOn = false;
 
     int flushId = 0;
 
@@ -62,10 +65,18 @@ public class TTAppEventLogger {
         /** advertiser id fetch */
         autoEventsManager = new TTAutoEventsManager(this);
 
-        //fetch global switch here
-        isGlobalSwitchOn = true;
+        remoteSdkConfigProcess();
 
         activateApp();
+
+        /**
+         * the main thread sleeps for 500 ms, let the remoteSdkConfigProcess method execute first
+         */
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void persistEvents() {
@@ -178,16 +189,18 @@ public class TTAppEventLogger {
      * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
      */
     private boolean isSystemActivated() {
-        if (!isGlobalSwitchOn) {
+        Boolean sdkGlobalSwitch = TiktokBusinessSdk.getSdkGlobalSwitch();
+        if (!sdkGlobalSwitch) {
             logger.verbose("Global switch is off, ignore all operations");
         }
-        return this.isGlobalSwitchOn;
+        return sdkGlobalSwitch;
     }
 
 
     private void flush(FlushReason reason) {
 
         if (!isSystemActivated()) return;
+
         TTUtil.checkThread(TAG);
 
         try {
@@ -242,6 +255,40 @@ public class TTAppEventLogger {
         addToQ(() -> {
             TTAppEventsQueue.clearAll();
             TTAppEventStorage.clearAll();
+        });
+    }
+
+    /**
+     * set remote switch and api available version
+     */
+    private void remoteSdkConfigProcess(){
+        addToQ(()->{
+            try {
+                JSONObject requestResult = TTRequest.getBusinessSDKConfig();
+
+                if(requestResult == null) return;
+
+                JSONObject businessSdkConfig = (JSONObject)requestResult.get("business_sdk_config");
+
+                if(businessSdkConfig == null) return;
+
+                Boolean enableSDK = (Boolean)businessSdkConfig.get("enable_sdk");
+                String availableVersion= (String) businessSdkConfig.get("available_version");
+
+                if(enableSDK != null) {
+                    TiktokBusinessSdk.setSdkGlobalSwitch(enableSDK);
+                    logger.verbose("enable_sdk="+enableSDK);
+                }
+
+                if(availableVersion != null && !availableVersion.equals("")) {
+                    TiktokBusinessSdk.setApiAvailableVersion(availableVersion);
+                    logger.verbose("available_version="+availableVersion);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
         });
     }
 

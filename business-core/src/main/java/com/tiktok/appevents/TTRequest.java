@@ -17,6 +17,7 @@ import java.util.TreeSet;
 
 class TTRequest {
     private static String TAG = TTRequest.class.getCanonicalName();
+    private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
 
     private static final int MAX_EVENT_SIZE = 50;
 
@@ -35,7 +36,31 @@ class TTRequest {
         // these fields wont change, so cache it locally to enhance performance
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
+        headParamMap.put("User-Agent", "tiktok-business-android-sdk/1.0.0");
+        //TODO BOE env need config x-tt-env, remove after going online
         headParamMap.put("x-tt-env", "jianyi");
+    }
+
+    public static JSONObject getBusinessSDKConfig() {
+        headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
+//        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+        String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+        String result = HttpRequestUtil.doGet(url, headParamMap);
+        logger.verbose(result);
+        JSONObject config =  null;
+        if (result != null) {
+            try {
+                JSONObject resultJson = new JSONObject(result);
+                Integer code = (Integer) resultJson.get("code");
+                if (code == 0) {
+                    config = (JSONObject)resultJson.get("data");
+                }
+            } catch (Exception e) {
+                TTCrashHandler.handleCrash(TAG, e);
+            }
+        }
+
+        return config;
     }
 
     // for debugging purpose
@@ -69,8 +94,7 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
 
-        TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
-        String url = "https://ads.tiktok.com/open_api/v1.1/app/track/";
+        String url = "https://ads.tiktok.com/open_api/v1.1/app/batch/";
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 

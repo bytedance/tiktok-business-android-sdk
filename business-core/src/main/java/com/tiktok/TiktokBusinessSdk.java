@@ -43,6 +43,14 @@ public class TiktokBusinessSdk {
      */
     private static String accessToken;
     /**
+     * remote switch
+     */
+    private static Boolean sdkGlobalSwitch = true;
+    /**
+     * api available version
+     */
+    private static String apiAvailableVersion = "v1.1";
+    /**
      * {@link LogLevel} of initialized sdk
      */
     private static LogLevel logLevel = LogLevel.INFO;
@@ -61,8 +69,7 @@ public class TiktokBusinessSdk {
         if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
         appId = ttConfig.appId;
         /* no write key exception */
-        if (ttConfig.accessToken == null)
-            throw new IllegalArgumentException("access token not found");
+        if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
         accessToken = ttConfig.accessToken;
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
@@ -84,8 +91,7 @@ public class TiktokBusinessSdk {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
-        appEventLogger = new TTAppEventLogger(ttSdk,
-                ttConfig.autoEvent);
+        appEventLogger = new TTAppEventLogger(ttSdk, ttConfig.autoEvent);
     }
 
     /**
@@ -219,6 +225,22 @@ public class TiktokBusinessSdk {
      */
     public static String getAppId() {
         return appId;
+    }
+
+    public static Boolean getSdkGlobalSwitch() {
+        return sdkGlobalSwitch;
+    }
+
+    public static void setSdkGlobalSwitch(Boolean sdkGlobalSwitch) {
+        TiktokBusinessSdk.sdkGlobalSwitch = sdkGlobalSwitch;
+    }
+
+    public static String getApiAvailableVersion() {
+        return apiAvailableVersion;
+    }
+
+    public static void setApiAvailableVersion(String apiAvailableVersion) {
+        TiktokBusinessSdk.apiAvailableVersion = apiAvailableVersion;
     }
 
     /**

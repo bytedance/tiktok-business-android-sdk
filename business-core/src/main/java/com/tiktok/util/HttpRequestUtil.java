@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
@@ -17,8 +15,43 @@ public class HttpRequestUtil {
 
     private static final String TAG = HttpRequestUtil.class.getCanonicalName();
 
+    public static String doGet(String url, Map<String, String> headerParamMap) {
+        String result = null;
+
+        HttpURLConnection connection = null;
+
+        try {
+            URL httpURL = new URL(url);
+            connection = (HttpURLConnection) httpURL.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(5000);
+            connection.setDoOutput(false);
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+
+            for (Map.Entry<String, String> entry : headerParamMap.entrySet()) {
+                connection.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+
+            connection.connect();
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                result = streamToString(connection.getInputStream());
+            }
+
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+
+        return result;
+    }
+
     public static String doPost(String url, Map<String, String> headerParamMap, String jsonStr) {
-        TTUtil.checkThread(TAG);
 
         String result = null;
 
