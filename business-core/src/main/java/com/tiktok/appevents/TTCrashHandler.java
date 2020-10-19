@@ -3,6 +3,11 @@ package com.tiktok.appevents;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTLogger;
 
+/**
+ * A global crash handler which mainly does
+ * 1. send error details to a remote analytic tool
+ * 2. Prevent from app from crash
+ */
 public class TTCrashHandler {
     private static final String TAG = TTCrashHandler.class.getCanonicalName();
     private static TTLogger ttLogger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());

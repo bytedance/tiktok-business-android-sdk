@@ -29,7 +29,7 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
 
     @Override
     public void onResume(LifecycleOwner owner) {
-        appEventLogger.startScheduler();
+        appEventLogger.restartScheduler();
     }
 
     @Override

@@ -28,6 +28,7 @@ class TTRequestBuilder {
 
         try {
             result.put("app_id", TiktokBusinessSdk.getAppId());
+            result.put("event_source", "APP_EVENTS_SDK");
             result.put("locale", getBcp47Language());
             result.put("ip", SystemInfoUtil.getLocalIpAddress());
 

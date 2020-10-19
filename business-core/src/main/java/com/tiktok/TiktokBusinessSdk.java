@@ -85,17 +85,28 @@ public class TiktokBusinessSdk {
     }
 
     /**
-     * initializeSdk
+     * Only one TiktokBusinessSdk instance exist within a single App process
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
-        appEventLogger = new TTAppEventLogger(ttSdk, ttConfig.autoEvent);
+        // the appEventLogger instance will be the main interface to track events
+        appEventLogger = new TTAppEventLogger(ttSdk,
+                ttConfig.autoEvent);
     }
 
     /**
-     * startTracking if turnOffAutoTracking enabled
+     * Normally, the sdk will enable network after it is initialized,
+     * all the events stored in the memory or on the disk will be flushed to network once some conditions are reached,
+     * for example, every {@link TTAppEventLogger#TIME_BUFFER} seconds or there are more than {@link TTAppEventLogger#THRESHOLD} events
+     * in the memory.
+     * But if the app developer calls {@link TTConfig#turnOffAutoStart()}, then the "flush to network" operation will be simply suppressed
+     * by the sdk, then the developer has to call startTrack to bring network back.
+     * <p>
+     * When to use?
+     * This method can be invoked after the user agrees to some terms or conditions, so that the events are not pushed to the network
+     * before users' consent.
      */
     public static void startTrack() {
         if (!networkSwitch.get()) {
@@ -104,6 +115,15 @@ public class TiktokBusinessSdk {
         }
     }
 
+    /**
+     * For internal development usage, a monitoring tool which oversees how many events are in the memory,
+     * on the disk and have been flushed to network.
+     *
+     * @param ml
+     * @param dl
+     * @param nl
+     * @param nfl
+     */
     public static synchronized void setUpSdkListeners(
             MemoryListener ml,
             DiskStatusListener dl,
@@ -176,12 +196,20 @@ public class TiktokBusinessSdk {
     }
 
     /**
-     * FORCE_FLUSH
+     * All the events stored in the memory or on the disk will be flushed to network once some conditions are reached,
+     * for example, every {@link TTAppEventLogger#TIME_BUFFER} seconds or there are more than {@link TTAppEventLogger#THRESHOLD} events
+     * in the memory.
+     * But you can always invoke this method to eagerly flush events to network
      */
     public static void flush() {
         appEventLogger.forceFlush();
     }
 
+    /**
+     * Internal use only
+     * clear all events from memory and disk
+     * We discourage your from calling this method
+     */
     public static void clearAll() {
         appEventLogger.clearAll();
     }
@@ -245,6 +273,9 @@ public class TiktokBusinessSdk {
 
     /**
      * To get config and permissions from the app
+     * All config items can be set by declaring <meta-data> in AndroidManifest.xml,
+     * but they can also be set explicitly by calling the relevant setters methods defined in this class
+     * see more {@link TTConfig#turnOffAutoStart()}, {@link TTConfig#enableDebug()}
      */
     public static class TTConfig {
         /* application context */
@@ -262,6 +293,11 @@ public class TiktokBusinessSdk {
         /* auto init flag check in manifest */
         private boolean autoStart = true;
 
+        /**
+         * Read configs from <meta-data>
+         *
+         * @param context
+         */
         public TTConfig(Context context) {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
             application = (Application) context.getApplicationContext();
@@ -338,7 +374,7 @@ public class TiktokBusinessSdk {
         /**
          * to disable auto event tracking & lifecycle listeners
          */
-        public TTConfig turnOffAutoTracking() {
+        public TTConfig turnOffAutoStart() {
             this.autoStart = false;
             return this;
         }

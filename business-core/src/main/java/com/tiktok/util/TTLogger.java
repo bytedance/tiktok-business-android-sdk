@@ -24,6 +24,9 @@ public final class TTLogger {
     }
 
     private String resolvedStr(String format, Object... extra) {
+        if (format == null) {
+            return "null";
+        }
         return extra.length == 0 ? format : String.format(format, extra);
 
     }

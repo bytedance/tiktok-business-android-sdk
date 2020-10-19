@@ -13,9 +13,31 @@ import java.util.Map;
 
 public class HttpRequestUtil {
 
+    public static class HttpRequestOptions {
+        private static int UNSET = -1;
+        public int connectTimeout = UNSET;
+        public int readTimeout = UNSET;
+
+        public void configConnection(HttpURLConnection connection) {
+            if (connectTimeout != UNSET) {
+                connection.setConnectTimeout(connectTimeout);
+            }
+            if (readTimeout != UNSET) {
+                connection.setReadTimeout(readTimeout);
+            }
+        }
+    }
+
     private static final String TAG = HttpRequestUtil.class.getCanonicalName();
 
     public static String doGet(String url, Map<String, String> headerParamMap) {
+        HttpRequestOptions options = new HttpRequestOptions();
+        options.connectTimeout = 2000;
+        options.readTimeout = 5000;
+        return doGet(url, headerParamMap, options);
+    }
+
+    public static String doGet(String url, Map<String, String> headerParamMap, HttpRequestOptions options) {
         String result = null;
 
         HttpURLConnection connection = null;
@@ -24,8 +46,7 @@ public class HttpRequestUtil {
             URL httpURL = new URL(url);
             connection = (HttpURLConnection) httpURL.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(2000);
-            connection.setReadTimeout(5000);
+            options.configConnection(connection);
             connection.setDoOutput(false);
             connection.setDoInput(true);
             connection.setUseCaches(false);
@@ -52,6 +73,13 @@ public class HttpRequestUtil {
     }
 
     public static String doPost(String url, Map<String, String> headerParamMap, String jsonStr) {
+        HttpRequestOptions options = new HttpRequestOptions();
+        options.connectTimeout = 2000;
+        options.readTimeout = 5000;
+        return doPost(url, headerParamMap, jsonStr, options);
+    }
+
+    public static String doPost(String url, Map<String, String> headerParamMap, String jsonStr, HttpRequestOptions options) {
 
         String result = null;
 
@@ -66,8 +94,7 @@ public class HttpRequestUtil {
 
             connection = (HttpURLConnection) httpURL.openConnection();
             connection.setRequestMethod("POST");
-            connection.setConnectTimeout(2000);
-            connection.setReadTimeout(5000);
+            options.configConnection(connection);
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setUseCaches(false);

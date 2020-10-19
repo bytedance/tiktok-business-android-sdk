@@ -42,19 +42,21 @@ class TTRequest {
     }
 
     public static JSONObject getBusinessSDKConfig() {
+        logger.info("Try to fetch global configs");
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
 //        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
         String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
         String result = HttpRequestUtil.doGet(url, headParamMap);
         logger.verbose(result);
-        JSONObject config =  null;
+        JSONObject config = null;
         if (result != null) {
             try {
                 JSONObject resultJson = new JSONObject(result);
                 Integer code = (Integer) resultJson.get("code");
                 if (code == 0) {
-                    config = (JSONObject)resultJson.get("data");
+                    config = (JSONObject) resultJson.get("data");
                 }
+                logger.info("Global config fetched: " + config.toString());
             } catch (Exception e) {
                 TTCrashHandler.handleCrash(TAG, e);
             }
@@ -148,6 +150,7 @@ class TTRequest {
             }
             notifyChange();
         }
+        logger.verbose("Flushed %d events, failed to flush %d events", successfulRequests, failedEvents.size());
         toBeSentRequests = 0;
         failedRequests = 0;
         successfulRequests = 0;

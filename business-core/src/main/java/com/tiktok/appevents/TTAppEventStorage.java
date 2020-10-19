@@ -88,6 +88,7 @@ class TTAppEventStorage {
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)))) {
             oos.writeObject(appEventPersist);
+            logger.verbose("Saving %d events to disk", appEventPersist.getAppEvents().size());
             if (TiktokBusinessSdk.diskListener != null) {
                 TiktokBusinessSdk.diskListener.onDiskChange(appEventPersist.getAppEvents().size(), false);
             }

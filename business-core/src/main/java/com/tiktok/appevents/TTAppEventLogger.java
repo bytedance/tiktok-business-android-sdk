@@ -22,9 +22,12 @@ import java.util.concurrent.TimeUnit;
 public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
 
+    // every TIME_BUFFER seconds, a flush task will be pushed to the execution queue
     private static final int TIME_BUFFER = 15;
+    // once THRESHOLD events got accumulated in the memory, a flush task will be pushed to the execution queue
     static final int THRESHOLD = 100;
 
+    // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
 
     /**
@@ -36,11 +39,24 @@ public class TTAppEventLogger {
      */
     Lifecycle lifecycle;
 
+
+    /**
+     * We provide a global switch in order that you can turn off our sdk remotely
+     * This is a final rescue in case our sdk is causing constant crashes in you app.
+     * on the switch if off, the events will neither be saved to the memory nor on the disk,
+     * our sdk simply ignores all the track requests.
+     */
+    private boolean isGlobalSwitchOn = false;
+
+    // for internal debug purpose
     int flushId = 0;
 
+    // similar to what javascript has, so that all the internal tasks are executed in a waterfall fashion, avoiding race conditions
     static ScheduledExecutorService eventLoop = Executors.newSingleThreadScheduledExecutor(new TTThreadFactory());
-    static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor(new TTThreadFactory());
     ScheduledFuture<?> future = null;
+
+    // used by internal monitor
+    static ScheduledExecutorService timerService = Executors.newSingleThreadScheduledExecutor(new TTThreadFactory());
     ScheduledFuture<?> timeFuture = null;
     private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
 
@@ -79,7 +95,10 @@ public class TTAppEventLogger {
         }
     }
 
-    public void persistEvents() {
+    /**
+     * persist events to the disk
+     */
+    void persistEvents() {
         addToQ(() -> TTAppEventStorage.persist(null));
     }
 
@@ -105,20 +124,24 @@ public class TTAppEventLogger {
 
     int counter = 15;
 
+    void startScheduler() {
+        doStartScheduler(TIME_BUFFER, false);
+    }
+
+    void restartScheduler() {
+        doStartScheduler(TIME_BUFFER, true);
+    }
+
     /**
      * Try to flush to network every {@link TTAppEventLogger#TIME_BUFFER} seconds
      * Like setTimeInterval in js
      */
-    void startScheduler() {
-        doStartScheduler(TIME_BUFFER);
-    }
-
-    // for the sake of simplicity of unit tests
-    private void doStartScheduler(int interval) {
+    private void doStartScheduler(int interval, boolean immediate) {
         if (future == null) {
-            future = eventLoop.scheduleAtFixedRate(batchFlush, interval, interval, TimeUnit.SECONDS);
+            future = eventLoop.scheduleAtFixedRate(batchFlush, immediate ? 0 : interval, interval, TimeUnit.SECONDS);
         }
         if (timeFuture == null && TiktokBusinessSdk.nextTimeFlushListener != null) {
+            counter = interval;
             timeFuture = timerService.scheduleAtFixedRate(() -> {
                 TiktokBusinessSdk.nextTimeFlushListener.timeLeft(counter);
                 if (counter == 0) {
@@ -214,7 +237,7 @@ public class TTAppEventLogger {
                 List<TTAppEvent> failedEvents = TTRequest.appEventReport(TTRequestBuilder.getBasePayload(
                         TiktokBusinessSdk.getApplicationContext(),
                         TiktokBusinessSdk.isGaidCollectionEnabled()
-                        ), appEventPersist.getAppEvents());
+                ), appEventPersist.getAppEvents());
 
                 if (!failedEvents.isEmpty()) { // flush failed, persist events
                     logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
