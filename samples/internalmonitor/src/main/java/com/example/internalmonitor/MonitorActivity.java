@@ -29,10 +29,13 @@ public class MonitorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
-                .enableDebug();
+        if (!inited) {
+            inited = true;
+            TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
+                    .enableDebug();
 //                    .turnOffAdvertiserIDCollection();
-        TiktokBusinessSdk.initializeSdk(ttConfig);
+            TiktokBusinessSdk.initializeSdk(ttConfig);
+        }
 
         SDKEventHandler handler = new SDKEventHandler(this);
         // TODO, use ViewModel to keep activity state

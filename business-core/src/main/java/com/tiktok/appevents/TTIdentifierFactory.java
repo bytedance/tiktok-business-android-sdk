@@ -9,6 +9,10 @@ import android.os.*;
 
 import android.text.TextUtils;
 
+import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTLogger;
+
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -16,17 +20,23 @@ import java.util.concurrent.BlockingQueue;
  * get advertiser id info using Google Play API
  */
 class TTIdentifierFactory {
+    private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
-    public static AdIdInfo getGoogleAdIdInfo(Context context) throws PackageManager.NameNotFoundException, RemoteException {
+    private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    private static RuntimeException serviceNotInstalled = new RuntimeException("Google play service not installed");
+
+    public static AdIdInfo getGoogleAdIdInfo(Context context) throws RemoteException {
         PackageManager packageManager = context.getPackageManager();
         try {
             // is google play installed
             packageManager.getPackageInfo("com.android.vending", 0);
         } catch (PackageManager.NameNotFoundException e) {
             // google play is not installed
-            throw new PackageManager.NameNotFoundException("package 'com.android.vending' not found");
+            throw serviceNotInstalled;
         }
 
+
+//        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
         // service binding intent
         Intent intent = new Intent("com.google.android.gms.ads.identifier.service.START");
         intent.setPackage("com.google.android.gms");
@@ -38,19 +48,16 @@ class TTIdentifierFactory {
                 String adId = adIdInterface.getAdId();
                 boolean isAdTrackingEnabled = adIdInterface.isAdIdTrackingEnabled();
                 if (TextUtils.isEmpty(adId)) {
-                    // empty ad id, something went wrong
-                    throw new IllegalStateException("Ad ID is null or empty");
+                    return new AdIdInfo("", isAdTrackingEnabled);
                 } else {
                     // everything is ok, call listener
                     return new AdIdInfo(adId, isAdTrackingEnabled);
                 }
             } else {
+                logger.info("Failed to detect google play identifier service on this phone");
                 // connection to service was not successful
-                throw new IllegalStateException("Bad GMS service connection");
+                return new AdIdInfo("", true);
             }
-        } catch (RemoteException e) {
-            // can't process IBinder object
-            throw e;
         } finally {
             // finally unbind from service
             context.unbindService(serviceConnection);

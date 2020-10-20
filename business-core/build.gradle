@@ -8,7 +8,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.2.0'
-
+//    implementation 'com.google.android.gms:play-services-ads:15.0.1'
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

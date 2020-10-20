@@ -39,14 +39,6 @@ public class TTAppEventLogger {
      */
     Lifecycle lifecycle;
 
-    /**
-     * We provide a global switch in order that you can turn off our sdk remotely
-     * This is a final rescue in case our sdk is causing constant crashes in you app.
-     * on the switch if off, the events will neither be saved to the memory nor on the disk,
-     * our sdk simply ignores all the track requests.
-     */
-    private boolean isGlobalSwitchOn = false;
-
     // for internal debug purpose
     int flushId = 0;
 
@@ -187,11 +179,9 @@ public class TTAppEventLogger {
 
     // only when this method is called will the whole sdk be activated
     private void activateSdk() {
-        addToLater(() -> {
-            autoEventsManager.trackOnAppOpenEvents();
-            startScheduler();
-            flush(FlushReason.START_UP);
-        }, 1);
+        autoEventsManager.trackOnAppOpenEvents();
+        startScheduler();
+        flush(FlushReason.START_UP);
     }
 
     private void flush(FlushReason reason) {
@@ -313,9 +303,9 @@ public class TTAppEventLogger {
 
             } catch (JSONException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 TiktokBusinessSdk.setGlobalConfigFetched();
-                if (TiktokBusinessSdk.getSdkGlobalSwitch()){
+                if (TiktokBusinessSdk.getSdkGlobalSwitch()) {
                     activateSdk();
                 }
             }

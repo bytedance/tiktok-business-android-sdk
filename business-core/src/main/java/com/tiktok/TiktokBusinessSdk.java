@@ -45,7 +45,10 @@ public class TiktokBusinessSdk {
     private static AtomicBoolean globalConfigFetched = new AtomicBoolean(false);
 
     /**
-     * remote switch
+     * We provide a global switch in order that you can turn off our sdk remotely
+     * This is a final rescue in case our sdk is causing constant crashes in you app.
+     * If the switch is off, the events will neither be saved to the memory nor on the disk,
+     * our sdk simply ignores all the track or flush requests.
      */
     private static Boolean sdkGlobalSwitch = true;
     /**
