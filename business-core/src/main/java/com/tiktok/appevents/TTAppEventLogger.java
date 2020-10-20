@@ -65,8 +65,7 @@ public class TTAppEventLogger {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(TiktokBusinessSdk ttSdk,
-                            boolean lifecycleTrackEnable) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable) {
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
 
@@ -79,7 +78,9 @@ public class TTAppEventLogger {
 
         /** advertiser id fetch */
         autoEventsManager = new TTAutoEventsManager(this);
+
         SystemInfoUtil.initUserAgent();
+
         remoteSdkConfigProcess();
     }
 
@@ -285,19 +286,12 @@ public class TTAppEventLogger {
         addToQ(() -> {
             try {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
-                TiktokBusinessSdk.setGlobalConfigFetched();
 
-                if (requestResult == null) {
-                    activateSdk();
-                    return;
-                }
+                if (requestResult == null) return;
 
                 JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
 
-                if (businessSdkConfig == null) {
-                    activateSdk();
-                    return;
-                }
+                if (businessSdkConfig == null) return;
 
                 Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
                 String availableVersion = (String) businessSdkConfig.get("available_version");
@@ -309,8 +303,6 @@ public class TTAppEventLogger {
                     if (!enableSDK) {
                         logger.info("Clear all events and stop timers because global switch is not turned on");
                         clearAll();
-                    } else {
-                        activateSdk();
                     }
                 }
 
@@ -321,9 +313,13 @@ public class TTAppEventLogger {
 
             } catch (JSONException e) {
                 e.printStackTrace();
+            }finally {
+                TiktokBusinessSdk.setGlobalConfigFetched();
+                if (TiktokBusinessSdk.getSdkGlobalSwitch()){
+                    activateSdk();
+                }
             }
 
         });
     }
-
 }

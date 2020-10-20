@@ -68,15 +68,21 @@ public class TiktokBusinessSdk {
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
         /* no app id exception */
-        if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
+        if (ttConfig.appId == null) {
+            throw new IllegalArgumentException("app id not found");
+        }
         appId = ttConfig.appId;
+
         /* no write key exception */
-        if (ttConfig.accessToken == null)
+        if (ttConfig.accessToken == null) {
             throw new IllegalArgumentException("access token not found");
+        }
         accessToken = ttConfig.accessToken;
+
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
         gaidCollectionEnabled = ttConfig.advertiserIDCollectionEnable;
+
         /* sdk logger & loglevel */
         if (ttConfig.debug) {
             logLevel = LogLevel.VERBOSE;
@@ -84,6 +90,7 @@ public class TiktokBusinessSdk {
             logLevel = LogLevel.INFO;
         }
         logger = new TTLogger(TAG, logLevel);
+
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
     }
 
@@ -94,10 +101,11 @@ public class TiktokBusinessSdk {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
 
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
+
         ttSdk = new TiktokBusinessSdk(ttConfig);
+
         // the appEventLogger instance will be the main interface to track events
-        appEventLogger = new TTAppEventLogger(ttSdk,
-                ttConfig.autoEvent);
+        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent);
     }
 
     /**
