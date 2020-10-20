@@ -79,7 +79,7 @@ public class TTAppEventLogger {
 
         /** advertiser id fetch */
         autoEventsManager = new TTAutoEventsManager(this);
-
+        SystemInfoUtil.initUserAgent();
         remoteSdkConfigProcess();
     }
 
@@ -186,7 +186,6 @@ public class TTAppEventLogger {
 
     // only when this method is called will the whole sdk be activated
     private void activateSdk() {
-        SystemInfoUtil.initUserAgent();
         addToLater(() -> {
             autoEventsManager.trackOnAppOpenEvents();
             startScheduler();
@@ -288,11 +287,17 @@ public class TTAppEventLogger {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
                 TiktokBusinessSdk.setGlobalConfigFetched();
 
-                if (requestResult == null) return;
+                if (requestResult == null) {
+                    activateSdk();
+                    return;
+                }
 
                 JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
 
-                if (businessSdkConfig == null) return;
+                if (businessSdkConfig == null) {
+                    activateSdk();
+                    return;
+                }
 
                 Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
                 String availableVersion = (String) businessSdkConfig.get("available_version");
