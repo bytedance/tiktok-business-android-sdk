@@ -11,6 +11,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class HttpRequestUtil {
 
     public static class HttpRequestOptions {
@@ -40,11 +42,11 @@ public class HttpRequestUtil {
     public static String doGet(String url, Map<String, String> headerParamMap, HttpRequestOptions options) {
         String result = null;
 
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
 
         try {
             URL httpURL = new URL(url);
-            connection = (HttpURLConnection) httpURL.openConnection();
+            connection = (HttpsURLConnection) httpURL.openConnection();
             connection.setRequestMethod("GET");
             options.configConnection(connection);
             connection.setDoOutput(false);
@@ -83,7 +85,7 @@ public class HttpRequestUtil {
 
         String result = null;
 
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
 
         OutputStream outputStream = null;
 
@@ -92,7 +94,7 @@ public class HttpRequestUtil {
 
             URL httpURL = new URL(url);
 
-            connection = (HttpURLConnection) httpURL.openConnection();
+            connection = (HttpsURLConnection) httpURL.openConnection();
             connection.setRequestMethod("POST");
             options.configConnection(connection);
             connection.setDoOutput(true);

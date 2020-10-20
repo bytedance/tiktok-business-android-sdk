@@ -37,15 +37,14 @@ class TTRequest {
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
         headParamMap.put("User-Agent", "tiktok-business-android-sdk/1.0.0/v1.1");
-        //TODO BOE env need config x-tt-env, remove after going online
-        headParamMap.put("x-tt-env", "jianyi");
+//        headParamMap.put("x-tt-env", "jianyi");
     }
 
     public static JSONObject getBusinessSDKConfig() {
         logger.info("Try to fetch global configs");
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
-//        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
-        String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+//        String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
         String result = HttpRequestUtil.doGet(url, headParamMap);
         logger.verbose(result);
         JSONObject config = null;
@@ -173,7 +172,6 @@ class TTRequest {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("type", "track");
             jsonObject.put("event", event.getEventName());
-            //TODO 转化时间的时候用默认时区吗？
             jsonObject.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
             jsonObject.put("properties", event.getJsonObject());
             return jsonObject;
@@ -184,10 +182,10 @@ class TTRequest {
     }
 
     /**
-     * 切分列表
+     * split event list
      *
-     * @param sourceList 列表
-     * @param splitNum   切分份数
+     * @param sourceList
+     * @param splitNum
      * @param <T>
      */
     public static <T> List<List<T>> averageAssign(List<T> sourceList, int splitNum) {
