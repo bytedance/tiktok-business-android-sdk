@@ -22,6 +22,7 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
     private static final TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
 
     private final TTAppEventLogger appEventLogger;
+    private boolean isPaused = false;
 
     public TTActivityLifecycleCallbacksListener(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
@@ -29,12 +30,15 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
 
     @Override
     public void onResume(LifecycleOwner owner) {
-        appEventLogger.restartScheduler();
+        if (isPaused) {
+            appEventLogger.restartScheduler();
+        }
     }
 
     @Override
     public void onPause(LifecycleOwner owner) {
         appEventLogger.stopScheduler();
+        isPaused = true;
     }
 
     @Override
