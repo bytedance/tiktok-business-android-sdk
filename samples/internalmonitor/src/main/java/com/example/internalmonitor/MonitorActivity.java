@@ -13,13 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.appevents.TTAppEventLogger;
+import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 public class MonitorActivity extends AppCompatActivity {
@@ -29,13 +29,10 @@ public class MonitorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!inited) {
-            inited = true;
-            TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
-                    .enableDebug();
+        TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
+                .enableDebug();
 //                    .turnOffAdvertiserIDCollection();
-            TiktokBusinessSdk.initializeSdk(ttConfig);
-        }
+        TiktokBusinessSdk.initializeSdk(ttConfig);
 
         SDKEventHandler handler = new SDKEventHandler(this);
         // TODO, use ViewModel to keep activity state

@@ -42,6 +42,8 @@ public class TiktokBusinessSdk {
      * access token
      */
     private static String accessToken;
+    private static AtomicBoolean globalConfigFetched = new AtomicBoolean(false);
+
     /**
      * remote switch
      */
@@ -62,14 +64,15 @@ public class TiktokBusinessSdk {
     /**
      * logger util
      */
-    TTLogger logger;
+    private static TTLogger logger;
 
     private TiktokBusinessSdk(TTConfig ttConfig) {
         /* no app id exception */
         if (ttConfig.appId == null) throw new IllegalArgumentException("app id not found");
         appId = ttConfig.appId;
         /* no write key exception */
-        if (ttConfig.accessToken == null) throw new IllegalArgumentException("access token not found");
+        if (ttConfig.accessToken == null)
+            throw new IllegalArgumentException("access token not found");
         accessToken = ttConfig.accessToken;
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
@@ -89,6 +92,7 @@ public class TiktokBusinessSdk {
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
+
         if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
         ttSdk = new TiktokBusinessSdk(ttConfig);
         // the appEventLogger instance will be the main interface to track events
@@ -142,6 +146,7 @@ public class TiktokBusinessSdk {
         if (nfl != null) {
             nextTimeFlushListener = nfl;
         }
+        flush();
     }
 
     // inner status listeners, for debugging purpose
@@ -257,6 +262,27 @@ public class TiktokBusinessSdk {
 
     public static Boolean getSdkGlobalSwitch() {
         return sdkGlobalSwitch;
+    }
+
+    /**
+     * if globalSwitch request is sent to network, but the network returns error, activate the app regardless
+     * if globalSwitch request is sent to network and api returns false, then sdk will not be activated
+     * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
+     */
+    public static boolean isSystemActivated() {
+        Boolean sdkGlobalSwitch = TiktokBusinessSdk.getSdkGlobalSwitch();
+        if (!sdkGlobalSwitch) {
+            logger.verbose("Global switch is off, ignore all operations");
+        }
+        return sdkGlobalSwitch;
+    }
+
+    public static Boolean isGlobalConfigFetched() {
+        return globalConfigFetched.get();
+    }
+
+    public static void setGlobalConfigFetched() {
+        globalConfigFetched.set(true);
     }
 
     public static void setSdkGlobalSwitch(Boolean sdkGlobalSwitch) {

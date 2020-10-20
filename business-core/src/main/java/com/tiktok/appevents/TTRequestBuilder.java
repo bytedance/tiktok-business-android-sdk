@@ -40,6 +40,7 @@ class TTRequestBuilder {
             TTIdentifierFactory.AdIdInfo adIdInfo = null;
             try {
                 if (isGaidCollectionEnabled) {
+                    // fetch gaid info through google service
                     adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(context);
                 }
             } catch (Exception e) {

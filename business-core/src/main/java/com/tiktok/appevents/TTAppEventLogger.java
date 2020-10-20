@@ -39,7 +39,6 @@ public class TTAppEventLogger {
      */
     Lifecycle lifecycle;
 
-
     /**
      * We provide a global switch in order that you can turn off our sdk remotely
      * This is a final rescue in case our sdk is causing constant crashes in you app.
@@ -82,17 +81,6 @@ public class TTAppEventLogger {
         autoEventsManager = new TTAutoEventsManager(this);
 
         remoteSdkConfigProcess();
-
-        activateApp();
-
-        /**
-         * the main thread sleeps for 500 ms, let the remoteSdkConfigProcess method execute first
-         */
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -106,7 +94,7 @@ public class TTAppEventLogger {
      * track purchase after PurchasesUpdatedListener
      */
     public void trackPurchase(List<Object> purchases, List<Object> skuDetails) {
-        if (!isSystemActivated()) {
+        if (!TiktokBusinessSdk.isSystemActivated()) {
             return;
         }
         addToQ(() -> {
@@ -173,13 +161,13 @@ public class TTAppEventLogger {
      * @param props
      */
     public void track(@NonNull String event, @Nullable TTProperty props) {
-        if (!isSystemActivated()) {
+        if (!TiktokBusinessSdk.isSystemActivated()) {
             return;
         }
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
         Runnable task = () -> {
-            logger.debug(event + " : " + finalProps.get().toString());
+            logger.debug("track " + event + " : " + finalProps.get().toString());
 
             TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.get().toString()));
 
@@ -197,34 +185,29 @@ public class TTAppEventLogger {
     }
 
     // only when this method is called will the whole sdk be activated
-    private void activateApp() {
+    private void activateSdk() {
         SystemInfoUtil.initUserAgent();
-        addToQ(() -> {
+        addToLater(() -> {
             autoEventsManager.trackOnAppOpenEvents();
             startScheduler();
             flush(FlushReason.START_UP);
-        });
+        }, 1);
     }
-
-    /**
-     * if globalSwitch request is sent to network, but the network returns error, activate the app regardless
-     * if globalSwitch request is sent to network and api returns false, then sdk will not be activated
-     * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
-     */
-    private boolean isSystemActivated() {
-        Boolean sdkGlobalSwitch = TiktokBusinessSdk.getSdkGlobalSwitch();
-        if (!sdkGlobalSwitch) {
-            logger.verbose("Global switch is off, ignore all operations");
-        }
-        return sdkGlobalSwitch;
-    }
-
 
     private void flush(FlushReason reason) {
-
-        if (!isSystemActivated()) return;
-
         TTUtil.checkThread(TAG);
+
+        // if global config is not fetched, we can track events and put in into memory
+        // but they should not be sent to the network
+        if (!TiktokBusinessSdk.isGlobalConfigFetched()) {
+            logger.verbose("Skip flushing because global config is not fetched");
+            return;
+        }
+        // global switch is turned off, dump all events
+        if (!TiktokBusinessSdk.isSystemActivated()) {
+            logger.info("Skip flushing because global switch is turned off");
+            return;
+        }
 
         try {
             if (TiktokBusinessSdk.getNetworkSwitch()) {
@@ -274,6 +257,17 @@ public class TTAppEventLogger {
         }
     }
 
+
+    // Do not remove, for the ease of local test
+    private void addToLater(Runnable task, int seconds) {
+        // http://www.javabyexamples.com/handling-exceptions-from-executorservice-tasks
+        try {
+            eventLoop.schedule(task, seconds, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
+        }
+    }
+
     public void clearAll() {
         addToQ(() -> {
             TTAppEventsQueue.clearAll();
@@ -283,29 +277,41 @@ public class TTAppEventLogger {
 
     /**
      * set remote switch and api available version
+     * if the remote config is not fetched, the events can only be saved in memory
+     * if the config is fetched and config.globalSwitch is true, events can be saved in memory or on the disk.
+     * if the config is fetched and config.globalSwitch is false, the events can neither be saved in memory nor on the disk
+     * any events in the memory will be gone when the app is closed.
      */
-    private void remoteSdkConfigProcess(){
-        addToQ(()->{
+    private void remoteSdkConfigProcess() {
+        addToQ(() -> {
             try {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
+                TiktokBusinessSdk.setGlobalConfigFetched();
 
-                if(requestResult == null) return;
+                if (requestResult == null) return;
 
-                JSONObject businessSdkConfig = (JSONObject)requestResult.get("business_sdk_config");
+                JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
 
-                if(businessSdkConfig == null) return;
+                if (businessSdkConfig == null) return;
 
-                Boolean enableSDK = (Boolean)businessSdkConfig.get("enable_sdk");
-                String availableVersion= (String) businessSdkConfig.get("available_version");
+                Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
+                String availableVersion = (String) businessSdkConfig.get("available_version");
 
-                if(enableSDK != null) {
+                if (enableSDK != null) {
                     TiktokBusinessSdk.setSdkGlobalSwitch(enableSDK);
-                    logger.verbose("enable_sdk="+enableSDK);
+                    logger.verbose("enable_sdk=" + enableSDK);
+                    // if sdk is shutdown, stop all the timers
+                    if (!enableSDK) {
+                        logger.info("Clear all events and stop timers because global switch is not turned on");
+                        clearAll();
+                    } else {
+                        activateSdk();
+                    }
                 }
 
-                if(availableVersion != null && !availableVersion.equals("")) {
+                if (availableVersion != null && !availableVersion.equals("")) {
                     TiktokBusinessSdk.setApiAvailableVersion(availableVersion);
-                    logger.verbose("available_version="+availableVersion);
+                    logger.verbose("available_version=" + availableVersion);
                 }
 
             } catch (JSONException e) {

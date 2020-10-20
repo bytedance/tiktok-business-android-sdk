@@ -6,7 +6,7 @@ import com.tiktok.util.TTUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TTAppEventsQueue {
+class TTAppEventsQueue {
 
     private static String TAG = TTAppEventsQueue.class.getCanonicalName();
     private static List<TTAppEvent> memory = new ArrayList<>();

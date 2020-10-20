@@ -59,7 +59,8 @@ public class AppEventCycleAdapter extends RecyclerView.Adapter<AppEventCycleAdap
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        TTAppEvent event = TTAppEventLogger.getSuccessfulEvents().get(position);
+        int lastIndex = TTAppEventLogger.getSuccessfulEvents().size() - 1;
+        TTAppEvent event = TTAppEventLogger.getSuccessfulEvents().get(lastIndex - position);
         holder.getEventName().setText(event.getEventName());
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 

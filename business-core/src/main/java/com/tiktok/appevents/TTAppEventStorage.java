@@ -29,8 +29,14 @@ class TTAppEventStorage {
      *
      * @param failedEvents if flush failed, failedEvents is not null
      */
-    public synchronized static void persist(List<TTAppEvent> failedEvents) {
+    synchronized static void persist(List<TTAppEvent> failedEvents) {
         TTUtil.checkThread(TAG);
+
+        logger.verbose("Tried to persist to disk");
+        if (!TiktokBusinessSdk.isSystemActivated()) {
+            logger.verbose("Quit persisting to disk because global switch is turned off");
+            return;
+        }
 
         List<TTAppEvent> eventsFromMemory = TTAppEventsQueue.exportAllEvents();
 
@@ -105,7 +111,7 @@ class TTAppEventStorage {
         }
     }
 
-    public synchronized static TTAppEventPersist readFromDisk() {
+    synchronized static TTAppEventPersist readFromDisk() {
         TTUtil.checkThread(TAG);
 
         Context context = TiktokBusinessSdk.getApplicationContext();
