@@ -36,7 +36,7 @@ class TTRequest {
         // these fields wont change, so cache it locally to enhance performance
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
-        headParamMap.put("User-Agent", "tiktok-business-android-sdk/1.0.0");
+        headParamMap.put("User-Agent", "tiktok-business-android-sdk/1.0.0/v1.1");
         //TODO BOE env need config x-tt-env, remove after going online
         headParamMap.put("x-tt-env", "jianyi");
     }
@@ -96,7 +96,7 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
 
-        String url = "https://ads.tiktok.com/open_api/v1.1/app/batch/";
+        String url = "https://ads.tiktok.com/open_api/"+TiktokBusinessSdk.getApiAvailableVersion()+"/app/batch/";
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 
