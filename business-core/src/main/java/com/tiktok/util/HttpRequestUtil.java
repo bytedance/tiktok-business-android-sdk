@@ -67,7 +67,11 @@ public class HttpRequestUtil {
             TTCrashHandler.handleCrash(TAG, e);
         } finally {
             if (connection != null) {
-                connection.disconnect();
+                try {
+                    connection.disconnect();
+                }catch (Exception e){
+                    TTCrashHandler.handleCrash(TAG, e);
+                }
             }
         }
 
@@ -126,7 +130,11 @@ public class HttpRequestUtil {
                 }
             }
             if (connection != null) {
-                connection.disconnect();
+                try {
+                    connection.disconnect();
+                }catch (Exception e){
+                    TTCrashHandler.handleCrash(TAG, e);
+                }
             }
         }
 

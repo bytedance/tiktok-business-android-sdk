@@ -9,7 +9,6 @@ import com.tiktok.util.TTUtil;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -57,18 +56,16 @@ class TTAppEventStorage {
         toBeSaved.addEvents(eventsFromMemory);
 
         //If end up persisting more than 10,000 events, persist the latest 10,000 events by timestamp
-        slimEvents(toBeSaved, MAX_PERSIST_EVENTS_NUM);
+        discardOldEvents(toBeSaved, MAX_PERSIST_EVENTS_NUM);
         saveToDisk(toBeSaved);
     }
 
     private static int totalDumped = 0;
 
     /**
-     * events slim
-     *
-     * @param ttAppEventPersist
+     * In order not to overwhelm users' disk, only maxPersistNum is allowed to be persisted to disk
      */
-    private static void slimEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
+    private static void discardOldEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
         if (ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {
             return;
         }

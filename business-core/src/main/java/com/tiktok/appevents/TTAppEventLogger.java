@@ -83,21 +83,21 @@ public class TTAppEventLogger {
         addToQ(() -> TTAppEventStorage.persist(null));
     }
 
-    /**
-     * track purchase after PurchasesUpdatedListener
-     */
-    public void trackPurchase(List<Object> purchases, List<Object> skuDetails) {
+    public void trackPurchase(List<JSONObject> purchases, @Nullable List<JSONObject> skuDetails) {
         if (!TiktokBusinessSdk.isSystemActivated()) {
             return;
         }
         addToQ(() -> {
             JSONObject allSkuMap = null;
-            if (!skuDetails.isEmpty()) {
-                allSkuMap = TTInAppPurchaseManager.getSkuDetailsMap(skuDetails);
+            if (purchases.isEmpty() || skuDetails.isEmpty()) {
+                return;
             }
-            if (!purchases.isEmpty()) {
-                for (Object purchase : purchases) {
-                    track("Purchase", TTInAppPurchaseManager.getPurchaseProps(purchase, allSkuMap));
+
+            allSkuMap = TTInAppPurchaseManager.getSkuDetailsMap(skuDetails);
+            for (JSONObject purchase : purchases) {
+                TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchase, allSkuMap);
+                if (property != null) {
+                    track("Purchase", property);
                 }
             }
         });
@@ -207,10 +207,8 @@ public class TTAppEventLogger {
 
                 appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-                List<TTAppEvent> failedEvents = TTRequest.appEventReport(TTRequestBuilder.getBasePayload(
-                        TiktokBusinessSdk.getApplicationContext(),
-                        TiktokBusinessSdk.isGaidCollectionEnabled()
-                ), appEventPersist.getAppEvents());
+                List<TTAppEvent> failedEvents = TTRequest.reportAppEvent(TTRequestBuilder.getBasePayload(
+                        TiktokBusinessSdk.getApplicationContext()), appEventPersist.getAppEvents());
 
                 if (!failedEvents.isEmpty()) { // flush failed, persist events
                     logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
@@ -309,7 +307,6 @@ public class TTAppEventLogger {
                     activateSdk();
                 }
             }
-
         });
     }
 }

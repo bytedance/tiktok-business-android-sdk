@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -17,6 +18,8 @@ import com.android.billingclient.api.*;
 import com.example.R;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.appevents.TTProperty;
+
+import org.json.JSONObject;
 
 import java.util.*;
 
@@ -48,7 +51,7 @@ public class HomeFragment extends Fragment {
                         .build();
 
                 int responseCode = billingClient.launchBillingFlow(activity, billingFlowParams).getResponseCode();
-                homeViewModel.setText("BillingResponseCode: "+responseCode);
+                homeViewModel.setText("BillingResponseCode: " + responseCode);
             } else {
                 queryPurchase();
             }
@@ -60,14 +63,24 @@ public class HomeFragment extends Fragment {
                     && purchases != null) {
 
                 /** tiktok.monitor track purchase */
-                TiktokBusinessSdk.trackPurchase(purchases, skuDetails);
+                List<JSONObject> purchaseJSONs = new ArrayList<>();
+
+                try {
+                    for (Purchase purchase : purchases) {
+                        purchaseJSONs.add(new JSONObject(purchase.getOriginalJson()));
+                    }
+                    List<JSONObject> skuDetailsList = Collections.singletonList(new JSONObject(skuDetails.getOriginalJson()));
+                    TiktokBusinessSdk.trackPurchase(purchaseJSONs, skuDetailsList);
+                } catch (Exception e) {
+                    Toast.makeText(HomeFragment.this.getActivity(), "Failed to track purchase: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
 
                 purchase = purchases.get(0);
                 homeViewModel.setText("purchase success, sku: " + purchase.getSku() + ". click to consume");
             } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
                 homeViewModel.setText("USER_CANCELED");
             } else {
-                homeViewModel.setText("otherErr : "+billingResult.getResponseCode());
+                homeViewModel.setText("otherErr : " + billingResult.getResponseCode());
             }
         };
 
@@ -131,14 +144,15 @@ public class HomeFragment extends Fragment {
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(@NonNull BillingResult billingResult) {
-                if (billingResult.getResponseCode() ==  BillingClient.BillingResponseCode.OK) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
                     homeViewModel.setText("onBillingSetupFinished");
                     // query existing purchases
                     queryPurchase();
-                }else{
+                } else {
                     homeViewModel.setText("Failed to set up billing");
                 }
             }
+
             @Override
             public void onBillingServiceDisconnected() {
                 homeViewModel.setText("onBillingServiceDisconnected");

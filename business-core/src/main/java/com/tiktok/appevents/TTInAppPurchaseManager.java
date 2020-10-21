@@ -28,13 +28,12 @@ class TTInAppPurchaseManager {
     /**
      * local cache sku details for future track purchase
      */
-    public static JSONObject getSkuDetailsMap(List<Object> skuDetails) {
+    static JSONObject getSkuDetailsMap(List<JSONObject> skuDetails) {
         JSONObject allSkus = new JSONObject();
-        for (Object skuDetail : skuDetails) {
-            JSONObject skuJson = extractJsonFromString(skuDetail.toString());
+        for (JSONObject skuDetail : skuDetails) {
             try {
-                String productId = skuJson.getString("productId");
-                allSkus.put(productId, skuJson);
+                String productId = skuDetail.getString("productId");
+                allSkus.put(productId, skuDetail);
             } catch (JSONException ignored) {
             }
         }
@@ -44,19 +43,24 @@ class TTInAppPurchaseManager {
     /**
      * p
      * */
-    public static TTProperty getPurchaseProps(Object purchase, JSONObject allSkuMap) {
+    static TTProperty getPurchaseProps(JSONObject purchase, JSONObject allSkuMap) {
         TTProperty props = new TTProperty();
-        JSONObject purchaseJson = extractJsonFromString(purchase.toString());
         String productId = null;
         try {
-            productId = purchaseJson.getString("productId");
-        } catch (JSONException ignored) {}
+            productId = purchase.getString("productId");
+        } catch (JSONException e) {
+            TTCrashHandler.handleCrash(TAG, e);
+            return null;
+        }
         if (productId != null) {
             JSONObject skuDetail = null;
             if (allSkuMap != null) {
                 try {
                     skuDetail = allSkuMap.getJSONObject(productId);
-                } catch (JSONException ignored) {}
+                } catch (JSONException e) {
+                    TTCrashHandler.handleCrash(TAG, e);
+                    return null;
+                }
             }
             props = getPurchaseProperties(productId, skuDetail);
         }
@@ -74,8 +78,6 @@ class TTInAppPurchaseManager {
     private static JSONObject extractJsonFromString(String objString) {
         /**
          * JSON string not passed for new api
-         * egs: [Purchase. Json: {"packageName":"com.example","acknowledged":false,"orderId":"transactionId.android.test.purchased","productId":"android.test.purchased","developerPayload":"","purchaseTime":0,"purchaseState":0,"purchaseToken":"inapp:com.example:android.test.purchased"}]
-         * SkuDetails: {"skuDetailsToken":"AEuhp4Lu4HAdf3nvnusEjwhfJQemFbKGuSQ37wM_7UJcce89YnZiBA6HJVz5vFMFbMPq","productId":"android.test.purchased","type":"inapp","price":"₹72.41","price_amount_micros":72407614,"price_currency_code":"INR","title":"Sample Title","description":"Sample description for product: android.test.purchased."}
          * this function tries to find start { and end } of json string in objString
          * */
         JSONObject jsonObject = null;

@@ -7,10 +7,14 @@ import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+
 import com.android.vending.billing.IInAppBillingService;
 import com.tiktok.TiktokBusinessSdk;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         // TiktokBusinessSdk init start
         TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
-                .setAppId("")
-                .setAccessToken("")
                 .enableDebug();
         TiktokBusinessSdk.initializeSdk(ttConfig);
         // TiktokBusinessSdk init end
@@ -125,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 ownedItems = mService.getPurchases(3, getPackageName(), "inapp", null);
 
-                Toast.makeText(context, "getPurchases() - success return Bundle", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "getPurchases() - success return Bundle", Toast.LENGTH_SHORT).show();
                 Log.i(tag, "getPurchases() - success return Bundle");
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -136,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             int response = ownedItems.getInt("RESPONSE_CODE");
-            Toast.makeText(context, "getPurchases() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "getPurchases() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
             Log.i(tag, "getPurchases() - \"RESPONSE_CODE\" return " + response);
 
             if (response != 0) return;
@@ -159,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
             if (mService == null) return;
 
             ArrayList<String> skuList = new ArrayList<>();
+            skuList.add("android.test.refunded");
             skuList.add(productID);
             Bundle querySkus = new Bundle();
             querySkus.putStringArrayList("ITEM_ID_LIST", skuList);
@@ -167,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 skuDetails = mService.getSkuDetails(3, getPackageName(), "inapp", querySkus);
 
-                Toast.makeText(context, "getSkuDetails() - success return Bundle", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "getSkuDetails() - success return Bundle", Toast.LENGTH_SHORT).show();
                 Log.i(tag, "getSkuDetails() - success return Bundle");
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -178,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             int response = skuDetails.getInt("RESPONSE_CODE");
-            Toast.makeText(context, "getSkuDetails() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "getSkuDetails() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
             Log.i(tag, "getSkuDetails() - \"RESPONSE_CODE\" return " + response);
 
             if (response != 0) return;
@@ -192,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     JSONObject object = new JSONObject(thisResponse);
 
-                    String sku   = object.getString("productId");
+                    String sku = object.getString("productId");
                     String title = object.getString("title");
                     String price = object.getString("price");
 
@@ -204,11 +207,11 @@ public class MainActivity extends AppCompatActivity {
 
                     Bundle buyIntentBundle = mService.getBuyIntent(3, getPackageName(), sku, "inapp", "bGoa+V7g/yqDXvKRqq+JTFn4uQZbPiQJo4pf9RzJ");
 
-                    Toast.makeText(context, "getBuyIntent() - success return Bundle", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "getBuyIntent() - success return Bundle", Toast.LENGTH_SHORT).show();
                     Log.i(tag, "getBuyIntent() - success return Bundle");
 
                     response = buyIntentBundle.getInt("RESPONSE_CODE");
-                    Toast.makeText(context, "getBuyIntent() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(context, "getBuyIntent() - \"RESPONSE_CODE\" return " + response, Toast.LENGTH_SHORT).show();
                     Log.i(tag, "getBuyIntent() - \"RESPONSE_CODE\" return " + response);
 
                     if (response != 0) continue;
@@ -236,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 response = mService.consumePurchase(3, getPackageName(), String.format("inapp:com.example.iabtest:%s", productID));
 
-                Toast.makeText(context, "consumePurchase() - success : return " + response, Toast.LENGTH_SHORT).show();
+//                Toast.makeText(context, "consumePurchase() - success : return " + response, Toast.LENGTH_SHORT).show();
                 Log.i(tag, "consumePurchase() - success : return " + response);
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -257,9 +260,12 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode != RESULT_OK) return;
 
             int responseCode = data.getIntExtra("RESPONSE_CODE", 1);
-            Toast.makeText(context, "onActivityResult() - \"RESPONSE_CODE\" return " + responseCode, Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, "onActivityResult() - \"RESPONSE_CODE\" return " + responseCode, Toast.LENGTH_SHORT).show();
             Log.i(tag, "onActivityResult() - \"RESPONSE_CODE\" return " + responseCode);
 
+            if (responseCode == 1) {
+                Toast.makeText(this, "Purchase is cancelled", Toast.LENGTH_SHORT).show();
+            }
             if (responseCode != 0) return;
 
             String purchaseData = data.getStringExtra("INAPP_PURCHASE_DATA");
@@ -269,7 +275,11 @@ public class MainActivity extends AppCompatActivity {
             Log.i(tag, "onActivityResult() - \"INAPP_DATA_SIGNATURE\" return " + dataSignature);
 
             // Tiktok purchase track
-            TiktokBusinessSdk.trackPurchase(purchaseData, skuDetailsList);
+            try {
+                TiktokBusinessSdk.trackPurchase(new JSONObject(purchaseData), new JSONObject(skuDetailsList.get(0)));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 

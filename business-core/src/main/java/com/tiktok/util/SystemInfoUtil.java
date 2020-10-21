@@ -8,6 +8,7 @@ import android.webkit.WebView;
 
 import com.tiktok.TiktokBusinessSdk;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Enumeration;
@@ -61,7 +62,7 @@ public class SystemInfoUtil {
                 NetworkInterface intf = en.nextElement();
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()) {
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
                         return inetAddress.getHostAddress();
                     }
                 }
@@ -79,12 +80,13 @@ public class SystemInfoUtil {
     private static String userAgent;
 
     // invoke it in the mainThread
-    public static void initUserAgent(){
+    public static void initUserAgent() {
         userAgent = new WebView(TiktokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
     }
 
     public static String getUserAgent() {
         return userAgent;
     }
+
 
 }

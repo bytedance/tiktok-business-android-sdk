@@ -52,6 +52,5 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
         appEventLogger.stopScheduler();
     }
 
-
 }
 

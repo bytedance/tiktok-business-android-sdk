@@ -13,7 +13,10 @@ import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTLogger;
 
+import org.json.JSONObject;
+
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TiktokBusinessSdk {
@@ -199,23 +202,59 @@ public class TiktokBusinessSdk {
 
     /**
      * public interface for tracking Event with custom properties
+     * {@link TTProperty} is just a simple wrapper around JSONObject, the reason why we
+     * introduce it is to suppress JSONException.
      */
     public static void trackEvent(@NonNull String event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 
+
     /**
-     * process purchases from PurchasesUpdatedListener
+     * Track a list purchases at the same time.
+     * The skuDetails should be set correspondingly
+     *
+     * @param purchases  A list of purchase json returned by google play, an example is shown below.
+     *                   {
+     *                   "packageName":"com.example",
+     *                   "acknowledged":false,
+     *                   "orderId":"transactionId.android.test.purchased",
+     *                   "productId":"android.test.purchased", // the same productId should also exist in the skuDetails
+     *                   "developerPayload":"",
+     *                   "purchaseTime":0,
+     *                   "purchaseState":0,
+     *                   "purchaseToken":"inapp:com.example:android.test.purchased"
+     *                   }
+     * @param skuDetails A list of skuDetails returned by google play, an example is shown below.
+     *                   {
+     *                   "skuDetailsToken":"blahblah",
+     *                   "productId":"android.test.purchased",
+     *                   "type":"inapp",
+     *                   "price":"₹72.41",
+     *                   "price_amount_micros":72407614,
+     *                   "price_currency_code":"INR",
+     *                   "title":"Sample Title",
+     *                   "description":"Sample description for product: android.test.purchased."
+     *                   }
      */
-    public static void trackPurchase(@Nullable Object purchases, @Nullable Object skuDetailsList) {
-        appEventLogger.trackPurchase(Collections.singletonList(purchases), Collections.singletonList(skuDetailsList));
+    public static void trackPurchase(@Nullable List<JSONObject> purchases, @Nullable List<JSONObject> skuDetails) {
+        appEventLogger.trackPurchase(purchases, skuDetails);
     }
 
     /**
-     * All the events stored in the memory or on the disk will be flushed to network once some conditions are reached,
+     * A shortcut method if there is only one purchase, see more {@link TiktokBusinessSdk#trackPurchase(List, List)}
+     * @param purchase
+     * @param skuDetails
+     */
+    public static void trackPurchase(@Nullable JSONObject purchase, @Nullable JSONObject skuDetails) {
+        trackPurchase(Collections.singletonList(purchase), Collections.singletonList(skuDetails));
+    }
+
+    /**
+     * Eagerly flush events to network.
+     * Normally, all events stored in the memory or on the disk will be flushed to network once some conditions are reached,
      * for example, every {@link TTAppEventLogger#TIME_BUFFER} seconds or there are more than {@link TTAppEventLogger#THRESHOLD} events
      * in the memory.
-     * But you can always invoke this method to eagerly flush events to network
      */
     public static void flush() {
         appEventLogger.forceFlush();
@@ -224,7 +263,7 @@ public class TiktokBusinessSdk {
     /**
      * Internal use only
      * clear all events from memory and disk
-     * We discourage your from calling this method
+     * Calling this method is discouraged
      */
     public static void clearAll() {
         appEventLogger.clearAll();

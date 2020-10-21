@@ -19,7 +19,7 @@ class TTRequestBuilder {
 
     private static JSONObject basePayloadCache = null;
 
-    public static JSONObject getBasePayload(Context context, boolean isGaidCollectionEnabled) {
+    public static JSONObject getBasePayload(Context context) {
         TTUtil.checkThread(TAG);
         if (basePayloadCache != null) {
             return basePayloadCache;
@@ -36,17 +36,6 @@ class TTRequestBuilder {
             if (userAgent != null) {
                 result.put("user_agent", userAgent);
             }
-
-            TTIdentifierFactory.AdIdInfo adIdInfo = null;
-            try {
-                if (isGaidCollectionEnabled) {
-                    // fetch gaid info through google service
-                    adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(context);
-                }
-            } catch (Exception e) {
-                TTCrashHandler.handleCrash(TAG, e);
-            }
-            result.put("context", contextBuilder(adIdInfo));
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
             basePayloadCache = new JSONObject();
@@ -54,6 +43,25 @@ class TTRequestBuilder {
         }
         basePayloadCache = result;
         return result;
+    }
+
+    private static JSONObject contextForApiCache = null;
+
+    public static JSONObject getContextForApi() throws JSONException {
+        if (contextForApiCache != null) {
+            return contextForApiCache;
+        }
+        TTIdentifierFactory.AdIdInfo adIdInfo = null;
+        try {
+            if (TiktokBusinessSdk.isGaidCollectionEnabled()) {
+                // fetch gaid info through google service
+                adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(TiktokBusinessSdk.getApplicationContext());
+            }
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
+        }
+        contextForApiCache = contextBuilder(adIdInfo);
+        return contextForApiCache;
     }
 
     private static Locale getCurrentLocale() {

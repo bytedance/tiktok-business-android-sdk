@@ -19,7 +19,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * get advertiser id info using Google Play API
  */
-class TTIdentifierFactory {
+public class TTIdentifierFactory {
     private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
     private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
@@ -34,7 +34,6 @@ class TTIdentifierFactory {
             // google play is not installed
             throw serviceNotInstalled;
         }
-
 
 //        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
         // service binding intent

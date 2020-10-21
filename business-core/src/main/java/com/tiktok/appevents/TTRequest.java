@@ -1,5 +1,7 @@
 package com.tiktok.appevents;
 
+import android.content.Context;
+
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
 import com.tiktok.util.TTLogger;
@@ -43,7 +45,7 @@ class TTRequest {
     public static JSONObject getBusinessSDKConfig() {
         logger.info("Try to fetch global configs");
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
-        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TiktokBusinessSdk.getAppId();
 //        String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
         String result = HttpRequestUtil.doGet(url, headParamMap);
         logger.verbose(result);
@@ -78,7 +80,7 @@ class TTRequest {
      * @param appEventList
      * @return the accumulation of all failed events
      */
-    public static synchronized List<TTAppEvent> appEventReport(JSONObject basePayload, List<TTAppEvent> appEventList) {
+    public static synchronized List<TTAppEvent> reportAppEvent(JSONObject basePayload, List<TTAppEvent> appEventList) {
         TTUtil.checkThread(TAG);
         // access-token might change during runtime
         headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
@@ -95,7 +97,7 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
 
-        String url = "https://ads.tiktok.com/open_api/"+TiktokBusinessSdk.getApiAvailableVersion()+"/app/batch/";
+        String url = "https://ads.tiktok.com/open_api/" + TiktokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 
@@ -104,11 +106,11 @@ class TTRequest {
         for (List<TTAppEvent> currentBatch : chunks) {
             List<JSONObject> batch = new ArrayList<>();
             for (TTAppEvent event : currentBatch) {
-                JSONObject jsonObject = transferJson(event);
-                if (jsonObject == null) {
+                JSONObject propertiesJson = transferJson(event);
+                if (propertiesJson == null) {
                     continue;
                 }
-                batch.add(jsonObject);
+                batch.add(propertiesJson);
             }
 
             JSONObject bodyJson = basePayload;
@@ -169,12 +171,13 @@ class TTRequest {
             return null;
         }
         try {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("type", "track");
-            jsonObject.put("event", event.getEventName());
-            jsonObject.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
-            jsonObject.put("properties", event.getJsonObject());
-            return jsonObject;
+            JSONObject propertiesJson = new JSONObject();
+            propertiesJson.put("type", "track");
+            propertiesJson.put("event", event.getEventName());
+            propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
+            propertiesJson.put("properties", event.getJsonObject());
+            propertiesJson.put("context", TTRequestBuilder.getContextForApi());
+            return propertiesJson;
         } catch (JSONException e) {
             TTCrashHandler.handleCrash(TAG, e);
             return null;
