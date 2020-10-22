@@ -1,13 +1,12 @@
 package com.tiktok.appevents;
 
-import android.content.Context;
-
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 import com.tiktok.util.TimeUtil;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -115,15 +114,18 @@ class TTRequest {
 
             JSONObject bodyJson = basePayload;
             try {
-                bodyJson.put("batch", batch);
+                bodyJson.put("batch", new JSONArray(batch));
             } catch (Exception e) {
                 failedEvents.addAll(currentBatch);
                 TTCrashHandler.handleCrash(TAG, e);
                 continue;
             }
 
-            String bodyStr = bodyJson.toString();
-            logger.verbose("To Api:\n" + bodyStr);
+            try {
+                String bodyStr = bodyJson.toString(4);
+                logger.verbose("To Api:\n" + bodyStr);
+            } catch (JSONException e) {
+            }
 
             String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
@@ -175,7 +177,7 @@ class TTRequest {
             propertiesJson.put("type", "track");
             propertiesJson.put("event", event.getEventName());
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
-            propertiesJson.put("properties", event.getJsonObject());
+            propertiesJson.put("properties", new JSONObject(event.getJsonStr()));
             propertiesJson.put("context", TTRequestBuilder.getContextForApi());
             return propertiesJson;
         } catch (JSONException e) {

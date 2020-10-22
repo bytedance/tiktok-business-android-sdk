@@ -29,13 +29,6 @@ class TTRequestBuilder {
         try {
             result.put("app_id", TiktokBusinessSdk.getAppId());
             result.put("event_source", "APP_EVENTS_SDK");
-            result.put("locale", getBcp47Language());
-            result.put("ip", SystemInfoUtil.getLocalIpAddress());
-
-            String userAgent = SystemInfoUtil.getUserAgent();
-            if (userAgent != null) {
-                result.put("user_agent", userAgent);
-            }
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
             basePayloadCache = new JSONObject();
@@ -131,7 +124,7 @@ class TTRequestBuilder {
         app.put("name", SystemInfoUtil.getAppName());
         app.put("namespace", SystemInfoUtil.getPackageName());
         app.put("version", SystemInfoUtil.getVersionName());
-        app.put("build", SystemInfoUtil.getVersionCode());
+        app.put("build", SystemInfoUtil.getVersionCode() + "");
 
         JSONObject device = new JSONObject();
         device.put("platform", "Android");
@@ -141,6 +134,13 @@ class TTRequestBuilder {
         JSONObject context = new JSONObject();
         context.put("app", app);
         context.put("device", device);
+        context.put("locale", getBcp47Language());
+        context.put("ip", SystemInfoUtil.getLocalIpAddress());
+
+        String userAgent = SystemInfoUtil.getUserAgent();
+        if (userAgent != null) {
+            context.put("user_agent", userAgent);
+        }
         return context;
     }
 }

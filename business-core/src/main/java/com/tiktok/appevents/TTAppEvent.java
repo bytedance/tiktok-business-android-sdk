@@ -1,5 +1,11 @@
 package com.tiktok.appevents;
 
+import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTLogger;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
@@ -10,18 +16,20 @@ public class TTAppEvent implements Serializable {
 
     private String eventName;
     private Date timeStamp;
-    private String jsonObject;
+    private String jsonStr;
     private static AtomicLong counter = new AtomicLong(new Date().getTime() + 0L);
     private Long uniqueId;
+    private static String TAG = TTAppEventsQueue.class.getCanonicalName();
+    private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
 
-    TTAppEvent(String eventName, String jsonObject) {
-        this(eventName, new Date(), jsonObject);
+    TTAppEvent(String eventName, String jsonStr) {
+        this(eventName, new Date(), jsonStr);
     }
 
-    TTAppEvent(String eventName, Date timeStamp, String jsonObject) {
+    TTAppEvent(String eventName, Date timeStamp, String jsonStr) {
         this.eventName = eventName;
         this.timeStamp = timeStamp;
-        this.jsonObject = jsonObject;
+        this.setJsonStr(jsonStr);
         this.uniqueId = TTAppEvent.counter.getAndIncrement();
     }
 
@@ -41,12 +49,18 @@ public class TTAppEvent implements Serializable {
         this.timeStamp = timeStamp;
     }
 
-    public String getJsonObject() {
-        return jsonObject;
+    public String getJsonStr() {
+        return jsonStr;
     }
 
-    public void setJsonObject(String jsonObject) {
-        this.jsonObject = jsonObject;
+    public void setJsonStr(String jsonStr) {
+        try {
+            new JSONObject(jsonStr);
+            this.jsonStr = jsonStr;
+        } catch (JSONException ex) {
+            logger.info("Invalid jsonStr provided: " + jsonStr);
+            this.jsonStr = "{}";
+        }
     }
 
     public Long getUniqueId() {
@@ -58,7 +72,7 @@ public class TTAppEvent implements Serializable {
         return "TTAppEvent{" +
                 "eventName='" + eventName + '\'' +
                 ", timeStamp=" + timeStamp +
-                ", jsonObject='" + jsonObject + '\'' +
+                ", jsonObject='" + jsonStr + '\'' +
                 ", uniqueId=" + uniqueId +
                 '}';
     }

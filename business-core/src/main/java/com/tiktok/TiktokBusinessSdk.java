@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
+import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.util.TTLogger;
 
 import org.json.JSONObject;
@@ -98,6 +99,10 @@ public class TiktokBusinessSdk {
         logger = new TTLogger(TAG, logLevel);
 
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
+    }
+
+    public static synchronized boolean isInitialized() {
+        return ttSdk != null;
     }
 
     /**
@@ -212,42 +217,16 @@ public class TiktokBusinessSdk {
 
     /**
      * Track a list purchases at the same time.
-     * The skuDetails should be set correspondingly
-     *
-     * @param purchases  A list of purchase json returned by google play, an example is shown below.
-     *                   {
-     *                   "packageName":"com.example",
-     *                   "acknowledged":false,
-     *                   "orderId":"transactionId.android.test.purchased",
-     *                   "productId":"android.test.purchased", // the same productId should also exist in the skuDetails
-     *                   "developerPayload":"",
-     *                   "purchaseTime":0,
-     *                   "purchaseState":0,
-     *                   "purchaseToken":"inapp:com.example:android.test.purchased"
-     *                   }
-     * @param skuDetails A list of skuDetails returned by google play, an example is shown below.
-     *                   {
-     *                   "skuDetailsToken":"blahblah",
-     *                   "productId":"android.test.purchased",
-     *                   "type":"inapp",
-     *                   "price":"₹72.41",
-     *                   "price_amount_micros":72407614,
-     *                   "price_currency_code":"INR",
-     *                   "title":"Sample Title",
-     *                   "description":"Sample description for product: android.test.purchased."
-     *                   }
      */
-    public static void trackPurchase(@Nullable List<JSONObject> purchases, @Nullable List<JSONObject> skuDetails) {
-        appEventLogger.trackPurchase(purchases, skuDetails);
+    public static void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
+        appEventLogger.trackPurchase(purchaseInfos);
     }
 
     /**
      * A shortcut method if there is only one purchase, see more {@link TiktokBusinessSdk#trackPurchase(List, List)}
-     * @param purchase
-     * @param skuDetails
      */
-    public static void trackPurchase(@Nullable JSONObject purchase, @Nullable JSONObject skuDetails) {
-        trackPurchase(Collections.singletonList(purchase), Collections.singletonList(skuDetails));
+    public static void trackPurchase(TTPurchaseInfo info) {
+        trackPurchase(Collections.singletonList(info));
     }
 
     /**

@@ -24,16 +24,12 @@ import java.util.Date;
 
 public class MonitorActivity extends AppCompatActivity {
 
-    private static boolean inited = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!inited) {
-            inited = true;
+        if (!TiktokBusinessSdk.isInitialized()) {
             TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
                     .enableDebug();
-//                    .turnOffAdvertiserIDCollection();
             TiktokBusinessSdk.initializeSdk(ttConfig);
         }
 

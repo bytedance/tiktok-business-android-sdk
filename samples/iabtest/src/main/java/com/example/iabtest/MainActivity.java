@@ -14,6 +14,7 @@ import android.os.Bundle;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.appevents.TTPurchaseInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -49,9 +50,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TiktokBusinessSdk init start
-        TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
-                .enableDebug();
-        TiktokBusinessSdk.initializeSdk(ttConfig);
+      if(!TiktokBusinessSdk.isInitialized()){
+          TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
+                  .enableDebug();
+          TiktokBusinessSdk.initializeSdk(ttConfig);
+      }
         // TiktokBusinessSdk init end
 
         // Context
@@ -113,10 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Toast.makeText(context, "isBillingSupported() - fail!", Toast.LENGTH_SHORT).show();
                 Log.w(tag, "isBillingSupported() - fail!");
-                return;
             }
-
-            // TODO: check result
         });
 
         btnCheck.setOnClickListener(arg0 -> {
@@ -152,8 +152,6 @@ public class MainActivity extends AppCompatActivity {
             Log.i(tag, "getPurchases() - \"INAPP_PURCHASE_DATA_LIST\" return " + purchaseDataList.toString());
             Log.i(tag, "getPurchases() - \"INAPP_DATA_SIGNATURE\" return " + (signatureList != null ? signatureList.toString() : "null"));
             Log.i(tag, "getPurchases() - \"INAPP_CONTINUATION_TOKEN\" return " + (continuationToken != null ? continuationToken : "null"));
-
-            // TODO: management owned purchase
         });
 
         btnBuy.setOnClickListener(arg0 -> {
@@ -161,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
             if (mService == null) return;
 
             ArrayList<String> skuList = new ArrayList<>();
-            skuList.add("android.test.refunded");
             skuList.add(productID);
             Bundle querySkus = new Bundle();
             querySkus.putStringArrayList("ITEM_ID_LIST", skuList);
@@ -276,8 +273,8 @@ public class MainActivity extends AppCompatActivity {
 
             // Tiktok purchase track
             try {
-                TiktokBusinessSdk.trackPurchase(new JSONObject(purchaseData), new JSONObject(skuDetailsList.get(0)));
-            } catch (JSONException e) {
+                TiktokBusinessSdk.trackPurchase(new TTPurchaseInfo(new JSONObject(purchaseData), new JSONObject(skuDetailsList.get(0))));
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

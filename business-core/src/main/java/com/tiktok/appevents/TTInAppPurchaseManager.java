@@ -3,6 +3,7 @@ package com.tiktok.appevents;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,29 +43,23 @@ class TTInAppPurchaseManager {
 
     /**
      * p
-     * */
-    static TTProperty getPurchaseProps(JSONObject purchase, JSONObject allSkuMap) {
+     */
+    static TTProperty getPurchaseProps(TTPurchaseInfo purchaseInfo) {
         TTProperty props = new TTProperty();
         String productId = null;
         try {
-            productId = purchase.getString("productId");
+            productId = purchaseInfo.getPurchase().getString("productId");
         } catch (JSONException e) {
+            // this exception should happen since we already did a filtering in the previous step
             TTCrashHandler.handleCrash(TAG, e);
             return null;
         }
         if (productId != null) {
-            JSONObject skuDetail = null;
-            if (allSkuMap != null) {
-                try {
-                    skuDetail = allSkuMap.getJSONObject(productId);
-                } catch (JSONException e) {
-                    TTCrashHandler.handleCrash(TAG, e);
-                    return null;
-                }
-            }
-            props = getPurchaseProperties(productId, skuDetail);
+            JSONObject skuDetail = purchaseInfo.getSkuDetails();
+            return getPurchaseProperties(productId, skuDetail);
+        } else {
+            return null;
         }
-        return props;
     }
 
     /**

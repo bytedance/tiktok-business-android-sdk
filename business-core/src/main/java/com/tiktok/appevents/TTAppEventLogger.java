@@ -13,6 +13,7 @@ import com.tiktok.util.TTUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,19 +84,20 @@ public class TTAppEventLogger {
         addToQ(() -> TTAppEventStorage.persist(null));
     }
 
-    public void trackPurchase(List<JSONObject> purchases, @Nullable List<JSONObject> skuDetails) {
+    public void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
         if (!TiktokBusinessSdk.isSystemActivated()) {
             return;
         }
         addToQ(() -> {
             JSONObject allSkuMap = null;
-            if (purchases.isEmpty() || skuDetails.isEmpty()) {
+
+            if (purchaseInfos.isEmpty()) {
                 return;
             }
 
-            allSkuMap = TTInAppPurchaseManager.getSkuDetailsMap(skuDetails);
-            for (JSONObject purchase : purchases) {
-                TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchase, allSkuMap);
+
+            for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
+                TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
                 if (property != null) {
                     track("Purchase", property);
                 }
@@ -160,7 +162,10 @@ public class TTAppEventLogger {
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
         Runnable task = () -> {
-            logger.debug("track " + event + " : " + finalProps.get().toString());
+            try {
+                logger.debug("track " + event + " : " + finalProps.get().toString(4));
+            } catch (JSONException e) {
+            }
 
             TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.get().toString()));
 

@@ -65,7 +65,7 @@ public class AppEventCycleAdapter extends RecyclerView.Adapter<AppEventCycleAdap
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
         holder.getEventTimestamp().setText(dateFormat.format(event.getTimeStamp()));
-        holder.getEventDetails().setText(event.getJsonObject());
+        holder.getEventDetails().setText(event.getJsonStr());
     }
 
     @Override

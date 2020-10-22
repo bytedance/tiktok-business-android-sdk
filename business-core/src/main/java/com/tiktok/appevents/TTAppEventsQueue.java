@@ -1,7 +1,11 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +14,9 @@ class TTAppEventsQueue {
 
     private static String TAG = TTAppEventsQueue.class.getCanonicalName();
     private static List<TTAppEvent> memory = new ArrayList<>();
+
+    private TTAppEventsQueue() {
+    }
 
     private static void notifyChange() {
         if (TiktokBusinessSdk.memoryListener != null) {
@@ -32,7 +39,7 @@ class TTAppEventsQueue {
         return memory.size();
     }
 
-    public static synchronized void clearAll(){
+    public static synchronized void clearAll() {
         TTUtil.checkThread(TAG);
         memory = new ArrayList<>();
         notifyChange();
