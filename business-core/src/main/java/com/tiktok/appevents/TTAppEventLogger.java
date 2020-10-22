@@ -13,7 +13,6 @@ import com.tiktok.util.TTUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,12 +20,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
+    static final String SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF = "Skip flushing because global switch is turned off";
+    static final String SKIP_FLUSHING_BECAUSE_GLOBAL_CONFIG_IS_NOT_FETCHED = "Skip flushing because global config is not fetched";
     static final String TAG = TTAppEventLogger.class.getName();
 
     // every TIME_BUFFER seconds, a flush task will be pushed to the execution queue
     private static final int TIME_BUFFER = 15;
     // once THRESHOLD events got accumulated in the memory, a flush task will be pushed to the execution queue
     static final int THRESHOLD = 100;
+    public static final String NETWORK_IS_TURNED_OFF = "SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking";
 
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
@@ -73,7 +75,7 @@ public class TTAppEventLogger {
         autoEventsManager = new TTAutoEventsManager(this);
 
         SystemInfoUtil.initUserAgent();
-
+        TTAppEventsQueue.clearAll();
         remoteSdkConfigProcess();
     }
 
@@ -189,18 +191,18 @@ public class TTAppEventLogger {
         flush(FlushReason.START_UP);
     }
 
-    private void flush(FlushReason reason) {
+    void flush(FlushReason reason) {
         TTUtil.checkThread(TAG);
 
         // if global config is not fetched, we can track events and put in into memory
         // but they should not be sent to the network
         if (!TiktokBusinessSdk.isGlobalConfigFetched()) {
-            logger.verbose("Skip flushing because global config is not fetched");
+            logger.info(SKIP_FLUSHING_BECAUSE_GLOBAL_CONFIG_IS_NOT_FETCHED);
             return;
         }
         // global switch is turned off, dump all events
         if (!TiktokBusinessSdk.isSystemActivated()) {
-            logger.info("Skip flushing because global switch is turned off");
+            logger.info(SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF);
             return;
         }
 
@@ -223,12 +225,17 @@ public class TTAppEventLogger {
 
                 flushId++;
             } else {
-                logger.verbose("SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking");
+                logger.info(NETWORK_IS_TURNED_OFF);
                 TTAppEventStorage.persist(null);
             }
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
         }
+    }
+
+    public void destroy() {
+        TTAppEventsQueue.clearAll();
+        stopScheduler();
     }
 
     /**

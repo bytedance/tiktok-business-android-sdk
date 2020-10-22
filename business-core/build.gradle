@@ -16,6 +16,7 @@ dependencies {
     def powerMockVersion = '2.0.2'
     testImplementation "org.powermock:powermock-api-mockito2:$powerMockVersion"
     testImplementation "org.powermock:powermock-module-junit4:$powerMockVersion"
+    testImplementation 'org.json:json:20200518'
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'

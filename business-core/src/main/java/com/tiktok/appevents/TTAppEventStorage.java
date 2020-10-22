@@ -28,7 +28,7 @@ class TTAppEventStorage {
      *
      * @param failedEvents if flush failed, failedEvents is not null
      */
-    synchronized static void persist(List<TTAppEvent> failedEvents) {
+    public synchronized static void persist(List<TTAppEvent> failedEvents) {
         TTUtil.checkThread(TAG);
 
         logger.verbose("Tried to persist to disk");

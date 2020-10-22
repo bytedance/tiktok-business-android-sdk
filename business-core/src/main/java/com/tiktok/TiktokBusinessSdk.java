@@ -138,6 +138,17 @@ public class TiktokBusinessSdk {
         }
     }
 
+    public static void destroy() {
+        ttSdk = null;
+        memoryListener = null;
+        diskListener = null;
+        networkListener = null;
+        nextTimeFlushListener = null;
+        if(appEventLogger != null){
+            appEventLogger.destroy();
+        }
+    }
+
     /**
      * For internal development usage, a monitoring tool which oversees how many events are in the memory,
      * on the disk and have been flushed to network.

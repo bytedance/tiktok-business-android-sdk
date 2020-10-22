@@ -7,7 +7,7 @@ import com.tiktok.TiktokBusinessSdk.LogLevel;
 /**
  * Logger util class
  */
-public final class TTLogger {
+public class TTLogger {
 
     /**
      * loglevel
