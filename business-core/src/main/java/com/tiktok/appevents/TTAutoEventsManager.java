@@ -5,12 +5,15 @@ import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
+import com.tiktok.util.TimeUtil;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.tiktok.util.TTConst.TTSDK_APP_BUILD;
@@ -18,17 +21,8 @@ import static com.tiktok.util.TTConst.TTSDK_APP_VERSION;
 
 class TTAutoEventsManager {
 
-    // for test purpose
-    static final long TWO_SECONDS = 2 * 1000;
-    private static final long TWO_DAYS = 48 * 60 * 60 * 1000;
-    private static SimpleDateFormat fm;
     private TTLogger logger;
     private static final String TAG = TTAutoEventsManager.class.getCanonicalName();
-
-    static {
-        fm = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault());
-        fm.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
 
     private TTAppEventLogger appEventLogger;
     private TTKeyValueStore store;
@@ -69,7 +63,7 @@ class TTAutoEventsManager {
         /* check and track InstallApp. */
         if (previousBuild == null) {
             appEventLogger.track("InstallApp", null);
-            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
+            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, TimeUtil.dateStr(0));
         } else if (!currentBuild.equals(previousBuild)) {
             // app updated
         }
@@ -82,32 +76,29 @@ class TTAutoEventsManager {
     }
 
     // extract into a single method to simplify writing unit test
-    private boolean isSatisfyRetention(long duration) {
+    boolean isSatisfyRetention() {
         String isLogged = store.get(TTConst.TTSDK_APP_2DRENTION_LOGGED);
         if (isLogged != null && isLogged.equals("true")) {
             return false;
         }
         // check 2Dretention
-        Date now = new Date();
         String dateFromStore = store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
         if (dateFromStore == null) {
             logger.warn("First Launch Date should already been set in the trackFirstInstallEvent, could be a bug");
-            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
+            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, TimeUtil.dateStr(0));
             return false;
         }
         try {
-            long beforeTime = fm.parse(dateFromStore).getTime();
-            return now.getTime() - beforeTime >= duration;
+            // now is 1 day greater than the date stored in the shared preference
+            return TimeUtil.isNowAfter(dateFromStore, 1);
         } catch (Exception e) {
             logger.info("Failed to check 2day retention %s", e.getMessage());
-            // if failed to parse the date, try to set it to now
-            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, fm.format(new Date()));
             return false;
         }
     }
 
     private void track2DayRetentionEvent() {
-        if (isSatisfyRetention(TWO_DAYS)) {
+        if (isSatisfyRetention()) {
             appEventLogger.track("2Dretention", null);
             store.set(TTConst.TTSDK_APP_2DRENTION_LOGGED, "true");
         }

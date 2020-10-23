@@ -37,13 +37,9 @@ public class TTAppEventLoggerTest extends BaseTest {
     public void skipFlush() throws Exception {
         PowerMockito.mockStatic(TiktokBusinessSdk.class);
 
-        TTAutoEventsManager autoEventsManager = mock(TTAutoEventsManager.class);
-
-
         Application context = mock(Application.class);
         when(TiktokBusinessSdk.getApplicationContext()).thenReturn(context);
 
-        PowerMockito.whenNew(TTAutoEventsManager.class).withArguments(any()).thenReturn(autoEventsManager);
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
         TTLogger logger = mock(TTLogger.class);

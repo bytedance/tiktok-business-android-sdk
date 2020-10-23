@@ -14,8 +14,6 @@ import com.tiktok.appevents.TTProperty;
 import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.util.TTLogger;
 
-import org.json.JSONObject;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;

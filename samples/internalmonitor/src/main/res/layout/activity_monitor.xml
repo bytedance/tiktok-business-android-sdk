@@ -256,8 +256,8 @@
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginLeft="24dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
             android:layout_marginTop="@dimen/spacing"
             android:text="@string/track"
             app:layout_constraintStart_toEndOf="@+id/count"
@@ -293,10 +293,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/spacing"
             android:layout_marginLeft="@dimen/spacing"
-            android:layout_marginEnd="@dimen/spacing"
-            android:layout_marginRight="@dimen/spacing"
             android:text="reset"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/flush"
             app:layout_constraintTop_toTopOf="@+id/flush" />
 

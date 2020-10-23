@@ -75,7 +75,7 @@ public class TTAppEventLogger {
         autoEventsManager = new TTAutoEventsManager(this);
 
         SystemInfoUtil.initUserAgent();
-        TTAppEventsQueue.clearAll();
+        addToQ(TTAppEventsQueue::clearAll);
         remoteSdkConfigProcess();
     }
 
