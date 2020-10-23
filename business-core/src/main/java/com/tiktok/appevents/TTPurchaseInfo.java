@@ -1,11 +1,10 @@
 package com.tiktok.appevents;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class TTPurchaseInfo {
-    private JSONObject purchase;
-    private JSONObject skuDetails;
+    private final JSONObject purchase;
+    private final JSONObject skuDetails;
 
     public static class InvalidTTPurchaseInfoException extends Exception {
 
@@ -53,7 +52,7 @@ public class TTPurchaseInfo {
                 && !purchase.isNull("productId");
     }
 
-    /*
+    /**
      *{
      *  "skuDetailsToken":"blahblah",
      *  "productId":"android.test.purchased",

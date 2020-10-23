@@ -17,7 +17,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.android.billingclient.api.*;
 import com.example.R;
 import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.appevents.TTProperty;
 import com.tiktok.appevents.TTPurchaseInfo;
 
 import org.json.JSONObject;

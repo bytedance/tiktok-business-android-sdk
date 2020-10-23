@@ -177,7 +177,10 @@ class TTRequest {
             propertiesJson.put("type", "track");
             propertiesJson.put("event", event.getEventName());
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
-            propertiesJson.put("properties", new JSONObject(event.getJsonStr()));
+            JSONObject properties = new JSONObject(event.getJsonStr());
+            if (properties.length() != 0) {
+                propertiesJson.put("properties", properties);
+            }
             propertiesJson.put("context", TTRequestBuilder.getContextForApi());
             return propertiesJson;
         } catch (JSONException e) {

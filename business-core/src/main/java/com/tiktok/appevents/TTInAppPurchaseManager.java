@@ -1,51 +1,19 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.util.TTKeyValueStore;
-import com.tiktok.util.TTLogger;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class TTInAppPurchaseManager {
     static final String TAG = TTInAppPurchaseManager.class.getName();
-    /**
-     * SharedPreferences util
-     */
-    private static TTKeyValueStore store;
-    private static TTLogger logger;
-
-    static {
-        /* SharedPreferences helper */
-        store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
-        logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
-    }
-
-    /**
-     * local cache sku details for future track purchase
-     */
-    static JSONObject getSkuDetailsMap(List<JSONObject> skuDetails) {
-        JSONObject allSkus = new JSONObject();
-        for (JSONObject skuDetail : skuDetails) {
-            try {
-                String productId = skuDetail.getString("productId");
-                allSkus.put(productId, skuDetail);
-            } catch (JSONException ignored) {
-            }
-        }
-        return allSkus;
-    }
 
     /**
      * p
      */
     static TTProperty getPurchaseProps(TTPurchaseInfo purchaseInfo) {
-        TTProperty props = new TTProperty();
         String productId = null;
         try {
             productId = purchaseInfo.getPurchase().getString("productId");
@@ -63,32 +31,6 @@ class TTInAppPurchaseManager {
     }
 
     /**
-     * purchase data and sku details are passed as list of objects
-     * tries to find json substring in the string and
-     * safe returns JSONObject
-     *
-     * @param objString
-     * @return
-     */
-    private static JSONObject extractJsonFromString(String objString) {
-        /**
-         * JSON string not passed for new api
-         * this function tries to find start { and end } of json string in objString
-         * */
-        JSONObject jsonObject = null;
-        int start = objString.indexOf("{");
-        int end = objString.lastIndexOf("}");
-        if ((start >= 0) && (end > start) && (end + 1 <= objString.length())) {
-            try {
-                jsonObject = new JSONObject(objString.substring(start, end + 1));
-            } catch (JSONException ignored) {
-                jsonObject = new JSONObject();
-            }
-        }
-        return jsonObject;
-    }
-
-    /**
      * returns purchase TTProperty from sku cache
      * returns content_id -> sku always
      */
@@ -100,7 +42,6 @@ class TTInAppPurchaseManager {
             String currencyCode = safeJsonGetString(skuDetails, "price_currency_code");
             props.put("currency", currencyCode);
             content.put("quantity", 1);
-            content.put("description", safeJsonGetString(skuDetails, "description"));
             String price = safeJsonGetString(skuDetails, "price");
             float floatPrice = (float) 0;
             try {

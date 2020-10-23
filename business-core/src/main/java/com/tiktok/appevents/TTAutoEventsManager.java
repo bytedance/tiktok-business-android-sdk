@@ -1,33 +1,41 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
-import com.tiktok.util.TTLogger;
-import com.tiktok.util.TimeUtil;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
-import static com.tiktok.util.TTConst.TTSDK_APP_BUILD;
-import static com.tiktok.util.TTConst.TTSDK_APP_VERSION;
+import static com.tiktok.util.TTConst.*;
 
 class TTAutoEventsManager {
 
-    private TTLogger logger;
     private static final String TAG = TTAutoEventsManager.class.getCanonicalName();
 
-    private TTAppEventLogger appEventLogger;
+    private static final SimpleDateFormat dateFormat;
+    private static final SimpleDateFormat timeFormat;
+
+    static {
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        timeFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault());
+    }
+
+    private final TTAppEventLogger appEventLogger;
     private TTKeyValueStore store;
 
     public TTAutoEventsManager(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
         store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
-        logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
     }
 
-    private boolean shouldTrackAppLifecycleEvents() {
-        return appEventLogger.lifecycleTrackEnable;
+    private boolean shouldTrackAppLifecycleEvents(TTConst.AppEventName event) {
+        return appEventLogger.lifecycleTrackEnable
+                && !appEventLogger.disabledEvents.contains(event.toString());
     }
 
     /**
@@ -37,64 +45,68 @@ class TTAutoEventsManager {
      * 3. launchApp
      */
     public void trackOnAppOpenEvents() {
-        if (shouldTrackAppLifecycleEvents()) {
-            trackFirstInstallEvent();
-            track2DayRetentionEvent();
-            appEventLogger.track(TTConst.AppEventName.LaunchApp, null);
-        }
+        trackFirstInstallEvent();
+        track2DayRetentionEvent();
+        trackLaunchEvent();
     }
 
     private void trackFirstInstallEvent() {
-        /* gets current app version & build */
-        String currentVersion = SystemInfoUtil.getVersionName();
-        String currentBuild = String.valueOf(SystemInfoUtil.getVersionCode());
+        /* first app launch, set only on first launch */
+        String firstLaunch = store.get(TTSDK_APP_FIRST_LAUNCH);
+        /* get install trigger time, set only on InstallApp trigger */
+        String installTime = store.get(TTSDK_APP_INSTALL_TIME);
+        if (installTime != null) return;
 
-        /* get the previous recorded version. */
-        String previousVersion = store.get(TTSDK_APP_VERSION);
-        String previousBuild = store.get(TTSDK_APP_BUILD);
+        Date now = new Date();
+        HashMap<String, Object> hm = new HashMap<>();
 
-        /* check and track InstallApp. */
-        if (previousBuild == null) {
-            appEventLogger.track(TTConst.AppEventName.InstallApp, null);
-            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, TimeUtil.dateStr(0));
-        } else if (!currentBuild.equals(previousBuild)) {
-            // app updated
+        if (firstLaunch == null) {
+            hm.put(TTSDK_APP_FIRST_LAUNCH, timeFormat.format(now));
         }
 
-        /* update store with existing version. */
-        HashMap<String, Object> hm = new HashMap<>();
-        hm.put(TTSDK_APP_VERSION, currentVersion);
-        hm.put(TTSDK_APP_BUILD, currentBuild);
+        /* check and track InstallApp. */
+        if (shouldTrackAppLifecycleEvents(AppEventName.InstallApp)) {
+            appEventLogger.track(AppEventName.InstallApp, null);
+            hm.put(TTSDK_APP_INSTALL_TIME, timeFormat.format(now));
+        }
+
         store.set(hm);
     }
 
-    // extract into a single method to simplify writing unit test
-    boolean isSatisfyRetention() {
-        String isLogged = store.get(TTConst.TTSDK_APP_2DRENTION_LOGGED);
-        if (isLogged != null && isLogged.equals("true")) {
-            return false;
-        }
-        // check 2Dretention
-        String dateFromStore = store.get(TTConst.TTSDK_APP_LAST_LAUNCH);
-        if (dateFromStore == null) {
-            logger.warn("First Launch Date should already been set in the trackFirstInstallEvent, could be a bug");
-            store.set(TTConst.TTSDK_APP_LAST_LAUNCH, TimeUtil.dateStr(0));
-            return false;
-        }
+    private void track2DayRetentionEvent() {
+        String is2DayLogged = store.get(TTSDK_APP_2DR_TIME);
+        if (is2DayLogged != null) return;
+
+        String firstLaunch = store.get(TTSDK_APP_FIRST_LAUNCH);
+        if (firstLaunch == null) return;
+
         try {
-            // now is 1 day greater than the date stored in the shared preference
-            return TimeUtil.isNowAfter(dateFromStore, 1);
-        } catch (Exception e) {
-            logger.info("Failed to check 2day retention %s", e.getMessage());
-            return false;
+            Date firstLaunchTime = timeFormat.parse(firstLaunch);
+            Date now = new Date();
+            if (shouldTrackAppLifecycleEvents(AppEventName.TwoDayRetention)
+                    && isSatisfyRetention(firstLaunchTime, now)) {
+                appEventLogger.track(AppEventName.TwoDayRetention, null);
+                store.set(TTSDK_APP_2DR_TIME, timeFormat.format(now));
+            }
+        } catch (ParseException ignored) {
         }
     }
 
-    private void track2DayRetentionEvent() {
-        if (isSatisfyRetention()) {
-            appEventLogger.track(TTConst.AppEventName.TwoDayRetention, null);
-            store.set(TTConst.TTSDK_APP_2DRENTION_LOGGED, "true");
+    private void trackLaunchEvent() {
+        if (shouldTrackAppLifecycleEvents(AppEventName.LaunchApp)) {
+            appEventLogger.track(AppEventName.LaunchApp, null);
+            store.set(TTSDK_APP_LAST_LAUNCH, timeFormat.format(new Date()));
         }
+    }
+
+    // extract into a single method to simplify writing unit test
+    private boolean isSatisfyRetention(Date firstLaunch, Date now) {
+        Calendar c = Calendar.getInstance();
+        c.setTime(firstLaunch);
+        c.add(Calendar.DATE, 1);
+        String nextDayFromFirst = dateFormat.format(c.getTime());
+        String todayDate = dateFormat.format(now);
+        return nextDayFromFirst.equals(todayDate);
     }
 
 }

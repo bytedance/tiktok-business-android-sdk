@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.TTLogger;
 
-import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -35,7 +34,6 @@ public class TTIdentifierFactory {
             throw serviceNotInstalled;
         }
 
-//        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
         // service binding intent
         Intent intent = new Intent("com.google.android.gms.ads.identifier.service.START");
         intent.setPackage("com.google.android.gms");

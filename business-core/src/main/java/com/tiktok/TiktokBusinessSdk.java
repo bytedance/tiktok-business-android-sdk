@@ -14,6 +14,7 @@ import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,7 +45,7 @@ public class TiktokBusinessSdk {
      * access token
      */
     private static String accessToken;
-    private static AtomicBoolean globalConfigFetched = new AtomicBoolean(false);
+    private static final AtomicBoolean globalConfigFetched = new AtomicBoolean(false);
 
     /**
      * We provide a global switch in order that you can turn off our sdk remotely
@@ -106,6 +107,13 @@ public class TiktokBusinessSdk {
     /**
      * Only one TiktokBusinessSdk instance exist within a single App process
      */
+    public static synchronized void initializeSdk(Context context) {
+        initializeSdk(new TTConfig(context));
+    }
+
+    /**
+     * Only one TiktokBusinessSdk instance exist within a single App process
+     */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
 
@@ -114,7 +122,7 @@ public class TiktokBusinessSdk {
         ttSdk = new TiktokBusinessSdk(ttConfig);
 
         // the appEventLogger instance will be the main interface to track events
-        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent);
+        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents);
     }
 
     /**
@@ -356,6 +364,8 @@ public class TiktokBusinessSdk {
         private boolean advertiserIDCollectionEnable = true;
         /* auto init flag check in manifest */
         private boolean autoStart = true;
+        /* disable custom auto events */
+        private ArrayList<String> disabledEvents;
 
         /**
          * Read configs from <meta-data>
@@ -365,7 +375,7 @@ public class TiktokBusinessSdk {
         public TTConfig(Context context) {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
             application = (Application) context.getApplicationContext();
-
+            disabledEvents = new ArrayList<>();
             /* try fetch app key from AndroidManifest file first */
 
             ApplicationInfo appInfo = null;
@@ -395,7 +405,7 @@ public class TiktokBusinessSdk {
             }
 
             try {
-                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoTracking");
+                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoStart");
                 if (autoFlag != null && autoFlag.toString().equals("true")) {
                     autoStart = false;
                 }
@@ -448,6 +458,14 @@ public class TiktokBusinessSdk {
          */
         public TTConfig turnOffAutoEvents() {
             this.autoEvent = false;
+            return this;
+        }
+
+        /**
+         * to disable auto event tracking custom events
+         */
+        public TTConfig turnOffAutoEvents(ArrayList<String> events) {
+            this.disabledEvents = events;
             return this;
         }
 

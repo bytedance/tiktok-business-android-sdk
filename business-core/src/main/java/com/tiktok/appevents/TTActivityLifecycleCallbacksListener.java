@@ -1,20 +1,10 @@
 package com.tiktok.appevents;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static com.tiktok.util.TTConst.TTSDK_APP_BUILD;
-import static com.tiktok.util.TTConst.TTSDK_APP_VERSION;
 
 class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
 
@@ -29,26 +19,26 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
     }
 
     @Override
-    public void onResume(LifecycleOwner owner) {
+    public void onResume(@NonNull LifecycleOwner owner) {
         if (isPaused) {
             appEventLogger.restartScheduler();
         }
     }
 
     @Override
-    public void onPause(LifecycleOwner owner) {
+    public void onPause(@NonNull LifecycleOwner owner) {
         appEventLogger.stopScheduler();
         isPaused = true;
     }
 
     @Override
-    public void onStop(LifecycleOwner owner) {
+    public void onStop(@NonNull LifecycleOwner owner) {
         appEventLogger.persistEvents();
     }
 
     // TODO might never be called as per Android's doc
     @Override
-    public void onDestroy(LifecycleOwner owner) {
+    public void onDestroy(@NonNull LifecycleOwner owner) {
         appEventLogger.stopScheduler();
     }
 

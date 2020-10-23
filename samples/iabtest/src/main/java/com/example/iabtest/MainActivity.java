@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
     private Context context;
@@ -50,8 +51,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TiktokBusinessSdk init start
-      if(!TiktokBusinessSdk.isInitialized()){
+      if(!TiktokBusinessSdk.isInitialized()) {
           TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
+                  .turnOffAutoEvents(new ArrayList<>(Arrays.asList("LaunchApp", "InstallApp")))
                   .enableDebug();
           TiktokBusinessSdk.initializeSdk(ttConfig);
       }

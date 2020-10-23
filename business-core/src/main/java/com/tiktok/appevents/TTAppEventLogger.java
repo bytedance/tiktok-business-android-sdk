@@ -13,6 +13,7 @@ import com.tiktok.util.TTUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -32,7 +33,8 @@ public class TTAppEventLogger {
 
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
-
+    // custom auto event disable, events will be disabled when disabledEvents.contains(event)
+    final ArrayList<String> disabledEvents;
     /**
      * Logger util
      */
@@ -54,15 +56,16 @@ public class TTAppEventLogger {
     ScheduledFuture<?> timeFuture = null;
     private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
 
-    private TTAutoEventsManager autoEventsManager;
+    private final TTAutoEventsManager autoEventsManager;
 
     public static List<TTAppEvent> getSuccessfulEvents() {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable, ArrayList<String> disabledEvents) {
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
+        this.disabledEvents = disabledEvents;
 
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
 
@@ -90,12 +93,10 @@ public class TTAppEventLogger {
             return;
         }
         addToQ(() -> {
-            JSONObject allSkuMap = null;
 
             if (purchaseInfos.isEmpty()) {
                 return;
             }
-
 
             for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
                 TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
