@@ -3,6 +3,7 @@ package com.tiktok.appevents;
 import android.app.Application;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
@@ -17,6 +18,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.tiktok.util.TTConst.AppEventName.InternalTest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -84,9 +86,9 @@ public class TTAppEventLoggerTest extends BaseTest {
         verify(logger).info(TTAppEventLogger.NETWORK_IS_TURNED_OFF);
     }
 
-    TTAppEvent fromDisk1 = new TTAppEvent("aa", "{}");
-    TTAppEvent fromDisk2 = new TTAppEvent("bb", "{}");
-    TTAppEvent fromMemory3 = new TTAppEvent("cc", "{}");
+    TTAppEvent fromDisk1 = new TTAppEvent(InternalTest, "{}");
+    TTAppEvent fromDisk2 = new TTAppEvent(InternalTest, "{}");
+    TTAppEvent fromMemory3 = new TTAppEvent(InternalTest, "{}");
 
     private TTAppEventLogger flushCommon() {
         PowerMockito.mockStatic(TiktokBusinessSdk.class);
@@ -140,7 +142,7 @@ public class TTAppEventLoggerTest extends BaseTest {
     public void flushFailed() {
         TTAppEventLogger appEventLogger = flushCommon();
         List<TTAppEvent> failed = new LinkedList<>();
-        failed.add(new TTAppEvent("Failed", "{}"));
+        failed.add(new TTAppEvent(InternalTest, "{}"));
 
         // when failed to flush, persist to disk
         when(TTRequest.reportAppEvent(any(), any())).thenReturn(failed);

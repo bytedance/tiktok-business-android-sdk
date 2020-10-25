@@ -11,6 +11,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.List;
 
+import static com.tiktok.util.TTConst.AppEventName.InternalTest;
 import static org.junit.Assert.*;
 
 import static org.mockito.Mockito.*;
@@ -22,8 +23,8 @@ public class TTAppEventsQueueTest extends BaseTest {
 
     @Test
     public void simpleCase() {
-        TTAppEventsQueue.addEvent(new TTAppEvent("aaa", "{}"));
-        TTAppEventsQueue.addEvent(new TTAppEvent("bbb", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
 
         assertEquals(2, TTAppEventsQueue.size());
         TTAppEventsQueue.clearAll();
@@ -52,15 +53,15 @@ public class TTAppEventsQueueTest extends BaseTest {
 
             }
         });
-        TTAppEventsQueue.addEvent(new TTAppEvent("ccc", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
         TiktokBusinessSdk.destroy();
         TTAppEventsQueue.clearAll();
     }
 
     @Test
     public void testExport() {
-        TTAppEvent e1 = new TTAppEvent("ccc", "{}");
-        TTAppEvent e2 = new TTAppEvent("ddd", "{}");
+        TTAppEvent e1 = new TTAppEvent(InternalTest, "{}");
+        TTAppEvent e2 = new TTAppEvent(InternalTest, "{}");
         TTAppEventsQueue.addEvent(e1);
         TTAppEventsQueue.addEvent(e2);
 
