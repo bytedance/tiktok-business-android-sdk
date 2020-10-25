@@ -7,14 +7,7 @@ import com.tiktok.util.TTKeyValueStore;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TimeUtil;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.tiktok.util.TTConst.TTSDK_APP_BUILD;
 import static com.tiktok.util.TTConst.TTSDK_APP_VERSION;
@@ -47,7 +40,7 @@ class TTAutoEventsManager {
         if (shouldTrackAppLifecycleEvents()) {
             trackFirstInstallEvent();
             track2DayRetentionEvent();
-            appEventLogger.track("LaunchApp", null);
+            appEventLogger.track(TTConst.AppEventName.LaunchApp, null);
         }
     }
 
@@ -62,7 +55,7 @@ class TTAutoEventsManager {
 
         /* check and track InstallApp. */
         if (previousBuild == null) {
-            appEventLogger.track("InstallApp", null);
+            appEventLogger.track(TTConst.AppEventName.InstallApp, null);
             store.set(TTConst.TTSDK_APP_LAST_LAUNCH, TimeUtil.dateStr(0));
         } else if (!currentBuild.equals(previousBuild)) {
             // app updated
@@ -99,7 +92,7 @@ class TTAutoEventsManager {
 
     private void track2DayRetentionEvent() {
         if (isSatisfyRetention()) {
-            appEventLogger.track("2Dretention", null);
+            appEventLogger.track(TTConst.AppEventName.TwoDayRetention, null);
             store.set(TTConst.TTSDK_APP_2DRENTION_LOGGED, "true");
         }
     }

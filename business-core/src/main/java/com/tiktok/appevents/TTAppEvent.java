@@ -1,6 +1,7 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
 import org.json.JSONException;
@@ -22,12 +23,12 @@ public class TTAppEvent implements Serializable {
     private static String TAG = TTAppEventsQueue.class.getCanonicalName();
     private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
 
-    TTAppEvent(String eventName, String jsonStr) {
+    TTAppEvent(TTConst.AppEventName eventName, String jsonStr) {
         this(eventName, new Date(), jsonStr);
     }
 
-    TTAppEvent(String eventName, Date timeStamp, String jsonStr) {
-        this.eventName = eventName;
+    TTAppEvent(TTConst.AppEventName eventName, Date timeStamp, String jsonStr) {
+        this.eventName = eventName.toString();
         this.timeStamp = timeStamp;
         this.setJsonStr(jsonStr);
         this.uniqueId = TTAppEvent.counter.getAndIncrement();

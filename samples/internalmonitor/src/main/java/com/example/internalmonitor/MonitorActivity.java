@@ -16,6 +16,7 @@ import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
+import com.tiktok.util.TTConst;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,7 +51,7 @@ public class MonitorActivity extends AppCompatActivity {
             inner.put("time", new Date());
             property.put("code", "123")
                     .put("data", inner);
-            TiktokBusinessSdk.trackEvent("testEvent", property);
+            TiktokBusinessSdk.trackEvent(TTConst.AppEventName.InternalTest, property);
         } catch (JSONException e) {
             e.printStackTrace();
         }

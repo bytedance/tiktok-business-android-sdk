@@ -16,7 +16,7 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
-    <string name="menu_home">Home</string>
+    <string name="menu_billing">Google play Billing V4</string>
     <string name="menu_events">Events</string>
     <string name="menu_eventlog">Event Logs</string>
     <string name="properties">Event Properties</string>

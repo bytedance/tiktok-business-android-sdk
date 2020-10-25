@@ -5,13 +5,13 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.appevents.TTPurchaseInfo;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
 import java.util.Collections;
@@ -210,7 +210,7 @@ public class TiktokBusinessSdk {
     /**
      * public interface for tracking Event without custom properties
      */
-    public static void trackEvent(@NonNull String event) {
+    public static void trackEvent(TTConst.AppEventName event) {
         appEventLogger.track(event, null);
     }
 
@@ -219,7 +219,7 @@ public class TiktokBusinessSdk {
      * {@link TTProperty} is just a simple wrapper around JSONObject, the reason why we
      * introduce it is to suppress JSONException.
      */
-    public static void trackEvent(@NonNull String event, @Nullable TTProperty props) {
+    public static void trackEvent(TTConst.AppEventName event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 

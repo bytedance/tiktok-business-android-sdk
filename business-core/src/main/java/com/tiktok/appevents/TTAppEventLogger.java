@@ -1,12 +1,12 @@
 package com.tiktok.appevents;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
@@ -68,7 +68,6 @@ public class TTAppEventLogger {
 
         /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacksListener activityLifecycleCallbacks = new TTActivityLifecycleCallbacksListener(this);
-        TiktokBusinessSdk.getApplicationContext().registerActivityLifecycleCallbacks(activityLifecycleCallbacks);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
         /** advertiser id fetch */
@@ -101,7 +100,7 @@ public class TTAppEventLogger {
             for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
                 TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
                 if (property != null) {
-                    track("Purchase", property);
+                    track(TTConst.AppEventName.Purchase, property);
                 }
             }
         });
@@ -157,10 +156,11 @@ public class TTAppEventLogger {
      * @param event
      * @param props
      */
-    public void track(@NonNull String event, @Nullable TTProperty props) {
+    public void track(TTConst.AppEventName event, @Nullable TTProperty props) {
         if (!TiktokBusinessSdk.isSystemActivated()) {
             return;
         }
+
         if (props == null) props = new TTProperty();
         TTProperty finalProps = props;
         Runnable task = () -> {

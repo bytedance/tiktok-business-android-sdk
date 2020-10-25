@@ -122,8 +122,7 @@ public class EventFragment extends Fragment {
                         eventName,
                         Objects.requireNonNull(eventViewModel.getLiveProperties().getValue()).toString()
                 ));
-                Toast.makeText(requireContext(), eventName + " event triggered", Toast.LENGTH_SHORT).show();
-                reset();
+                Toast.makeText(requireContext(), eventName + " event tracked, plz check log", Toast.LENGTH_SHORT).show();
             }
         });
 
