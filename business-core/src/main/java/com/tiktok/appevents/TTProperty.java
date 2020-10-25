@@ -32,6 +32,13 @@ public class TTProperty {
         return this;
     }
 
+    public TTProperty putTTProperty(String key, TTProperty property){
+        try {
+            properties.put(key, property.get());
+        } catch (JSONException ignored) {}
+        return this;
+    }
+
     public JSONObject get() {
         return properties;
     }

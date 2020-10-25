@@ -106,6 +106,7 @@ public class TiktokBusinessSdk {
 
     /**
      * Only one TiktokBusinessSdk instance exist within a single App process
+     * this is used if you choose to use the default TTConfig settings
      */
     public static synchronized void initializeSdk(Context context) {
         initializeSdk(new TTConfig(context));
@@ -365,7 +366,7 @@ public class TiktokBusinessSdk {
         /* auto init flag check in manifest */
         private boolean autoStart = true;
         /* disable custom auto events */
-        private ArrayList<String> disabledEvents;
+        private List<TTConst.AppEventName> disabledEvents;
 
         /**
          * Read configs from <meta-data>
@@ -454,7 +455,7 @@ public class TiktokBusinessSdk {
         }
 
         /**
-         * to disable auto event tracking & lifecycle listeners
+         * to disable all auto event tracking captured by lifecycle listeners
          */
         public TTConfig turnOffAutoEvents() {
             this.autoEvent = false;
@@ -462,9 +463,9 @@ public class TiktokBusinessSdk {
         }
 
         /**
-         * to disable auto event tracking custom events
+         * to disable auto event tracking for some events
          */
-        public TTConfig turnOffAutoEvents(ArrayList<String> events) {
+        public TTConfig turnOffAutoEvents(List<TTConst.AppEventName> events) {
             this.disabledEvents = events;
             return this;
         }

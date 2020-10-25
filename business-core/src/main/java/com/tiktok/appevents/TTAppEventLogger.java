@@ -34,7 +34,7 @@ public class TTAppEventLogger {
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
     // custom auto event disable, events will be disabled when disabledEvents.contains(event)
-    final ArrayList<String> disabledEvents;
+    final List<TTConst.AppEventName> disabledEvents;
     /**
      * Logger util
      */
@@ -62,7 +62,7 @@ public class TTAppEventLogger {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable, ArrayList<String> disabledEvents) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AppEventName> disabledEvents) {
         logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.disabledEvents = disabledEvents;

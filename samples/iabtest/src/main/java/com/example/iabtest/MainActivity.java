@@ -15,6 +15,7 @@ import android.os.Bundle;
 import com.android.vending.billing.IInAppBillingService;
 import com.tiktok.TiktokBusinessSdk;
 import com.tiktok.appevents.TTPurchaseInfo;
+import com.tiktok.util.TTConst;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,12 +52,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TiktokBusinessSdk init start
-      if(!TiktokBusinessSdk.isInitialized()) {
-          TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
-                  .turnOffAutoEvents(new ArrayList<>(Arrays.asList("LaunchApp", "InstallApp")))
-                  .enableDebug();
-          TiktokBusinessSdk.initializeSdk(ttConfig);
-      }
+        if (!TiktokBusinessSdk.isInitialized()) {
+            TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
+                    .turnOffAutoEvents(new ArrayList<>(Arrays.asList(TTConst.AppEventName.LaunchApp,
+                            TTConst.AppEventName.InstallApp)))
+                    .enableDebug();
+            TiktokBusinessSdk.initializeSdk(ttConfig);
+        }
         // TiktokBusinessSdk init end
 
         // Context
@@ -255,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1001) {
             if (resultCode != RESULT_OK) return;
 

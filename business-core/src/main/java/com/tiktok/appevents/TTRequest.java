@@ -56,7 +56,7 @@ class TTRequest {
                 if (code == 0) {
                     config = (JSONObject) resultJson.get("data");
                 }
-                logger.info("Global config fetched: " + config.toString());
+                logger.info("Global config fetched: " + TTUtil.ppStr(config));
             } catch (Exception e) {
                 TTCrashHandler.handleCrash(TAG, e);
             }
@@ -149,7 +149,7 @@ class TTRequest {
                     failedEvents.addAll(currentBatch);
                     TTCrashHandler.handleCrash(TAG, e);
                 }
-                logger.verbose(result);
+                logger.verbose(TTUtil.ppStr(result));
             }
             notifyChange();
         }

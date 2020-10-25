@@ -21,7 +21,12 @@ import com.tiktok.util.TTConst;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Date;
+
+import static com.tiktok.util.TTConst.AppEventName.InstallApp;
+import static com.tiktok.util.TTConst.AppEventName.LaunchApp;
+import static com.tiktok.util.TTConst.AppEventName.TwoDayRetention;
 
 public class MonitorActivity extends AppCompatActivity {
 
@@ -30,6 +35,7 @@ public class MonitorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         if (!TiktokBusinessSdk.isInitialized()) {
             TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
+//                    .turnOffAutoEvents(Arrays.asList(LaunchApp,TwoDayRetention,InstallApp))
                     .enableDebug();
             TiktokBusinessSdk.initializeSdk(ttConfig);
         }
@@ -45,16 +51,13 @@ public class MonitorActivity extends AppCompatActivity {
 
     private void sendEvent() {
         TTProperty property = new TTProperty();
-        JSONObject inner = new JSONObject();
-        try {
-            inner.put("attr1", "someValue");
-            inner.put("time", new Date());
-            property.put("code", "123")
-                    .put("data", inner);
-            TiktokBusinessSdk.trackEvent(TTConst.AppEventName.InternalTest, property);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        TTProperty inner = new TTProperty();
+
+        inner.put("attr1", "someValue");
+        inner.put("time", new Date());
+        property.put("code", "123")
+                .putTTProperty("data", inner);
+        TiktokBusinessSdk.trackEvent(TTConst.AppEventName.InternalTest, property);
     }
 
     private void setUpHandlers() {

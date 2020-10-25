@@ -35,7 +35,7 @@ class TTAutoEventsManager {
 
     private boolean shouldTrackAppLifecycleEvents(TTConst.AppEventName event) {
         return appEventLogger.lifecycleTrackEnable
-                && !appEventLogger.disabledEvents.contains(event.toString());
+                && !appEventLogger.disabledEvents.contains(event);
     }
 
     /**
@@ -51,23 +51,17 @@ class TTAutoEventsManager {
     }
 
     private void trackFirstInstallEvent() {
-        /* first app launch, set only on first launch */
-        String firstLaunch = store.get(TTSDK_APP_FIRST_LAUNCH);
         /* get install trigger time, set only on InstallApp trigger */
-        String installTime = store.get(TTSDK_APP_INSTALL_TIME);
+        String installTime = store.get(TTSDK_APP_FIRST_INSTALL);
         if (installTime != null) return;
 
         Date now = new Date();
         HashMap<String, Object> hm = new HashMap<>();
-
-        if (firstLaunch == null) {
-            hm.put(TTSDK_APP_FIRST_LAUNCH, timeFormat.format(now));
-        }
+        hm.put(TTSDK_APP_FIRST_INSTALL, timeFormat.format(now));
 
         /* check and track InstallApp. */
         if (shouldTrackAppLifecycleEvents(AppEventName.InstallApp)) {
             appEventLogger.track(AppEventName.InstallApp, null);
-            hm.put(TTSDK_APP_INSTALL_TIME, timeFormat.format(now));
         }
 
         store.set(hm);
@@ -77,11 +71,11 @@ class TTAutoEventsManager {
         String is2DayLogged = store.get(TTSDK_APP_2DR_TIME);
         if (is2DayLogged != null) return;
 
-        String firstLaunch = store.get(TTSDK_APP_FIRST_LAUNCH);
-        if (firstLaunch == null) return;
+        String firstInstall = store.get(TTSDK_APP_FIRST_INSTALL);
+        if (firstInstall == null) return;// should not happen
 
         try {
-            Date firstLaunchTime = timeFormat.parse(firstLaunch);
+            Date firstLaunchTime = timeFormat.parse(firstInstall);
             Date now = new Date();
             if (shouldTrackAppLifecycleEvents(AppEventName.TwoDayRetention)
                     && isSatisfyRetention(firstLaunchTime, now)) {

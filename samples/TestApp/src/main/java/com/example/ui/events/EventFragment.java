@@ -22,6 +22,7 @@ import com.example.R;
 import com.example.model.EventLog;
 import com.example.testdata.TestEvents;
 import com.example.ui.eventlog.EventLogViewModel;
+import com.tiktok.TiktokBusinessSdk;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -82,7 +83,7 @@ public class EventFragment extends Fragment {
             Intent intent = new Intent(requireContext(), PropEditActivity.class);
             Bundle bundlePros = new Bundle();
             Iterator<String> keys = eventViewModel.getPropIterator();
-            while(keys.hasNext()) {
+            while (keys.hasNext()) {
                 String key = keys.next();
                 try {
                     bundlePros.putString(key, eventViewModel.getProp(key));
@@ -124,6 +125,11 @@ public class EventFragment extends Fragment {
                 ));
                 Toast.makeText(requireContext(), eventName + " event tracked, plz check log", Toast.LENGTH_SHORT).show();
             }
+        });
+
+        Button flushBtn = root.findViewById(R.id.flush);
+        flushBtn.setOnClickListener(v -> {
+            TiktokBusinessSdk.flush();
         });
 
         return root;
