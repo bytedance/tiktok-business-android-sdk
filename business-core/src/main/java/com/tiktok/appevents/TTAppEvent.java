@@ -17,20 +17,20 @@ public class TTAppEvent implements Serializable {
 
     private String eventName;
     private Date timeStamp;
-    private String jsonStr;
+    private String propertiesJson;
     private static AtomicLong counter = new AtomicLong(new Date().getTime() + 0L);
     private Long uniqueId;
     private static String TAG = TTAppEventsQueue.class.getCanonicalName();
     private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
 
-    TTAppEvent(TTConst.AppEventName eventName, String jsonStr) {
-        this(eventName, new Date(), jsonStr);
+    TTAppEvent(TTConst.AppEventName eventName, String propertiesJson) {
+        this(eventName, new Date(), propertiesJson);
     }
 
-    TTAppEvent(TTConst.AppEventName eventName, Date timeStamp, String jsonStr) {
+    TTAppEvent(TTConst.AppEventName eventName, Date timeStamp, String propertiesJson) {
         this.eventName = eventName.toString();
         this.timeStamp = timeStamp;
-        this.setJsonStr(jsonStr);
+        this.propertiesJson = propertiesJson;
         this.uniqueId = TTAppEvent.counter.getAndIncrement();
     }
 
@@ -50,18 +50,12 @@ public class TTAppEvent implements Serializable {
         this.timeStamp = timeStamp;
     }
 
-    public String getJsonStr() {
-        return jsonStr;
+    public String getPropertiesJson() {
+        return propertiesJson;
     }
 
-    public void setJsonStr(String jsonStr) {
-        try {
-            new JSONObject(jsonStr);
-            this.jsonStr = jsonStr;
-        } catch (JSONException ex) {
-            logger.info("Invalid jsonStr provided: " + jsonStr);
-            this.jsonStr = "{}";
-        }
+    public void setPropertiesJson(String propertiesJson) {
+        this.propertiesJson = propertiesJson;
     }
 
     public Long getUniqueId() {
@@ -73,7 +67,7 @@ public class TTAppEvent implements Serializable {
         return "TTAppEvent{" +
                 "eventName='" + eventName + '\'' +
                 ", timeStamp=" + timeStamp +
-                ", jsonObject='" + jsonStr + '\'' +
+                ", propertiesJson='" + propertiesJson + '\'' +
                 ", uniqueId=" + uniqueId +
                 '}';
     }

@@ -78,7 +78,7 @@ public class TTAppEventLogger {
 
         SystemInfoUtil.initUserAgent();
         addToQ(TTAppEventsQueue::clearAll);
-        remoteSdkConfigProcess();
+        initGlobalConfig();
     }
 
     /**
@@ -162,8 +162,7 @@ public class TTAppEventLogger {
             return;
         }
 
-        if (props == null) props = new TTProperty();
-        TTProperty finalProps = props;
+        TTProperty finalProps = props != null ? props : new TTProperty();
         Runnable task = () -> {
             try {
                 logger.debug("track " + event + " : " + finalProps.get().toString(4));
@@ -283,7 +282,7 @@ public class TTAppEventLogger {
      * if the config is fetched and config.globalSwitch is false, the events can neither be saved in memory nor on the disk
      * any events in the memory will be gone when the app is closed.
      */
-    private void remoteSdkConfigProcess() {
+    private void initGlobalConfig() {
         addToQ(() -> {
             try {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
@@ -316,7 +315,7 @@ public class TTAppEventLogger {
                 e.printStackTrace();
             } finally {
                 TiktokBusinessSdk.setGlobalConfigFetched();
-                if (TiktokBusinessSdk.getSdkGlobalSwitch()) {
+                if (TiktokBusinessSdk.isSystemActivated()) {
                     activateSdk();
                 }
             }

@@ -63,7 +63,10 @@ class TTAppEventStorage {
     private static int totalDumped = 0;
 
     /**
+     * discard old events
      * In order not to overwhelm users' disk, only maxPersistNum is allowed to be persisted to disk
+     *
+     * @param ttAppEventPersist
      */
     private static void discardOldEvents(TTAppEventPersist ttAppEventPersist, int maxPersistNum) {
         if (ttAppEventPersist == null || ttAppEventPersist.isEmpty()) {

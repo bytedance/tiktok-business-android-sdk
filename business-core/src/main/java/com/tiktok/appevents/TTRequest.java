@@ -177,7 +177,7 @@ class TTRequest {
             propertiesJson.put("type", "track");
             propertiesJson.put("event", event.getEventName());
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
-            JSONObject properties = new JSONObject(event.getJsonStr());
+            JSONObject properties = new JSONObject(event.getPropertiesJson());
             if (properties.length() != 0) {
                 propertiesJson.put("properties", properties);
             }
@@ -204,7 +204,7 @@ class TTRequest {
         for (int i = 0; i < times; i++) {
             int start = i * splitNum;
             int end = i * splitNum + splitNum;
-            result.add(new ArrayList<>(sourceList.subList(i * splitNum, Math.min(size, end))));
+            result.add(new ArrayList<>(sourceList.subList(start, Math.min(size, end))));
         }
         return result;
     }
