@@ -22,7 +22,7 @@ import com.example.R;
 import com.example.model.EventLog;
 import com.example.testdata.TestEvents;
 import com.example.ui.eventlog.EventLogViewModel;
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -129,7 +129,7 @@ public class EventFragment extends Fragment {
 
         Button flushBtn = root.findViewById(R.id.flush);
         flushBtn.setOnClickListener(v -> {
-            TiktokBusinessSdk.flush();
+            TikTokBusinessSdk.flush();
         });
 
         return root;

@@ -1,6 +1,7 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.BuildConfig;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
@@ -17,8 +18,8 @@ import java.util.Map;
 import java.util.TreeSet;
 
 class TTRequest {
-    private static String TAG = TTRequest.class.getCanonicalName();
-    private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    private static final String TAG = TTRequest.class.getCanonicalName();
+    private static final TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
 
     private static final int MAX_EVENT_SIZE = 50;
 
@@ -28,24 +29,25 @@ class TTRequest {
     private static int successfulRequests = 0;
 
     // stats for the whole lifecycle
-    private static TreeSet<Long> allRequestIds = new TreeSet<Long>();
-    private static List<TTAppEvent> successfullySentRequests = new ArrayList<>();
+    private static final TreeSet<Long> allRequestIds = new TreeSet<>();
+    private static final List<TTAppEvent> successfullySentRequests = new ArrayList<>();
 
-    private static Map<String, String> headParamMap = new HashMap<>();
+    private static final Map<String, String> headParamMap = new HashMap<>();
 
     static {
         // these fields wont change, so cache it locally to enhance performance
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
-        headParamMap.put("User-Agent", "tiktok-business-android-sdk/1.0.0/v1.1");
-//        headParamMap.put("x-tt-env", "jianyi");
+        String ua = String.format("tiktok-business-android-sdk/%s/%s",
+                BuildConfig.VERSION_NAME,
+                TikTokBusinessSdk.getApiAvailableVersion());
+        headParamMap.put("User-Agent", ua);
     }
 
     public static JSONObject getBusinessSDKConfig() {
         logger.info("Try to fetch global configs");
-        headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
-        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TiktokBusinessSdk.getAppId();
-//        String url = "http://10.231.18.90:9351/open_api/v1.1/business_sdk_config/get/?app_id="+TiktokBusinessSdk.getAppId();
+        headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
+        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TikTokBusinessSdk.getAppId();
         String result = HttpRequestUtil.doGet(url, headParamMap);
         logger.verbose(result);
         JSONObject config = null;
@@ -82,7 +84,7 @@ class TTRequest {
     public static synchronized List<TTAppEvent> reportAppEvent(JSONObject basePayload, List<TTAppEvent> appEventList) {
         TTUtil.checkThread(TAG);
         // access-token might change during runtime
-        headParamMap.put("access-token", TiktokBusinessSdk.getAccessToken());
+        headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
 
         if (appEventList == null || appEventList.size() == 0) {
             return new ArrayList<>();
@@ -96,7 +98,7 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
 
-        String url = "https://ads.tiktok.com/open_api/" + TiktokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+        String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 
@@ -112,6 +114,7 @@ class TTRequest {
                 batch.add(propertiesJson);
             }
 
+            // https://bytedance.feishu.cn/docs/doccnig9UUWvyRawy0zmrOY26Md
             JSONObject bodyJson = basePayload;
             try {
                 bodyJson.put("batch", new JSONArray(batch));
@@ -162,8 +165,8 @@ class TTRequest {
     }
 
     private static void notifyChange() {
-        if (TiktokBusinessSdk.networkListener != null) {
-            TiktokBusinessSdk.networkListener.onNetworkChange(toBeSentRequests, successfulRequests,
+        if (TikTokBusinessSdk.networkListener != null) {
+            TikTokBusinessSdk.networkListener.onNetworkChange(toBeSentRequests, successfulRequests,
                     failedRequests, allRequestIds.size() + TTAppEventsQueue.size(), successfullySentRequests.size());
         }
     }

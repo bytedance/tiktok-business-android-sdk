@@ -16,10 +16,4 @@ public class TTPropertyTest {
         assertEquals("track", property.get().optJSONArray("batch").getJSONObject(0).optString("type"));
     }
 
-    @Test
-    public void invalidProperty() throws JSONException {
-        String jsonStr = "aa";
-        TTProperty property = new TTProperty(new JSONObject(jsonStr));
-        assertEquals(property.get().toString(), "{}");
-    }
 }

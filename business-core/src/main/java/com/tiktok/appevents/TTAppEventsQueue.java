@@ -1,6 +1,6 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
@@ -19,13 +19,13 @@ class TTAppEventsQueue {
     }
 
     private static void notifyChange() {
-        if (TiktokBusinessSdk.memoryListener != null) {
-            TiktokBusinessSdk.memoryListener.onMemoryChange(memory.size());
+        if (TikTokBusinessSdk.memoryListener != null) {
+            TikTokBusinessSdk.memoryListener.onMemoryChange(memory.size());
         }
 
-        if (TiktokBusinessSdk.nextTimeFlushListener != null) {
+        if (TikTokBusinessSdk.nextTimeFlushListener != null) {
             int left = TTAppEventLogger.THRESHOLD - size();
-            TiktokBusinessSdk.nextTimeFlushListener.thresholdLeft(TTAppEventLogger.THRESHOLD, left > 0 ? left : 0);
+            TikTokBusinessSdk.nextTimeFlushListener.thresholdLeft(TTAppEventLogger.THRESHOLD, left > 0 ? left : 0);
         }
     }
 

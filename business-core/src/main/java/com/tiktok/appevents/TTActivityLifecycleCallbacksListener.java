@@ -3,13 +3,13 @@ package com.tiktok.appevents;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 
 class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
 
     private static final String TAG = TTActivityLifecycleCallbacksListener.class.getCanonicalName();
-    private static final TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    private static final TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
 
     private final TTAppEventLogger appEventLogger;
     private boolean isPaused = false;
@@ -22,6 +22,7 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
     public void onResume(@NonNull LifecycleOwner owner) {
         if (isPaused) {
             appEventLogger.restartScheduler();
+            appEventLogger.autoEventsManager.track2DayRetentionEvent();
         }
     }
 

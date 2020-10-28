@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">Tiktok Analytics Sample</string>
-    <string name="tiktok_business_app_key">c2424295d21b7f32573ad5ec2a1cbb3ca92e09be</string>
-    <string name="tiktok_business_app_id">com.shopee.sg</string>
-
     <string name="track">Track</string>
     <string name="flush">Flush</string>
     <string name="reset">Reset</string>

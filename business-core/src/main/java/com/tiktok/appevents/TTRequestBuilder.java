@@ -5,7 +5,7 @@ import android.os.Build;
 
 import androidx.annotation.Nullable;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTUtil;
 
@@ -27,7 +27,7 @@ class TTRequestBuilder {
         JSONObject result = new JSONObject();
 
         try {
-            result.put("app_id", TiktokBusinessSdk.getAppId());
+            result.put("app_id", TikTokBusinessSdk.getAppId());
             result.put("event_source", "APP_EVENTS_SDK");
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
@@ -46,9 +46,9 @@ class TTRequestBuilder {
         }
         TTIdentifierFactory.AdIdInfo adIdInfo = null;
         try {
-            if (TiktokBusinessSdk.isGaidCollectionEnabled()) {
+            if (TikTokBusinessSdk.isGaidCollectionEnabled()) {
                 // fetch gaid info through google service
-                adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(TiktokBusinessSdk.getApplicationContext());
+                adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(TikTokBusinessSdk.getApplicationContext());
             }
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
@@ -58,7 +58,7 @@ class TTRequestBuilder {
     }
 
     private static Locale getCurrentLocale() {
-        Context context = TiktokBusinessSdk.getApplicationContext();
+        Context context = TikTokBusinessSdk.getApplicationContext();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             return context.getResources().getConfiguration().getLocales().get(0);
         } else {

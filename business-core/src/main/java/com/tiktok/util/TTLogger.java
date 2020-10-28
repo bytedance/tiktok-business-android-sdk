@@ -2,7 +2,7 @@ package com.tiktok.util;
 
 import android.util.Log;
 
-import com.tiktok.TiktokBusinessSdk.LogLevel;
+import com.tiktok.TikTokBusinessSdk.LogLevel;
 
 /**
  * Logger util class

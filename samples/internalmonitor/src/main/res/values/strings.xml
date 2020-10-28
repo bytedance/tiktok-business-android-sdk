@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">InternalMonitor</string>
-    <string name="tiktok_business_app_key">abcdabcdabcdabcd00509731ca2343bbecb2b846</string>
-    <string name="tiktok_business_app_id">1211123727</string>
     <string name="track">track</string>
     <string name="track_count">Track count</string>
     <string name="flush">Flush</string>

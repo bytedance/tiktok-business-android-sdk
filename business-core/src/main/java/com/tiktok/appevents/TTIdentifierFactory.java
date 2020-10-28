@@ -9,7 +9,7 @@ import android.os.*;
 
 import android.text.TextUtils;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -21,7 +21,7 @@ import java.util.concurrent.BlockingQueue;
 public class TTIdentifierFactory {
     private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
-    private static TTLogger logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    private static TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
     private static RuntimeException serviceNotInstalled = new RuntimeException("Google play service not installed");
 
     public static AdIdInfo getGoogleAdIdInfo(Context context) throws RemoteException {

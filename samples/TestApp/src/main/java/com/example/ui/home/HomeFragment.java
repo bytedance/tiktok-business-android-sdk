@@ -16,7 +16,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.android.billingclient.api.*;
 import com.example.R;
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTPurchaseInfo;
 
 import org.json.JSONObject;
@@ -69,7 +69,7 @@ public class HomeFragment extends Fragment {
                     for (Purchase purchase : purchases) {
                         purchaseInfos.add(new TTPurchaseInfo(new JSONObject(purchase.getOriginalJson()), new JSONObject(skuDetails.getOriginalJson())));
                     }
-                    TiktokBusinessSdk.trackPurchase(purchaseInfos);
+                    TikTokBusinessSdk.trackGooglePlayPurchase(purchaseInfos);
                 } catch (Exception e) {
                     Toast.makeText(HomeFragment.this.getActivity(), "Failed to track purchase: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }

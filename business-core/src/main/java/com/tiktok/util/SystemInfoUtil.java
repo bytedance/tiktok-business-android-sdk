@@ -6,7 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.webkit.WebView;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -22,9 +22,9 @@ public class SystemInfoUtil {
 
     static {
         try {
-            application = TiktokBusinessSdk.getApplicationContext();
+            application = TikTokBusinessSdk.getApplicationContext();
             pm = application.getPackageManager();
-            packageInfo = pm.getPackageInfo(TiktokBusinessSdk.getApplicationContext().getPackageName(), 0);
+            packageInfo = pm.getPackageInfo(TikTokBusinessSdk.getApplicationContext().getPackageName(), 0);
         } catch (Exception ignored) {
         }
     }
@@ -81,7 +81,7 @@ public class SystemInfoUtil {
 
     // invoke it in the mainThread
     public static void initUserAgent() {
-        userAgent = new WebView(TiktokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+        userAgent = new WebView(TikTokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
     }
 
     public static String getUserAgent() {

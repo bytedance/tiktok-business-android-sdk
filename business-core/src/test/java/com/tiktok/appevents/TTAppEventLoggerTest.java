@@ -2,7 +2,7 @@ package com.tiktok.appevents;
 
 import android.app.Application;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
@@ -18,7 +18,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.tiktok.util.TTConst.AppEventName.InternalTest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -29,7 +28,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
-        TTUtil.class, TiktokBusinessSdk.class,
+        TTUtil.class, TikTokBusinessSdk.class,
         TTAutoEventsManager.class,
         TTAppEventStorage.class, TTRequest.class
 })
@@ -37,10 +36,10 @@ public class TTAppEventLoggerTest extends BaseTest {
 
     @Test
     public void skipFlush() throws Exception {
-        PowerMockito.mockStatic(TiktokBusinessSdk.class);
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
 
         Application context = mock(Application.class);
-        when(TiktokBusinessSdk.getApplicationContext()).thenReturn(context);
+        when(TikTokBusinessSdk.getApplicationContext()).thenReturn(context);
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -54,9 +53,9 @@ public class TTAppEventLoggerTest extends BaseTest {
 
     @Test
     public void globalConfigFetchedButTurnedOff() {
-        PowerMockito.mockStatic(TiktokBusinessSdk.class);
-        when(TiktokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
-        when(TiktokBusinessSdk.getSdkGlobalSwitch()).thenReturn(false);
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
+        when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
+        when(TikTokBusinessSdk.getSdkGlobalSwitch()).thenReturn(false);
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -70,11 +69,12 @@ public class TTAppEventLoggerTest extends BaseTest {
 
     @Test
     public void globalSwitchOnButNetworkTurnedOff() {
-        PowerMockito.mockStatic(TiktokBusinessSdk.class);
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
         PowerMockito.mockStatic(TTAppEventStorage.class);
 
-        when(TiktokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
-        when(TiktokBusinessSdk.isSystemActivated()).thenReturn(true);
+        when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
+        when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
+        when(TikTokBusinessSdk.getAccessToken()).thenReturn("aaa");
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -86,18 +86,38 @@ public class TTAppEventLoggerTest extends BaseTest {
         verify(logger).info(TTAppEventLogger.NETWORK_IS_TURNED_OFF);
     }
 
-    TTAppEvent fromDisk1 = new TTAppEvent(InternalTest, "{}");
-    TTAppEvent fromDisk2 = new TTAppEvent(InternalTest, "{}");
-    TTAppEvent fromMemory3 = new TTAppEvent(InternalTest, "{}");
+    @Test
+    public void globalSwitchOnButNetworkOnButAccessTokenNull() {
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
+        PowerMockito.mockStatic(TTAppEventStorage.class);
+
+        when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
+        when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
+        when(TikTokBusinessSdk.getAccessToken()).thenReturn(null);
+
+        TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
+
+        TTLogger logger = mock(TTLogger.class);
+        doCallRealMethod().when(appEventLogger).flush(any());
+
+        appEventLogger.logger = logger;
+        appEventLogger.flush(TTAppEventLogger.FlushReason.FORCE_FLUSH);
+        verify(logger).warn(TTAppEventLogger.SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN);
+    }
+
+    TTAppEvent fromDisk1 = new TTAppEvent("InternalTest", "{}");
+    TTAppEvent fromDisk2 = new TTAppEvent("InternalTest", "{}");
+    TTAppEvent fromMemory3 = new TTAppEvent("InternalTest", "{}");
 
     private TTAppEventLogger flushCommon() {
-        PowerMockito.mockStatic(TiktokBusinessSdk.class);
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
         PowerMockito.mockStatic(TTAppEventStorage.class);
         PowerMockito.mockStatic(TTRequest.class);
 
-        when(TiktokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
-        when(TiktokBusinessSdk.isSystemActivated()).thenReturn(true);
-        when(TiktokBusinessSdk.getNetworkSwitch()).thenReturn(true);
+        when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
+        when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
+        when(TikTokBusinessSdk.getNetworkSwitch()).thenReturn(true);
+        when(TikTokBusinessSdk.getAccessToken()).thenReturn("aaa");
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -142,7 +162,7 @@ public class TTAppEventLoggerTest extends BaseTest {
     public void flushFailed() {
         TTAppEventLogger appEventLogger = flushCommon();
         List<TTAppEvent> failed = new LinkedList<>();
-        failed.add(new TTAppEvent(InternalTest, "{}"));
+        failed.add(new TTAppEvent("InternalTest", "{}"));
 
         // when failed to flush, persist to disk
         when(TTRequest.reportAppEvent(any(), any())).thenReturn(failed);

@@ -6,7 +6,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 @PrepareForTest({
         TTUtil.class, TTLogger.class
 })
-public class TiktokBusinessSdkTest {
+public class TikTokBusinessSdkTest {
 
     @Before
     public void setup() throws Exception {
@@ -50,7 +50,7 @@ public class TiktokBusinessSdkTest {
 //
 //        PowerMockito.whenNew(TTLogger.class).withAnyArguments().thenReturn(logger);
 //
-//        TTLogger logger1 = new TTLogger("aa", TiktokBusinessSdk.LogLevel.DEBUG);
+//        TTLogger logger1 = new TTLogger("aa", TikTokBusinessSdk.LogLevel.DEBUG);
 //
 //
 //        new TTCrashHandler();
@@ -58,7 +58,7 @@ public class TiktokBusinessSdkTest {
 //        Bundle bundle = mock(Bundle.class);
 //        info.metaData = bundle;
 //
-//        TiktokBusinessSdk.TTConfig config = new TiktokBusinessSdk.TTConfig(context);
+//        TikTokBusinessSdk.TTConfig config = new TikTokBusinessSdk.TTConfig(context);
 //        System.out.println(config);
     }
 }

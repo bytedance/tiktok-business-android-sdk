@@ -13,6 +13,14 @@ public class TTPurchaseInfo {
         }
     }
 
+    /**
+     * @param purchase for google billing v3, simply pass the purchase JSONObject.
+     *                 for v4, you may try using new JSONObject(purchase.getOriginalJson()
+     * @param skuDetails for google billing v3, simply pass the skuDetails JSONObject.
+     *                   for v4, you may try using new JSONObject(skuDetails.getOriginalJson()
+     * @throws InvalidTTPurchaseInfoException if either the purchase or the skuDetails object are not valid
+     * or the productId does not match
+     */
     public TTPurchaseInfo(JSONObject purchase, JSONObject skuDetails) throws InvalidTTPurchaseInfoException {
         if (!isValidPurchase(purchase)) {
             throw new InvalidTTPurchaseInfoException("Not a valid purchase object");

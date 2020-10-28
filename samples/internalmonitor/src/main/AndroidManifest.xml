@@ -11,12 +11,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- create a new tiktok_config.xml file in this directory to provide to AppId,
+         however "tiktok_business_app_access_token" is optional.
+
+         a sample xml file could be like this
+         <?xml version="1.0" encoding="utf-8"?>
+            <resources>
+              <string name="tiktok_business_app_access_token">Your accessToken</string>
+              <string name="tiktok_business_app_id">Your AppId</string>
+            </resources>
+         -->
         <meta-data
             android:name="com.tiktok.sdk.AccessToken"
-            android:value="c2424295d21b7f32573ad5ec2a1cbb3ca92e09be" />
+            android:value="@string/tiktok_business_app_access_token" />
         <meta-data
             android:name="com.tiktok.sdk.AppId"
-            android:value="com.shopee.my" />
+            android:value="@string/tiktok_business_app_id" />
 
         <activity android:name=".MonitorActivity">
             <intent-filter>

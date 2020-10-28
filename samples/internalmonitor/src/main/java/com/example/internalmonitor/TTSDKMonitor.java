@@ -3,10 +3,10 @@ package com.example.internalmonitor;
 import android.os.Handler;
 import android.os.Message;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 
-public class TTSDKMonitor implements TiktokBusinessSdk.NetworkListener,
-        TiktokBusinessSdk.MemoryListener, TiktokBusinessSdk.DiskStatusListener, TiktokBusinessSdk.NextTimeFlushListener {
+public class TTSDKMonitor implements TikTokBusinessSdk.NetworkListener,
+        TikTokBusinessSdk.MemoryListener, TikTokBusinessSdk.DiskStatusListener, TikTokBusinessSdk.NextTimeFlushListener {
 
     private Handler handler;
 

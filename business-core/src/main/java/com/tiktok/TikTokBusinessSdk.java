@@ -11,7 +11,6 @@ import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.appevents.TTPurchaseInfo;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
 import java.util.ArrayList;
@@ -19,13 +18,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TiktokBusinessSdk {
-    static final String TAG = TiktokBusinessSdk.class.getName();
+public class TikTokBusinessSdk {
+    static final String TAG = TikTokBusinessSdk.class.getName();
 
     /**
-     * Singleton instance for {@link TiktokBusinessSdk}
+     * Singleton instance for {@link TikTokBusinessSdk}
      */
-    static volatile TiktokBusinessSdk ttSdk = null;
+    static volatile TikTokBusinessSdk ttSdk = null;
     /**
      * {@link TTAppEventLogger} package singleton
      */
@@ -72,18 +71,16 @@ public class TiktokBusinessSdk {
      */
     private static TTLogger logger;
 
-    private TiktokBusinessSdk(TTConfig ttConfig) {
+    private TikTokBusinessSdk(TTConfig ttConfig) {
         /* no app id exception */
         if (ttConfig.appId == null) {
             throw new IllegalArgumentException("app id not found");
         }
         appId = ttConfig.appId;
 
-        /* no write key exception */
-        if (ttConfig.accessToken == null) {
-            throw new IllegalArgumentException("access token not found");
+        if (ttConfig.accessToken != null) {
+            accessToken = ttConfig.accessToken.trim();
         }
-        accessToken = ttConfig.accessToken;
 
         /* validation done in TTConfig */
         applicationContext = ttConfig.application;
@@ -105,7 +102,7 @@ public class TiktokBusinessSdk {
     }
 
     /**
-     * Only one TiktokBusinessSdk instance exist within a single App process
+     * Only one TikTokBusinessSdk instance exist within a single App process
      * this is used if you choose to use the default TTConfig settings
      */
     public static synchronized void initializeSdk(Context context) {
@@ -113,14 +110,14 @@ public class TiktokBusinessSdk {
     }
 
     /**
-     * Only one TiktokBusinessSdk instance exist within a single App process
+     * Only one TikTokBusinessSdk instance exist within a single App process
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
 
-        if (ttSdk != null) throw new RuntimeException("TiktokBusinessSdk instance already exists");
+        if (ttSdk != null) throw new RuntimeException("TikTokBusinessSdk instance already exists");
 
-        ttSdk = new TiktokBusinessSdk(ttConfig);
+        ttSdk = new TikTokBusinessSdk(ttConfig);
 
         // the appEventLogger instance will be the main interface to track events
         appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents);
@@ -151,7 +148,7 @@ public class TiktokBusinessSdk {
         diskListener = null;
         networkListener = null;
         nextTimeFlushListener = null;
-        if(appEventLogger != null){
+        if (appEventLogger != null) {
             appEventLogger.destroy();
         }
     }
@@ -216,35 +213,60 @@ public class TiktokBusinessSdk {
     public static NetworkListener networkListener;
     public static NextTimeFlushListener nextTimeFlushListener;
 
+
     /**
-     * public interface for tracking Event without custom properties
+     * A shortcut method for the situations where the events do not require a property body.
+     * see more {@link TikTokBusinessSdk#trackEvent(String, TTProperty)}
      */
-    public static void trackEvent(TTConst.AppEventName event) {
+    public static void trackEvent(String event) {
         appEventLogger.track(event, null);
     }
 
+
     /**
-     * public interface for tracking Event with custom properties
-     * {@link TTProperty} is just a simple wrapper around JSONObject, the reason why we
-     * introduce it is to suppress JSONException.
+     * <pre>
+     * public interface for tracking Event with custom properties.
+     * You can pass in any eventName and relevant properties as per
+     * <a href="https://ads.tiktok.com/marketing_api/docs?rid=a5vmu2dmwy&id=1679472066464769">here</a>
+     *
+     * As everything is schemaless in this version, so we highly encourage you to construct the properties
+     * conforming to what is described in the above doc.
+     *
+     * Purchase events could be special, since we are providing a more user-friendly way here:
+     * For google play purchase event, see {@link #trackGooglePlayPurchase(TTPurchaseInfo)}
+     *
+     * For a more common purchase scenario, here is an example
+     * {@code
+     *      TTProperty.PurchaseItem item1 = new TTProperty.PurchaseItem(23.5f, 2, "a", "a");
+     *      TTProperty.PurchaseItem item2 = new TTProperty.PurchaseItem(10.5f, 1, "b", "b");
+     *
+     *      TikTokBusinessSdk.trackEvent("Purchase", TTProperty.getPurchaseProperty("dollar", item1, item2));
+     * }
+     * </pre>
+     *
+     * @param event event name
+     * @param props {@link TTProperty} is just a simple wrapper around JSONObject, the reason why we
+     *              introduce it is to suppress JSONException.
      */
-    public static void trackEvent(TTConst.AppEventName event, @Nullable TTProperty props) {
+    public static void trackEvent(String event, @Nullable TTProperty props) {
         appEventLogger.track(event, props);
     }
 
-
     /**
-     * Track a list purchases at the same time.
+     * Track a list of google play purchases at the same time.
      */
-    public static void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
+    public static void trackGooglePlayPurchase(List<TTPurchaseInfo> purchaseInfos) {
         appEventLogger.trackPurchase(purchaseInfos);
     }
 
     /**
-     * A shortcut method if there is only one purchase, see more {@link TiktokBusinessSdk#trackPurchase(List, List)}
+     * Track a google play purchase, a google purchase is consisted of a Purchase Object
+     * and a SkuDetails Object, which are two essential params to construct a {@link TTPurchaseInfo} object here.
+     *
+     * @param info
      */
-    public static void trackPurchase(TTPurchaseInfo info) {
-        trackPurchase(Collections.singletonList(info));
+    public static void trackGooglePlayPurchase(TTPurchaseInfo info) {
+        trackGooglePlayPurchase(Collections.singletonList(info));
     }
 
     /**
@@ -271,7 +293,7 @@ public class TiktokBusinessSdk {
      */
     public static Application getApplicationContext() {
         if (ttSdk == null)
-            throw new RuntimeException("TiktokBusinessSdk instance is not initialized");
+            throw new RuntimeException("TikTokBusinessSdk instance is not initialized");
         return applicationContext;
     }
 
@@ -280,6 +302,13 @@ public class TiktokBusinessSdk {
      */
     public static String getAccessToken() {
         return accessToken;
+    }
+
+    public static void updateAccessToken(String accessToken) {
+        if (accessToken == null) {
+            throw new IllegalArgumentException("Access Token cannot be null");
+        }
+        TikTokBusinessSdk.accessToken = accessToken.trim();
     }
 
     /**
@@ -317,7 +346,7 @@ public class TiktokBusinessSdk {
      * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
      */
     public static boolean isSystemActivated() {
-        Boolean sdkGlobalSwitch = TiktokBusinessSdk.getSdkGlobalSwitch();
+        Boolean sdkGlobalSwitch = TikTokBusinessSdk.getSdkGlobalSwitch();
         if (!sdkGlobalSwitch) {
             logger.verbose("Global switch is off, ignore all operations");
         }
@@ -333,7 +362,7 @@ public class TiktokBusinessSdk {
     }
 
     public static void setSdkGlobalSwitch(Boolean sdkGlobalSwitch) {
-        TiktokBusinessSdk.sdkGlobalSwitch = sdkGlobalSwitch;
+        TikTokBusinessSdk.sdkGlobalSwitch = sdkGlobalSwitch;
     }
 
     public static String getApiAvailableVersion() {
@@ -341,7 +370,7 @@ public class TiktokBusinessSdk {
     }
 
     public static void setApiAvailableVersion(String apiAvailableVersion) {
-        TiktokBusinessSdk.apiAvailableVersion = apiAvailableVersion;
+        TikTokBusinessSdk.apiAvailableVersion = apiAvailableVersion;
     }
 
     /**
@@ -366,7 +395,7 @@ public class TiktokBusinessSdk {
         /* auto init flag check in manifest */
         private boolean autoStart = true;
         /* disable custom auto events */
-        private List<TTConst.AppEventName> disabledEvents;
+        private List<String> disabledEvents;
 
         /**
          * Read configs from <meta-data>
@@ -463,10 +492,26 @@ public class TiktokBusinessSdk {
         }
 
         /**
-         * to disable auto event tracking for some events
+         * to disable auto event tracking for InstallApp event
          */
-        public TTConfig turnOffAutoEvents(List<TTConst.AppEventName> events) {
-            this.disabledEvents = events;
+        public TTConfig disableInstallLogging() {
+            this.disabledEvents.add("InstallApp");
+            return this;
+        }
+
+        /**
+         * to disable auto event tracking for LaunchApp event
+         */
+        public TTConfig disableLaunchLogging() {
+            this.disabledEvents.add("LaunchApp");
+            return this;
+        }
+
+        /**
+         * to disable auto event tracking for 2Dretention event
+         */
+        public TTConfig disableRetentionLogging() {
+            this.disabledEvents.add("2Dretention");
             return this;
         }
 
@@ -499,3 +544,4 @@ public class TiktokBusinessSdk {
     }
 
 }
+

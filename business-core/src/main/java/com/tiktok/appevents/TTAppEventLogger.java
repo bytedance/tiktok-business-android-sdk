@@ -4,7 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
@@ -21,6 +21,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
+    static final String SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN = "Skip flushing because access token is null";
     static final String SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF = "Skip flushing because global switch is turned off";
     static final String SKIP_FLUSHING_BECAUSE_GLOBAL_CONFIG_IS_NOT_FETCHED = "Skip flushing because global config is not fetched";
     static final String TAG = TTAppEventLogger.class.getName();
@@ -34,7 +35,7 @@ public class TTAppEventLogger {
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
     // custom auto event disable, events will be disabled when disabledEvents.contains(event)
-    final List<TTConst.AppEventName> disabledEvents;
+    final List<String> disabledEvents;
     /**
      * Logger util
      */
@@ -56,14 +57,14 @@ public class TTAppEventLogger {
     ScheduledFuture<?> timeFuture = null;
     private final Runnable batchFlush = () -> flush(FlushReason.TIMER);
 
-    private final TTAutoEventsManager autoEventsManager;
+    final TTAutoEventsManager autoEventsManager;
 
     public static List<TTAppEvent> getSuccessfulEvents() {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AppEventName> disabledEvents) {
-        logger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    public TTAppEventLogger(boolean lifecycleTrackEnable, List<String> disabledEvents) {
+        logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.disabledEvents = disabledEvents;
 
@@ -89,7 +90,7 @@ public class TTAppEventLogger {
     }
 
     public void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
-        if (!TiktokBusinessSdk.isSystemActivated()) {
+        if (!TikTokBusinessSdk.isSystemActivated()) {
             return;
         }
         addToQ(() -> {
@@ -101,7 +102,7 @@ public class TTAppEventLogger {
             for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
                 TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
                 if (property != null) {
-                    track(TTConst.AppEventName.Purchase, property);
+                    track("Purchase", property);
                 }
             }
         });
@@ -125,10 +126,10 @@ public class TTAppEventLogger {
         if (future == null) {
             future = eventLoop.scheduleAtFixedRate(batchFlush, immediate ? 0 : interval, interval, TimeUnit.SECONDS);
         }
-        if (timeFuture == null && TiktokBusinessSdk.nextTimeFlushListener != null) {
+        if (timeFuture == null && TikTokBusinessSdk.nextTimeFlushListener != null) {
             counter = interval;
             timeFuture = timerService.scheduleAtFixedRate(() -> {
-                TiktokBusinessSdk.nextTimeFlushListener.timeLeft(counter);
+                TikTokBusinessSdk.nextTimeFlushListener.timeLeft(counter);
                 if (counter == 0) {
                     counter = interval;
                 }
@@ -152,13 +153,13 @@ public class TTAppEventLogger {
     }
 
     /**
-     * interface exposed to {@link TiktokBusinessSdk}
+     * interface exposed to {@link TikTokBusinessSdk}
      *
      * @param event
      * @param props
      */
-    public void track(TTConst.AppEventName event, @Nullable TTProperty props) {
-        if (!TiktokBusinessSdk.isSystemActivated()) {
+    public void track(String event, @Nullable TTProperty props) {
+        if (!TikTokBusinessSdk.isSystemActivated()) {
             return;
         }
 
@@ -196,18 +197,23 @@ public class TTAppEventLogger {
 
         // if global config is not fetched, we can track events and put in into memory
         // but they should not be sent to the network
-        if (!TiktokBusinessSdk.isGlobalConfigFetched()) {
+        if (!TikTokBusinessSdk.isGlobalConfigFetched()) {
             logger.info(SKIP_FLUSHING_BECAUSE_GLOBAL_CONFIG_IS_NOT_FETCHED);
             return;
         }
         // global switch is turned off, dump all events
-        if (!TiktokBusinessSdk.isSystemActivated()) {
+        if (!TikTokBusinessSdk.isSystemActivated()) {
             logger.info(SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF);
+            return;
+        }
+        String accessToken = TikTokBusinessSdk.getAccessToken();
+        if (accessToken == null) {
+            logger.warn(SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN);
             return;
         }
 
         try {
-            if (TiktokBusinessSdk.getNetworkSwitch()) {
+            if (TikTokBusinessSdk.getNetworkSwitch()) {
                 logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
 
                 TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
@@ -215,7 +221,7 @@ public class TTAppEventLogger {
                 appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
                 List<TTAppEvent> failedEvents = TTRequest.reportAppEvent(TTRequestBuilder.getBasePayload(
-                        TiktokBusinessSdk.getApplicationContext()), appEventPersist.getAppEvents());
+                        TikTokBusinessSdk.getApplicationContext()), appEventPersist.getAppEvents());
 
                 if (!failedEvents.isEmpty()) { // flush failed, persist events
                     logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
@@ -297,7 +303,7 @@ public class TTAppEventLogger {
                 String availableVersion = (String) businessSdkConfig.get("available_version");
 
                 if (enableSDK != null) {
-                    TiktokBusinessSdk.setSdkGlobalSwitch(enableSDK);
+                    TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
                     logger.verbose("enable_sdk=" + enableSDK);
                     // if sdk is shutdown, stop all the timers
                     if (!enableSDK) {
@@ -307,15 +313,15 @@ public class TTAppEventLogger {
                 }
 
                 if (availableVersion != null && !availableVersion.equals("")) {
-                    TiktokBusinessSdk.setApiAvailableVersion(availableVersion);
+                    TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
                     logger.verbose("available_version=" + availableVersion);
                 }
 
             } catch (JSONException e) {
                 e.printStackTrace();
             } finally {
-                TiktokBusinessSdk.setGlobalConfigFetched();
-                if (TiktokBusinessSdk.isSystemActivated()) {
+                TikTokBusinessSdk.setGlobalConfigFetched();
+                if (TikTokBusinessSdk.isSystemActivated()) {
                     activateSdk();
                 }
             }

@@ -20,8 +20,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.TiktokBusinessSdk.TTConfig;
+import com.tiktok.TikTokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk.TTConfig;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,13 +52,15 @@ public class App extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             // Tiktok sdk init start
-            TTConfig ttConfig = new TTConfig(getApplication()).enableDebug();
-            TiktokBusinessSdk.initializeSdk(ttConfig);
+            TTConfig ttConfig = new TTConfig(getApplication())
+                    .disableLaunchLogging()
+                    .enableDebug();
+            TikTokBusinessSdk.initializeSdk(ttConfig);
             // Tiktok sdk init end
 
             // testing delay tracking, implementing a 60 sec delay manually
             // ideally has to be after accepting tracking permission
-            new Handler(Looper.getMainLooper()).postDelayed(TiktokBusinessSdk::startTrack, 6000);
+            new Handler(Looper.getMainLooper()).postDelayed(TikTokBusinessSdk::startTrack, 6000);
         }
     }
 

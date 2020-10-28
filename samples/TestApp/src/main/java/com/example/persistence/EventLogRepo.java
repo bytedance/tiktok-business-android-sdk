@@ -6,7 +6,7 @@ import android.os.AsyncTask;
 import androidx.lifecycle.LiveData;
 
 import com.example.model.EventLog;
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTProperty;
 import com.tiktok.util.TTConst;
 
@@ -56,7 +56,7 @@ public class EventLogRepo {
                 String key = (String) iterator.next();
                 ttProperty.put(key, props.get(key));
             }
-            TiktokBusinessSdk.trackEvent(TTConst.AppEventName.valueOf(eventLog.eventType), ttProperty);
+            TikTokBusinessSdk.trackEvent(eventLog.eventType, ttProperty);
             PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.save(eventLog));
         } catch (Exception ignored) {}
     }

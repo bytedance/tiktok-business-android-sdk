@@ -1,6 +1,6 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 
@@ -30,10 +30,10 @@ class TTAutoEventsManager {
 
     public TTAutoEventsManager(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;
-        store = new TTKeyValueStore(TiktokBusinessSdk.getApplicationContext());
+        store = new TTKeyValueStore(TikTokBusinessSdk.getApplicationContext());
     }
 
-    private boolean shouldTrackAppLifecycleEvents(TTConst.AppEventName event) {
+    private boolean shouldTrackAppLifecycleEvents(String event) {
         return appEventLogger.lifecycleTrackEnable
                 && !appEventLogger.disabledEvents.contains(event);
     }
@@ -60,14 +60,20 @@ class TTAutoEventsManager {
         hm.put(TTSDK_APP_FIRST_INSTALL, timeFormat.format(now));
 
         /* check and track InstallApp. */
-        if (shouldTrackAppLifecycleEvents(AppEventName.InstallApp)) {
-            appEventLogger.track(AppEventName.InstallApp, null);
+        if (shouldTrackAppLifecycleEvents("InstallApp")) {
+            appEventLogger.track("InstallApp", null);
         }
 
         store.set(hm);
     }
 
-    private void track2DayRetentionEvent() {
+    /**
+     * 2dretention should be called at 2 places
+     * 1. when the app is opened
+     * 2. when the user switches to the background, and then switch back after some while,
+     * since most users click "home" button rather than kill the process most of the time.
+     */
+    void track2DayRetentionEvent() {
         String is2DayLogged = store.get(TTSDK_APP_2DR_TIME);
         if (is2DayLogged != null) return;
 
@@ -77,9 +83,9 @@ class TTAutoEventsManager {
         try {
             Date firstLaunchTime = timeFormat.parse(firstInstall);
             Date now = new Date();
-            if (shouldTrackAppLifecycleEvents(AppEventName.TwoDayRetention)
+            if (shouldTrackAppLifecycleEvents("2Dretention")
                     && isSatisfyRetention(firstLaunchTime, now)) {
-                appEventLogger.track(AppEventName.TwoDayRetention, null);
+                appEventLogger.track("2Dretention", null);
                 store.set(TTSDK_APP_2DR_TIME, timeFormat.format(now));
             }
         } catch (ParseException ignored) {
@@ -87,8 +93,8 @@ class TTAutoEventsManager {
     }
 
     private void trackLaunchEvent() {
-        if (shouldTrackAppLifecycleEvents(AppEventName.LaunchApp)) {
-            appEventLogger.track(AppEventName.LaunchApp, null);
+        if (shouldTrackAppLifecycleEvents("LaunchApp")) {
+            appEventLogger.track("LaunchApp", null);
             store.set(TTSDK_APP_LAST_LAUNCH, timeFormat.format(new Date()));
         }
     }

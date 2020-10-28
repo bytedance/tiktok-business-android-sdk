@@ -2,9 +2,9 @@ package com.example.internalmonitor;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,32 +12,25 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.tiktok.TiktokBusinessSdk;
-import com.tiktok.appevents.TTAppEventLogger;
-import com.tiktok.appevents.TTCrashHandler;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTProperty;
-import com.tiktok.util.TTConst;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
 import java.util.Date;
-
-import static com.tiktok.util.TTConst.AppEventName.InstallApp;
-import static com.tiktok.util.TTConst.AppEventName.LaunchApp;
-import static com.tiktok.util.TTConst.AppEventName.TwoDayRetention;
 
 public class MonitorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!TiktokBusinessSdk.isInitialized()) {
-            TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplication())
-//                    .turnOffAutoEvents(Arrays.asList(LaunchApp,TwoDayRetention,InstallApp))
-                    .enableDebug();
-            TiktokBusinessSdk.initializeSdk(ttConfig);
+        if (!TikTokBusinessSdk.isInitialized()) {
+            TikTokBusinessSdk.TTConfig ttConfig =
+                    new TikTokBusinessSdk.TTConfig(getApplication())
+                            .enableDebug();
+            TikTokBusinessSdk.initializeSdk(ttConfig);
         }
 
         SDKEventHandler handler = new SDKEventHandler(this);
@@ -45,7 +38,7 @@ public class MonitorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_monitor);
         handler = new SDKEventHandler(this);
         TTSDKMonitor monitor = new TTSDKMonitor(handler);
-        TiktokBusinessSdk.setUpSdkListeners(monitor, monitor, monitor, monitor);
+        TikTokBusinessSdk.setUpSdkListeners(monitor, monitor, monitor, monitor);
         setUpHandlers();
     }
 
@@ -53,11 +46,39 @@ public class MonitorActivity extends AppCompatActivity {
         TTProperty property = new TTProperty();
         TTProperty inner = new TTProperty();
 
+        JSONArray array = new JSONArray();
+        try {
+            array.put(0, new JSONObject().put("a", 1));
+            array.put(1, new JSONObject().put("b", 1));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("a", 1)
+                    .put("b", new JSONObject().put("c", 1));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         inner.put("attr1", "someValue");
         inner.put("time", new Date());
         property.put("code", "123")
-                .putTTProperty("data", inner);
-        TiktokBusinessSdk.trackEvent(TTConst.AppEventName.InternalTest, property);
+                .put("data", inner)
+                .put("array", array)
+                .put("object", obj);
+
+
+        TikTokBusinessSdk.trackEvent("InternalTest", property);
+    }
+
+    public void sendPurchaseEvent(View view) {
+
+        TTProperty.PurchaseItem item1 = new TTProperty.PurchaseItem(23.5f, 2, "a", "a");
+        TTProperty.PurchaseItem item2 = new TTProperty.PurchaseItem(10.5f, 1, "b", "b");
+
+        TikTokBusinessSdk.trackEvent("Purchase", TTProperty.getPurchaseProperty("dollar", item1, item2));
     }
 
     private void setUpHandlers() {
@@ -78,22 +99,15 @@ public class MonitorActivity extends AppCompatActivity {
 
         Button flushBtn = findViewById(R.id.flush);
         flushBtn.setOnClickListener(v -> {
-            TiktokBusinessSdk.flush();
+            TikTokBusinessSdk.flush();
         });
 
         Button resetBtn = findViewById(R.id.reset);
         resetBtn.setOnClickListener(v -> {
             Toast.makeText(MonitorActivity.this, "Please restart app", Toast.LENGTH_SHORT).show();
-            TiktokBusinessSdk.clearAll();
+            TikTokBusinessSdk.clearAll();
             MonitorActivity.this.finish();
             System.exit(0);
-        });
-
-        // make sure our code does not block main thread
-        Button counter = findViewById(R.id.counter);
-        counter.setOnClickListener(v -> {
-            int curr = Integer.parseInt(counter.getText().toString());
-            counter.setText((curr + 1) + "");
         });
     }
 

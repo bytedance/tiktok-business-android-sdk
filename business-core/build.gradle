@@ -1,6 +1,32 @@
 apply plugin: 'com.android.library'
 
-apply from: rootProject.file('gradle/android.gradle')
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility rootProject.ext.sourceCompatibilityVersion
+        targetCompatibility rootProject.ext.targetCompatibilityVersion
+    }
+
+    lintOptions {
+        textReport true
+        textOutput 'stdout'
+        disable 'InvalidPackage', 'GradleCompatible'
+    }
+}
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
@@ -8,10 +34,8 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.1.0'
     implementation 'androidx.lifecycle:lifecycle-process:2.2.0'
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.2.0'
-//    implementation 'com.google.android.gms:play-services-ads:15.0.1'
 
     testImplementation 'junit:junit:4.13'
-
 
     def powerMockVersion = '2.0.2'
     testImplementation "org.powermock:powermock-api-mockito2:$powerMockVersion"
@@ -20,10 +44,4 @@ dependencies {
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-}
-
-android {
-    defaultConfig {
-        minSdkVersion 11
-    }
 }

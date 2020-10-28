@@ -13,15 +13,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.android.vending.billing.IInAppBillingService;
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTPurchaseInfo;
-import com.tiktok.util.TTConst;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
     private Context context;
@@ -51,15 +49,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // TiktokBusinessSdk init start
-        if (!TiktokBusinessSdk.isInitialized()) {
-            TiktokBusinessSdk.TTConfig ttConfig = new TiktokBusinessSdk.TTConfig(getApplicationContext())
-                    .turnOffAutoEvents(new ArrayList<>(Arrays.asList(TTConst.AppEventName.LaunchApp,
-                            TTConst.AppEventName.InstallApp)))
+        // TikTokBusinessSdk init start
+        if (!TikTokBusinessSdk.isInitialized()) {
+            TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(getApplicationContext())
+                    .disableInstallLogging()
+                    .disableLaunchLogging()
+                    .disableRetentionLogging()
                     .enableDebug();
-            TiktokBusinessSdk.initializeSdk(ttConfig);
+            TikTokBusinessSdk.initializeSdk(ttConfig);
         }
-        // TiktokBusinessSdk init end
+        // TikTokBusinessSdk init end
 
         // Context
         context = getApplicationContext();
@@ -278,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Tiktok purchase track
             try {
-                TiktokBusinessSdk.trackPurchase(new TTPurchaseInfo(new JSONObject(purchaseData), new JSONObject(skuDetailsList.get(0))));
+                TikTokBusinessSdk.trackGooglePlayPurchase(new TTPurchaseInfo(new JSONObject(purchaseData), new JSONObject(skuDetailsList.get(0))));
             } catch (Exception e) {
                 e.printStackTrace();
             }

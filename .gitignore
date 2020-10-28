@@ -76,3 +76,5 @@ lint/tmp/
 
 # Android Profiling
 *.hprof
+
+tiktok_config.xml

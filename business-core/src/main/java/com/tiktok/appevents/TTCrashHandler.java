@@ -1,6 +1,6 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 
 /**
@@ -10,7 +10,7 @@ import com.tiktok.util.TTLogger;
  */
 public class TTCrashHandler {
     private static final String TAG = TTCrashHandler.class.getCanonicalName();
-    private static TTLogger ttLogger = new TTLogger(TAG, TiktokBusinessSdk.getLogLevel());
+    private static TTLogger ttLogger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
 
     private static volatile TTCrashHandler instance = new TTCrashHandler();
 

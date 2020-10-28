@@ -1,6 +1,6 @@
 package com.tiktok.appevents;
 
-import com.tiktok.TiktokBusinessSdk;
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTUtil;
 
 import org.junit.Test;
@@ -11,20 +11,19 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.List;
 
-import static com.tiktok.util.TTConst.AppEventName.InternalTest;
 import static org.junit.Assert.*;
 
 import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({TTUtil.class, TiktokBusinessSdk.class})
+@PrepareForTest({TTUtil.class, TikTokBusinessSdk.class})
 public class TTAppEventsQueueTest extends BaseTest {
 
 
     @Test
     public void simpleCase() {
-        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
-        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
 
         assertEquals(2, TTAppEventsQueue.size());
         TTAppEventsQueue.clearAll();
@@ -33,15 +32,15 @@ public class TTAppEventsQueueTest extends BaseTest {
 
     @Test
     public void notifyListener() throws Exception {
-        PowerMockito.mockStatic(TiktokBusinessSdk.class);
-        PowerMockito.doCallRealMethod().when(TiktokBusinessSdk.class, "destroy");
-        PowerMockito.doCallRealMethod().when(TiktokBusinessSdk.class, "setUpSdkListeners", any(), any(), any(), any());
-        TiktokBusinessSdk.setUpSdkListeners(new TiktokBusinessSdk.MemoryListener() {
+        PowerMockito.mockStatic(TikTokBusinessSdk.class);
+        PowerMockito.doCallRealMethod().when(TikTokBusinessSdk.class, "destroy");
+        PowerMockito.doCallRealMethod().when(TikTokBusinessSdk.class, "setUpSdkListeners", any(), any(), any(), any());
+        TikTokBusinessSdk.setUpSdkListeners(new TikTokBusinessSdk.MemoryListener() {
             @Override
             public void onMemoryChange(int size) {
                 assertEquals(1, size);
             }
-        }, null, null, new TiktokBusinessSdk.NextTimeFlushListener() {
+        }, null, null, new TikTokBusinessSdk.NextTimeFlushListener() {
             @Override
             public void timeLeft(int timeLeft) {
             }
@@ -53,15 +52,15 @@ public class TTAppEventsQueueTest extends BaseTest {
 
             }
         });
-        TTAppEventsQueue.addEvent(new TTAppEvent(InternalTest, "{}"));
-        TiktokBusinessSdk.destroy();
+        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
+        TikTokBusinessSdk.destroy();
         TTAppEventsQueue.clearAll();
     }
 
     @Test
     public void testExport() {
-        TTAppEvent e1 = new TTAppEvent(InternalTest, "{}");
-        TTAppEvent e2 = new TTAppEvent(InternalTest, "{}");
+        TTAppEvent e1 = new TTAppEvent("InternalTest", "{}");
+        TTAppEvent e2 = new TTAppEvent("InternalTest", "{}");
         TTAppEventsQueue.addEvent(e1);
         TTAppEventsQueue.addEvent(e2);
 
