@@ -13,37 +13,31 @@ class TTInAppPurchaseManager {
     /**
      * p
      */
-    static TTProperty getPurchaseProps(TTPurchaseInfo purchaseInfo) {
+    static JSONObject getPurchaseProps(TTPurchaseInfo purchaseInfo) {
         String productId = null;
         try {
             productId = purchaseInfo.getPurchase().getString("productId");
-        } catch (JSONException e) {
-            // this exception should happen since we already did a filtering in the previous step
-            TTCrashHandler.handleCrash(TAG, e);
-            return null;
-        }
-        if (productId != null) {
             JSONObject skuDetail = purchaseInfo.getSkuDetails();
             return getPurchaseProperties(productId, skuDetail);
-        } else {
+        } catch (JSONException e) {
+            TTCrashHandler.handleCrash(TAG, e);
             return null;
         }
     }
 
     /**
-     * returns purchase TTProperty from sku cache
      * returns content_id -> sku always
      */
-    private static TTProperty getPurchaseProperties(String sku, JSONObject skuDetails) {
-        TTProperty props = new TTProperty();
-        TTProperty content = new TTProperty().put("content_id", sku);
+    private static JSONObject getPurchaseProperties(String sku, JSONObject skuDetails) throws JSONException {
+        JSONObject props = new JSONObject();
+        JSONObject content = new JSONObject().put("content_id", sku);
         if (skuDetails != null) {
             content.put("content_type", safeJsonGetString(skuDetails, "type"));
             String currencyCode = safeJsonGetString(skuDetails, "price_currency_code");
             props.put("currency", currencyCode);
             content.put("quantity", 1);
             String price = safeJsonGetString(skuDetails, "price");
-            float floatPrice = (float) 0;
+            double dPrice = 0;
             try {
                 // trying to remove the currency symbol from price
                 if (!currencyCode.equals("") && !price.equals("")) {
@@ -51,15 +45,15 @@ class TTInAppPurchaseManager {
                     Matcher matcher = regex.matcher(price);
                     if (matcher.find()) {
                         price = matcher.group(1);
-                        floatPrice = Float.parseFloat(price);
+                        dPrice = Double.parseDouble(price);
                     }
                 }
             } catch (Exception ignored) {
             }
-            content.put("price", floatPrice);
-            props.put("value", floatPrice);
+            content.put("price", dPrice);
+            props.put("value", dPrice);
         }
-        props.put("contents", new JSONArray().put(content.get()));
+        props.put("contents", new JSONArray().put(content));
         return props;
     }
 

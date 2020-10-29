@@ -7,8 +7,6 @@ import androidx.lifecycle.LiveData;
 
 import com.example.model.EventLog;
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.appevents.TTProperty;
-import com.tiktok.util.TTConst;
 
 import org.json.JSONObject;
 
@@ -51,12 +49,12 @@ public class EventLogRepo {
         try {
             JSONObject props = new JSONObject(eventLog.properties);
             Iterator iterator = props.keys();
-            TTProperty ttProperty = new TTProperty();
+            JSONObject obj = new JSONObject();
             while (iterator.hasNext()) {
                 String key = (String) iterator.next();
-                ttProperty.put(key, props.get(key));
+                obj.put(key, props.get(key));
             }
-            TikTokBusinessSdk.trackEvent(eventLog.eventType, ttProperty);
+            TikTokBusinessSdk.trackEvent(eventLog.eventType, obj);
             PersistenceManager.databaseWriteExecutor.execute(() -> eventLogDao.save(eventLog));
         } catch (Exception ignored) {}
     }

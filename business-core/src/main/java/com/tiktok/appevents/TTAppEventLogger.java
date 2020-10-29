@@ -94,13 +94,12 @@ public class TTAppEventLogger {
             return;
         }
         addToQ(() -> {
-
             if (purchaseInfos.isEmpty()) {
                 return;
             }
 
             for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
-                TTProperty property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
+                JSONObject property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
                 if (property != null) {
                     track("Purchase", property);
                 }
@@ -158,19 +157,19 @@ public class TTAppEventLogger {
      * @param event
      * @param props
      */
-    public void track(String event, @Nullable TTProperty props) {
+    public void track(String event, @Nullable JSONObject props) {
         if (!TikTokBusinessSdk.isSystemActivated()) {
             return;
         }
 
-        TTProperty finalProps = props != null ? props : new TTProperty();
+        JSONObject finalProps = props != null ? props : new JSONObject();
         Runnable task = () -> {
             try {
-                logger.debug("track " + event + " : " + finalProps.get().toString(4));
+                logger.debug("track " + event + " : " + finalProps.toString(4));
             } catch (JSONException e) {
             }
 
-            TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.get().toString()));
+            TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.toString()));
 
             if (TTAppEventsQueue.size() > THRESHOLD) {
                 flush(FlushReason.THRESHOLD);
@@ -220,8 +219,8 @@ public class TTAppEventLogger {
 
                 appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
 
-                List<TTAppEvent> failedEvents = TTRequest.reportAppEvent(TTRequestBuilder.getBasePayload(
-                        TikTokBusinessSdk.getApplicationContext()), appEventPersist.getAppEvents());
+                List<TTAppEvent> failedEvents = TTRequest
+                        .reportAppEvent(TTRequestBuilder.getBasePayload(), appEventPersist.getAppEvents());
 
                 if (!failedEvents.isEmpty()) { // flush failed, persist events
                     logger.warn("Failed to send %d events, will save to disk", failedEvents.size());

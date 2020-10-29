@@ -9,9 +9,10 @@ import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
-import com.tiktok.appevents.TTProperty;
 import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.util.TTLogger;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -128,7 +129,7 @@ public class TikTokBusinessSdk {
      * all the events stored in the memory or on the disk will be flushed to network once some conditions are reached,
      * for example, every {@link TTAppEventLogger#TIME_BUFFER} seconds or there are more than {@link TTAppEventLogger#THRESHOLD} events
      * in the memory.
-     * But if the app developer calls {@link TTConfig#turnOffAutoStart()}, then the "flush to network" operation will be simply suppressed
+     * But if the app developer calls {@link TTConfig#disableAutoStart()} ()}, then the "flush to network" operation will be simply suppressed
      * by the sdk, then the developer has to call startTrack to bring network back.
      * <p>
      * When to use?
@@ -185,18 +186,18 @@ public class TikTokBusinessSdk {
 
     // inner status listeners, for debugging purpose
     public interface DiskStatusListener {
-        public void onDiskChange(int diskSize, boolean read);
+        void onDiskChange(int diskSize, boolean read);
 
-        public void onDumped(int dumped);
+        void onDumped(int dumped);
     }
 
     public interface NextTimeFlushListener {
         // how many seconds until next auto flush
-        public void timeLeft(int timeLeft);
+        void timeLeft(int timeLeft);
 
         // how many until threshold
         // i.e. threshold is 100, current in memory is 80, then left will be 100 - 80 = 20
-        public void thresholdLeft(int threshold, int left);
+        void thresholdLeft(int threshold, int left);
     }
 
     public interface MemoryListener {
@@ -216,7 +217,7 @@ public class TikTokBusinessSdk {
 
     /**
      * A shortcut method for the situations where the events do not require a property body.
-     * see more {@link TikTokBusinessSdk#trackEvent(String, TTProperty)}
+     * see more {@link TikTokBusinessSdk#trackEvent(String, JSONObject)}
      */
     public static void trackEvent(String event) {
         appEventLogger.track(event, null);
@@ -237,18 +238,16 @@ public class TikTokBusinessSdk {
      *
      * For a more common purchase scenario, here is an example
      * {@code
-     *      TTProperty.PurchaseItem item1 = new TTProperty.PurchaseItem(23.5f, 2, "a", "a");
-     *      TTProperty.PurchaseItem item2 = new TTProperty.PurchaseItem(10.5f, 1, "b", "b");
+     *      TTPurchaseItem item1 = new TTPurchaseItem(23.5f, 2, "a", "a");
+     *      TTPurchaseItem item2 = new TTPurchaseItem(10.5f, 1, "b", "b");
      *
-     *      TikTokBusinessSdk.trackEvent("Purchase", TTProperty.getPurchaseProperty("dollar", item1, item2));
+     *      TikTokBusinessSdk.trackEvent("Purchase", TTPurchaseItem.getPurchaseProperty("dollar", item1, item2));
      * }
      * </pre>
      *
      * @param event event name
-     * @param props {@link TTProperty} is just a simple wrapper around JSONObject, the reason why we
-     *              introduce it is to suppress JSONException.
      */
-    public static void trackEvent(String event, @Nullable TTProperty props) {
+    public static void trackEvent(String event, @Nullable JSONObject props) {
         appEventLogger.track(event, props);
     }
 
@@ -377,7 +376,7 @@ public class TikTokBusinessSdk {
      * To get config and permissions from the app
      * All config items can be set by declaring <meta-data> in AndroidManifest.xml,
      * but they can also be set explicitly by calling the relevant setters methods defined in this class
-     * see more {@link TTConfig#turnOffAutoStart()}, {@link TTConfig#enableDebug()}
+     * see more {@link TTConfig#disableAutoStart()}, {@link TTConfig#enableDebug()}
      */
     public static class TTConfig {
         /* application context */
@@ -435,7 +434,7 @@ public class TikTokBusinessSdk {
             }
 
             try {
-                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoStart");
+                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoStart");
                 if (autoFlag != null && autoFlag.toString().equals("true")) {
                     autoStart = false;
                 }
@@ -443,7 +442,7 @@ public class TikTokBusinessSdk {
             }
 
             try {
-                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.turnOffAutoEvents");
+                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoEvents");
                 if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
                     autoEvent = false;
                 }
@@ -478,7 +477,7 @@ public class TikTokBusinessSdk {
         /**
          * to disable auto event tracking & lifecycle listeners
          */
-        public TTConfig turnOffAutoStart() {
+        public TTConfig disableAutoStart() {
             this.autoStart = false;
             return this;
         }
@@ -486,7 +485,7 @@ public class TikTokBusinessSdk {
         /**
          * to disable all auto event tracking captured by lifecycle listeners
          */
-        public TTConfig turnOffAutoEvents() {
+        public TTConfig disableAutoEvents() {
             this.autoEvent = false;
             return this;
         }
@@ -518,7 +517,7 @@ public class TikTokBusinessSdk {
         /**
          * to disable gaid in tracking
          */
-        public TTConfig turnOffAdvertiserIDCollection() {
+        public TTConfig disableAdvertiserIDCollection() {
             this.advertiserIDCollectionEnable = false;
             return this;
         }

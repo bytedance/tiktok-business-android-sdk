@@ -10,7 +10,9 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
 
-        <!-- create a new tiktok_config.xml file in this directory to provide to AppId,
+        <!--
+        // Tiktok SDK config start
+        create a new tiktok_config.xml file in this directory to provide to AppId,
         however "tiktok_business_app_access_token" is optional.
 
         a sample xml file could be like this
@@ -26,6 +28,8 @@
         <meta-data
             android:name="com.tiktok.sdk.AppId"
             android:value="@string/tiktok_business_app_id" />
+        <!-- Tiktok SDK config end -->
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

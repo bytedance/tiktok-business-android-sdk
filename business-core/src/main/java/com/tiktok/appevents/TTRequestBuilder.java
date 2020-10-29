@@ -19,7 +19,7 @@ class TTRequestBuilder {
 
     private static JSONObject basePayloadCache = null;
 
-    public static JSONObject getBasePayload(Context context) {
+    public static JSONObject getBasePayload() {
         TTUtil.checkThread(TAG);
         if (basePayloadCache != null) {
             return basePayloadCache;

@@ -27,6 +27,9 @@ public class TTUtil {
      * @return
      */
     public static String ppStr(JSONObject o) {
+        if (o == null) {
+            return "null";
+        }
         try {
             return o.toString(4);
         } catch (JSONException e) {

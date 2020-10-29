@@ -77,11 +77,15 @@ public class SystemInfoUtil {
         return Locale.getDefault().getLanguage();
     }
 
-    private static String userAgent;
+    private static String userAgent = "";
 
     // invoke it in the mainThread
     public static void initUserAgent() {
-        userAgent = new WebView(TikTokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+        try {
+            userAgent = new WebView(TikTokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+        } catch (Exception e) {
+            userAgent = System.getProperty("http.agent");
+        }
     }
 
     public static String getUserAgent() {

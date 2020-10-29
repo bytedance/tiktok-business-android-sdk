@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.appevents.TTProperty;
+import com.tiktok.appevents.TTPurchaseItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,42 +43,38 @@ public class MonitorActivity extends AppCompatActivity {
     }
 
     private void sendEvent() {
-        TTProperty property = new TTProperty();
-        TTProperty inner = new TTProperty();
-
+        JSONObject property = new JSONObject();
+        JSONObject inner = new JSONObject();
         JSONArray array = new JSONArray();
         try {
             array.put(0, new JSONObject().put("a", 1));
             array.put(1, new JSONObject().put("b", 1));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            JSONObject obj = new JSONObject();
 
-        JSONObject obj = new JSONObject();
-        try {
             obj.put("a", 1)
                     .put("b", new JSONObject().put("c", 1));
+            inner.put("attr1", "someValue");
+            inner.put("time", new Date());
+            property.put("code", "123")
+                    .put("data", inner)
+                    .put("array", array)
+                    .put("object", obj);
+            TikTokBusinessSdk.trackEvent("InternalTest", property);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        inner.put("attr1", "someValue");
-        inner.put("time", new Date());
-        property.put("code", "123")
-                .put("data", inner)
-                .put("array", array)
-                .put("object", obj);
-
-
-        TikTokBusinessSdk.trackEvent("InternalTest", property);
     }
 
     public void sendPurchaseEvent(View view) {
 
-        TTProperty.PurchaseItem item1 = new TTProperty.PurchaseItem(23.5f, 2, "a", "a");
-        TTProperty.PurchaseItem item2 = new TTProperty.PurchaseItem(10.5f, 1, "b", "b");
+        TTPurchaseItem item1 = new TTPurchaseItem(23.5f, 2, "a", "a");
+        TTPurchaseItem item2 = new TTPurchaseItem(10.5f, 1, "b", "b");
 
-        TikTokBusinessSdk.trackEvent("Purchase", TTProperty.getPurchaseProperty("dollar", item1, item2));
+        try {
+            TikTokBusinessSdk.trackEvent("Purchase", TTPurchaseItem.buildPurchaseProperties("dollar", item1, item2));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setUpHandlers() {

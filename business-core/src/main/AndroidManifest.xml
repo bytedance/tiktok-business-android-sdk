@@ -1,7 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.tiktok">
-    <application
-        android:networkSecurityConfig="@xml/network_security_config"
-    />
+
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <meta-data
+                android:name="com.tiktok.sdk.AccessToken"
+                android:value="@string/tiktok_business_app_access_token" />
+
+        <meta-data
+                android:name="com.tiktok.sdk.AppId"
+                android:value="@string/tiktok_business_app_id" />
+
+    </application>
+
 </manifest>

@@ -103,9 +103,9 @@ public class EventFragment extends Fragment {
             builder.setItems(events, (dialog, selected) -> {
                 eventViewModel.resetProps();
                 eventViewModel.setEvent(events[selected]);
-                for (String ttProperty : Objects.requireNonNull(TestEvents.TTEventProperties.get(events[selected]))) {
+                for (String property : Objects.requireNonNull(TestEvents.TTEventProperties.get(events[selected]))) {
                     try {
-                        eventViewModel.addProp(ttProperty, "");
+                        eventViewModel.addProp(property, "");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
