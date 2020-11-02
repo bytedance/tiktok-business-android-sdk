@@ -54,7 +54,7 @@ public class App extends AppCompatActivity {
             // Tiktok sdk init start
             TTConfig ttConfig = new TTConfig(getApplication())
                     .disableLaunchLogging()
-                    .enableDebug();
+                    .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);
             // Tiktok sdk init end
 

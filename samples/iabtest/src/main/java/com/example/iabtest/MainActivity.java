@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                     .disableInstallLogging()
                     .disableLaunchLogging()
                     .disableRetentionLogging()
-                    .enableDebug();
+                    .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);
         }
         // TikTokBusinessSdk init end

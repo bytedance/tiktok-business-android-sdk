@@ -29,7 +29,7 @@ public class MonitorActivity extends AppCompatActivity {
         if (!TikTokBusinessSdk.isInitialized()) {
             TikTokBusinessSdk.TTConfig ttConfig =
                     new TikTokBusinessSdk.TTConfig(getApplication())
-                            .enableDebug();
+                            .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);
         }
 

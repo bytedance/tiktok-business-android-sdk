@@ -88,11 +88,7 @@ public class TikTokBusinessSdk {
         gaidCollectionEnabled = ttConfig.advertiserIDCollectionEnable;
 
         /* sdk logger & loglevel */
-        if (ttConfig.debug) {
-            logLevel = LogLevel.VERBOSE;
-        } else {
-            logLevel = LogLevel.INFO;
-        }
+        logLevel = ttConfig.logLevel;
         logger = new TTLogger(TAG, logLevel);
 
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
@@ -376,7 +372,7 @@ public class TikTokBusinessSdk {
      * To get config and permissions from the app
      * All config items can be set by declaring <meta-data> in AndroidManifest.xml,
      * but they can also be set explicitly by calling the relevant setters methods defined in this class
-     * see more {@link TTConfig#disableAutoStart()}, {@link TTConfig#enableDebug()}
+     * see more {@link TTConfig#disableAutoStart()}, {@link TTConfig#setLogLevel(LogLevel)}
      */
     public static class TTConfig {
         /* application context */
@@ -386,7 +382,7 @@ public class TikTokBusinessSdk {
         /* Access-Token for api calls */
         private String accessToken;
         /* to enable logs */
-        private boolean debug = false;
+        private LogLevel logLevel = LogLevel.NONE;
         /* to enable auto event tracking */
         private boolean autoEvent = true;
         /* confirmation to read gaid */
@@ -453,8 +449,8 @@ public class TikTokBusinessSdk {
         /**
          * Enables debug logs
          */
-        public TTConfig enableDebug() {
-            this.debug = true;
+        public TTConfig setLogLevel(LogLevel ll) {
+            this.logLevel = ll;
             return this;
         }
 

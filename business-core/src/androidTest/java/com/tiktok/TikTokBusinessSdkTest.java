@@ -111,7 +111,7 @@ public class TikTokBusinessSdkTest {
                 .disableInstallLogging()
                 .disableRetentionLogging()
                 .disableAutoStart()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
@@ -166,7 +166,7 @@ public class TikTokBusinessSdkTest {
                 .disableLaunchLogging()
                 .disableRetentionLogging()
                 .disableAutoStart()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
@@ -230,7 +230,7 @@ public class TikTokBusinessSdkTest {
                 .disableLaunchLogging()
                 .disableInstallLogging()
                 .disableAutoStart()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
@@ -280,7 +280,7 @@ public class TikTokBusinessSdkTest {
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
@@ -348,7 +348,7 @@ public class TikTokBusinessSdkTest {
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
@@ -420,7 +420,7 @@ public class TikTokBusinessSdkTest {
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
-                .enableDebug();
+                .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // clear all persisted events
