@@ -5,6 +5,8 @@
  ******************************************************************************/
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -53,4 +55,108 @@ dependencies {
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}
+
+
+
+def taskNames = project.gradle.startParameter.taskNames
+if (taskNames.contains("bintrayUpload")) {
+    // bintray_api_key=*** ./gradlew clean build bintrayUpload
+
+    // fixed value, felixzhang is the admin of the android sdk
+    def userId = 'felixzhang'
+
+    // url format: https://bintray.com/:orgName/:repo/:packageName
+    // url, https://bintray.com/bytedancer/bytedance/tiktok-business-android-sdk
+    def orgName = 'bytedancer'
+    def REPO = 'bytedance'
+    def libArtifactId = mavenArtifactId
+
+    // this is maven group id
+    def artifactGroupId = mavenGroupId
+
+    // ask zhangwei@bytedance.com or qiucheng@bytedance.com
+    def apiKey = System.getenv("bintray_api_key")
+    if (apiKey == null) {
+        println("Fatal: plz provide the bintray_api_key, ask the admins for the key!!!!!!");
+        System.exit(-1);
+    }
+
+    task androidJavadoc(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        destinationDir = file("./javadoc/")
+        // ignore error
+        failOnError false
+    }
+    task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
+        classifier = 'javadoc'
+        from androidJavadoc.destinationDir
+    }
+
+// this is maven artifact id
+    task androidSourcesJar(type: Jar) {
+        from android.sourceSets.main.java.srcDirs
+        classifier = 'sources'
+    }
+
+    afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.release
+                    artifact androidSourcesJar
+                    artifact androidJavadocJar
+                    groupId artifactGroupId
+                    artifactId libArtifactId
+                    version VERSION_NAME
+
+                    pom.withXml {
+                        def dependenciesNode = asNode().getAt('dependencies')[0] ?: asNode().appendNode('dependencies')
+
+                        println "Creating POM file"
+                        // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                        configurations.implementation.allDependencies.each {
+                            // Ensure dependencies such as fileTree are not included.
+                            if (it.name != 'unspecified') {
+                                println "Adding dependency " + it.name
+                                def dependencyNode = dependenciesNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    bintray {
+        user = userId
+        key = apiKey
+        publications = ['release']
+        publish true
+//        override true
+        pkg {
+            // this is the repo created in step 2
+            repo = REPO
+            key = apiKey
+            name = libArtifactId
+            // this is the orgName created in step2
+            userOrg = orgName
+            // change to your license accordingly
+            licenses = ['MIT']
+
+            // your project's vcs
+            vcsUrl = 'https://github.com/bytedance/tiktok-business-android-sdk.git'
+            version {
+                name = VERSION_NAME
+                desc = 'Gradle Bintray Plugin 1.0 final'
+                released = new Date()
+                // version control tag, I think most of the time it should be equal to VERSION
+                vcsTag = '1.3.0'
+            }
+        }
+    }
 }

@@ -55,7 +55,7 @@ class TTRequest {
         headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
         String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TikTokBusinessSdk.getAppId();
         String result = HttpRequestUtil.doGet(url, headParamMap);
-        logger.verbose(result);
+        logger.debug(result);
         JSONObject config = null;
         if (result != null) {
             try {
@@ -131,7 +131,7 @@ class TTRequest {
 
             try {
                 String bodyStr = bodyJson.toString(4);
-                logger.verbose("To Api:\n" + bodyStr);
+                logger.debug("To Api:\n" + bodyStr);
             } catch (JSONException e) {
             }
 
@@ -157,11 +157,11 @@ class TTRequest {
                     failedEvents.addAll(currentBatch);
                     TTCrashHandler.handleCrash(TAG, e);
                 }
-                logger.verbose(TTUtil.ppStr(result));
+                logger.debug(TTUtil.ppStr(result));
             }
             notifyChange();
         }
-        logger.verbose("Flushed %d events, failed to flush %d events", successfulRequests, failedEvents.size());
+        logger.debug("Flushed %d events, failed to flush %d events", successfulRequests, failedEvents.size());
         toBeSentRequests = 0;
         failedRequests = 0;
         successfulRequests = 0;

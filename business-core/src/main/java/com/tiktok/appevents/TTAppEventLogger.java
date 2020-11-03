@@ -186,7 +186,7 @@ public class TTAppEventLogger {
 
 
     public void forceFlush() {
-        logger.verbose("FORCE_FLUSH called");
+        logger.debug("FORCE_FLUSH called");
         addToQ(() -> flush(FlushReason.FORCE_FLUSH));
     }
 
@@ -219,7 +219,7 @@ public class TTAppEventLogger {
 
         try {
             if (TikTokBusinessSdk.getNetworkSwitch()) {
-                logger.verbose("Start flush, version %d reason is %s", flushId, reason.name());
+                logger.debug("Start flush, version %d reason is %s", flushId, reason.name());
 
                 TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
 
@@ -229,10 +229,10 @@ public class TTAppEventLogger {
                         .reportAppEvent(TTRequestBuilder.getBasePayload(), appEventPersist.getAppEvents());
 
                 if (!failedEvents.isEmpty()) { // flush failed, persist events
-                    logger.warn("Failed to send %d events, will save to disk", failedEvents.size());
+                    logger.debug("Failed to send %d events, will save to disk", failedEvents.size());
                     TTAppEventStorage.persist(failedEvents);
                 }
-                logger.verbose("END flush, version %d reason is %s", flushId, reason.name());
+                logger.debug("END flush, version %d reason is %s", flushId, reason.name());
 
                 flushId++;
             } else {
@@ -309,7 +309,7 @@ public class TTAppEventLogger {
 
                 if (enableSDK != null) {
                     TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
-                    logger.verbose("enable_sdk=" + enableSDK);
+                    logger.debug("enable_sdk=" + enableSDK);
                     // if sdk is shutdown, stop all the timers
                     if (!enableSDK) {
                         logger.info("Clear all events and stop timers because global switch is not turned on");
@@ -319,7 +319,7 @@ public class TTAppEventLogger {
 
                 if (availableVersion != null && !availableVersion.equals("")) {
                     TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
-                    logger.verbose("available_version=" + availableVersion);
+                    logger.debug("available_version=" + availableVersion);
                 }
 
             } catch (JSONException e) {

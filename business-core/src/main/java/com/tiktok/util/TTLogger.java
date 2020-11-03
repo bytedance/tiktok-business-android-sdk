@@ -37,12 +37,6 @@ public class TTLogger {
 
     }
 
-    public void verbose(String format, Object... extra) {
-        if (shouldLog(LogLevel.VERBOSE)) {
-            Log.v(tag, resolvedStr(format, extra));
-        }
-    }
-
     public void info(String format, Object... extra) {
         if (shouldLog(LogLevel.INFO)) {
             Log.i(tag, resolvedStr(format, extra));

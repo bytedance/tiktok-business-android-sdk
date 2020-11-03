@@ -37,9 +37,9 @@ class TTAppEventStorage {
     public synchronized static void persist(List<TTAppEvent> failedEvents) {
         TTUtil.checkThread(TAG);
 
-        logger.verbose("Tried to persist to disk");
+        logger.debug("Tried to persist to disk");
         if (!TikTokBusinessSdk.isSystemActivated()) {
-            logger.verbose("Quit persisting to disk because global switch is turned off");
+            logger.debug("Quit persisting to disk because global switch is turned off");
             return;
         }
 
@@ -84,7 +84,7 @@ class TTAppEventStorage {
         int size = appEvents.size();
 
         if (size > maxPersistNum) {
-            logger.verbose("Way too many events(%d), slim it!", size);
+            logger.debug("Way too many events(%d), slim it!", size);
             totalDumped += size - maxPersistNum;
             TikTokBusinessSdk.diskListener.onDumped(totalDumped);
             ttAppEventPersist.setAppEvents(new ArrayList<>(appEvents.subList(size - maxPersistNum, size)));
@@ -100,7 +100,7 @@ class TTAppEventStorage {
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)))) {
             oos.writeObject(appEventPersist);
-            logger.verbose("Saving %d events to disk", appEventPersist.getAppEvents().size());
+            logger.debug("Saving %d events to disk", appEventPersist.getAppEvents().size());
             if (TikTokBusinessSdk.diskListener != null) {
                 TikTokBusinessSdk.diskListener.onDiskChange(appEventPersist.getAppEvents().size(), false);
             }
@@ -131,7 +131,7 @@ class TTAppEventStorage {
         try (ObjectInputStream ois = new ObjectInputStream(
                 new BufferedInputStream(context.openFileInput(EVENT_STORAGE_FILE)))) {
             appEventPersist = (TTAppEventPersist) ois.readObject();
-            logger.verbose("disk read data: %s", appEventPersist);
+            logger.debug("disk read data: %s", appEventPersist);
             deleteFile(f);
             if (TikTokBusinessSdk.diskListener != null) {
                 TikTokBusinessSdk.diskListener.onDiskChange(0, true);

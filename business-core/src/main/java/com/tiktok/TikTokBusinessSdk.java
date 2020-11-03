@@ -106,14 +106,6 @@ public class TikTokBusinessSdk {
 
     /**
      * Only one TikTokBusinessSdk instance exist within a single App process
-     * this is used if you choose to use the default TTConfig settings
-     */
-    public static synchronized void initializeSdk(Context context) {
-        initializeSdk(new TTConfig(context));
-    }
-
-    /**
-     * Only one TikTokBusinessSdk instance exist within a single App process
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
         Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
@@ -349,7 +341,7 @@ public class TikTokBusinessSdk {
     public static boolean isSystemActivated() {
         Boolean sdkGlobalSwitch = TikTokBusinessSdk.getSdkGlobalSwitch();
         if (!sdkGlobalSwitch) {
-            logger.verbose("Global switch is off, ignore all operations");
+            logger.info("Global switch is off, ignore all operations");
         }
         return sdkGlobalSwitch;
     }
@@ -535,9 +527,7 @@ public class TikTokBusinessSdk {
         INFO,
         WARN,
         /* Log exceptions and print debug output. */
-        DEBUG,
-        /* Same as DEBUG, and log transformations in bundled integrations. */
-        VERBOSE;
+        DEBUG;
 
         public boolean log() {
             return this != NONE;
