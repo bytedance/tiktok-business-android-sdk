@@ -18,7 +18,7 @@ public class TestEvents {
     static {
         TTEventProperties.put("LaunchApp", new String[]{});
         TTEventProperties.put("InstallApp", new String[]{});
-        TTEventProperties.put("2Dretention", new String[]{});
+        TTEventProperties.put("2DRetention", new String[]{});
         TTEventProperties.put("AddPaymentInfo", new String[]{
                 "success",
         });

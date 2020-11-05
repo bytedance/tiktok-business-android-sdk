@@ -41,7 +41,7 @@ class TTAutoEventsManager {
     /**
      * the events to be tracked when the app was just activated
      * 1. firstInstall
-     * 2. 2Dretention
+     * 2. 2DRetention
      * 3. launchApp
      */
     public void trackOnAppOpenEvents() {
@@ -68,7 +68,7 @@ class TTAutoEventsManager {
     }
 
     /**
-     * 2dretention should be called at 2 places
+     * 2DRetention should be called at 2 places
      * 1. when the app is opened
      * 2. when the user switches to the background, and then switch back after some while,
      * since most users click "home" button rather than kill the process most of the time.
@@ -83,9 +83,9 @@ class TTAutoEventsManager {
         try {
             Date firstLaunchTime = timeFormat.parse(firstInstall);
             Date now = new Date();
-            if (shouldTrackAppLifecycleEvents("2Dretention")
+            if (shouldTrackAppLifecycleEvents("2DRetention")
                     && isSatisfyRetention(firstLaunchTime, now)) {
-                appEventLogger.track("2Dretention", null);
+                appEventLogger.track("2DRetention", null);
                 store.set(TTSDK_APP_2DR_TIME, timeFormat.format(now));
             }
         } catch (ParseException ignored) {

@@ -503,10 +503,10 @@ public class TikTokBusinessSdk {
         }
 
         /**
-         * to disable auto event tracking for 2Dretention event
+         * to disable auto event tracking for 2DRetention event
          */
         public TTConfig disableRetentionLogging() {
-            this.disabledEvents.add("2Dretention");
+            this.disabledEvents.add("2DRetention");
             return this;
         }
 

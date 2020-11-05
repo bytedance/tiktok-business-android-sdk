@@ -114,7 +114,6 @@ class TTRequest {
                 batch.add(propertiesJson);
             }
 
-            // https://bytedance.feishu.cn/docs/doccnig9UUWvyRawy0zmrOY26Md
             JSONObject bodyJson = basePayload;
             try {
                 bodyJson.put("batch", new JSONArray(batch));

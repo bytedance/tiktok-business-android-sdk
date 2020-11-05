@@ -225,7 +225,7 @@ public class TikTokBusinessSdkTest {
         Date yesterday = c.getTime();
         sh.edit().putString(TTSDK_APP_FIRST_INSTALL, timeFormat.format(yesterday)).commit();
 
-        // disable all other auto events other than 2Dretention
+        // disable all other auto events other than 2DRetention
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableLaunchLogging()
                 .disableInstallLogging()
@@ -251,7 +251,7 @@ public class TikTokBusinessSdkTest {
         }
 
         // start delay track & force flush
-        // this will only trigger 2Dretention event
+        // this will only trigger 2DRetention event
         TikTokBusinessSdk.startTrack();
 
         sleep(2);
