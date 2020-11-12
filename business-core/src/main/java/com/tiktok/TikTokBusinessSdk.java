@@ -409,47 +409,47 @@ public class TikTokBusinessSdk {
             disabledEvents = new ArrayList<>();
             /* try fetch app key from AndroidManifest file first */
 
-            ApplicationInfo appInfo = null;
-            try {
-                appInfo = application.getPackageManager().getApplicationInfo(
-                        application.getPackageName(), PackageManager.GET_META_DATA);
-            } catch (Exception e) {
-                TTCrashHandler.handleCrash(TAG, e);
-            }
-
-            if (appInfo == null) return;
-
-            try {
-                Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
-                if (token != null) {
-                    accessToken = token.toString();
-                }
-            } catch (Exception ignored) {
-            }
-
-            try {
-                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
-                if (aid != null) {
-                    appId = aid.toString();
-                }
-            } catch (Exception ignored) {
-            }
-
-            try {
-                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoStart");
-                if (autoFlag != null && autoFlag.toString().equals("true")) {
-                    autoStart = false;
-                }
-            } catch (Exception ignored) {
-            }
-
-            try {
-                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoEvents");
-                if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
-                    autoEvent = false;
-                }
-            } catch (Exception ignored) {
-            }
+//            ApplicationInfo appInfo = null;
+//            try {
+//                appInfo = application.getPackageManager().getApplicationInfo(
+//                        application.getPackageName(), PackageManager.GET_META_DATA);
+//            } catch (Exception e) {
+//                TTCrashHandler.handleCrash(TAG, e);
+//            }
+//
+//            if (appInfo == null) return;
+//
+//            try {
+//                Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
+//                if (token != null) {
+//                    accessToken = token.toString();
+//                }
+//            } catch (Exception ignored) {
+//            }
+//
+//            try {
+//                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
+//                if (aid != null) {
+//                    appId = aid.toString();
+//                }
+//            } catch (Exception ignored) {
+//            }
+//
+//            try {
+//                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoStart");
+//                if (autoFlag != null && autoFlag.toString().equals("true")) {
+//                    autoStart = false;
+//                }
+//            } catch (Exception ignored) {
+//            }
+//
+//            try {
+//                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoEvents");
+//                if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
+//                    autoEvent = false;
+//                }
+//            } catch (Exception ignored) {
+//            }
         }
 
         /**

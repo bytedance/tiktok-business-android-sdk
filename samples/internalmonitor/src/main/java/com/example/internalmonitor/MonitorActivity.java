@@ -33,8 +33,13 @@ public class MonitorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!TikTokBusinessSdk.isInitialized()) {
+            String appId = this.getResources().getString(R.string.tiktok_business_app_id);
+            String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
+
             TikTokBusinessSdk.TTConfig ttConfig =
                     new TikTokBusinessSdk.TTConfig(getApplication())
+                            .setAppId(appId)
+                            .setAccessToken(accessToken)
                             .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);
         }

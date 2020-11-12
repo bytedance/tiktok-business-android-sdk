@@ -57,8 +57,12 @@ public class App extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         if (savedInstanceState == null) {
+            String appId = this.getResources().getString(R.string.tiktok_business_app_id);
+            String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             // Tiktok sdk init start
             TTConfig ttConfig = new TTConfig(getApplication())
+                    .setAppId(appId)
+                    .setAccessToken(accessToken)
                     .disableLaunchLogging()
                     .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);

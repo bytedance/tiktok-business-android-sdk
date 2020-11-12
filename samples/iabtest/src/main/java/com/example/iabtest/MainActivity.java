@@ -57,7 +57,11 @@ public class MainActivity extends AppCompatActivity {
 
         // TikTokBusinessSdk init start
         if (!TikTokBusinessSdk.isInitialized()) {
+            String appId = this.getResources().getString(R.string.tiktok_business_app_id);
+            String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(getApplicationContext())
+                    .setAppId(appId)
+                    .setAccessToken(accessToken)
                     .disableInstallLogging()
                     .disableLaunchLogging()
                     .disableRetentionLogging()
