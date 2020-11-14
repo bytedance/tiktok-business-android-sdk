@@ -48,7 +48,13 @@ public class TikTokBusinessSdkTest {
     public void quickSdkInit() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        TikTokBusinessSdk.initializeSdk(appContext);
+
+        String appId = appContext.getResources().getString(R.string.tiktok_business_app_id);
+        String accessToken = appContext.getResources().getString(R.string.tiktok_business_app_access_token);
+        TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
+                .setAppId(appId)
+                .setAccessToken(accessToken);
+        TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // check singleton is set
         assertTrue(TikTokBusinessSdk.isInitialized());
