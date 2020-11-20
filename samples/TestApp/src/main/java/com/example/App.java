@@ -62,11 +62,12 @@ public class App extends AppCompatActivity {
             // Tiktok sdk init start
             TTConfig ttConfig = new TTConfig(getApplication())
                     .setAppId(appId)
-                    .setAccessToken(accessToken)
-                    .disableLaunchLogging()
-                    .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
+                    .disableAutoStart()
+                    .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);
             TikTokBusinessSdk.initializeSdk(ttConfig);
             // Tiktok sdk init end
+
+            TikTokBusinessSdk.updateAccessToken(accessToken);
 
             // testing delay tracking, implementing a 60 sec delay manually
             // ideally has to be after accepting tracking permission

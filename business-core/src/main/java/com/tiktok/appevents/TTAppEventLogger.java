@@ -85,7 +85,9 @@ public class TTAppEventLogger {
 
         SystemInfoUtil.initUserAgent();
         addToQ(TTAppEventsQueue::clearAll);
-        initGlobalConfig();
+        if (TikTokBusinessSdk.getAccessToken() != null) {
+            initGlobalConfig();
+        }
     }
 
     /**
@@ -293,7 +295,7 @@ public class TTAppEventLogger {
      * if the config is fetched and config.globalSwitch is false, the events can neither be saved in memory nor on the disk
      * any events in the memory will be gone when the app is closed.
      */
-    private void initGlobalConfig() {
+    public void initGlobalConfig() {
         addToQ(() -> {
             try {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
