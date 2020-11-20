@@ -302,7 +302,9 @@ public class TikTokBusinessSdk {
             throw new IllegalArgumentException("Access Token cannot be null");
         }
         TikTokBusinessSdk.accessToken = accessToken.trim();
-        appEventLogger.initGlobalConfig();
+        if (!isGlobalConfigFetched()) {
+            appEventLogger.initGlobalConfig();
+        }
     }
 
     /**
