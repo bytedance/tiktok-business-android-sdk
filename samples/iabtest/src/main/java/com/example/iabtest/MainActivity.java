@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
         // TikTokBusinessSdk init start
         if (!TikTokBusinessSdk.isInitialized()) {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!
+            // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
             String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(getApplicationContext())

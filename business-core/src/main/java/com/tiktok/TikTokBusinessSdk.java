@@ -298,11 +298,15 @@ public class TikTokBusinessSdk {
     }
 
     public static void updateAccessToken(String accessToken) {
+        if (!TikTokBusinessSdk.isInitialized()) {
+            throw new IllegalStateException("This function should only be called after sdk is initialized");
+        }
         if (accessToken == null) {
             throw new IllegalArgumentException("Access Token cannot be null");
         }
         TikTokBusinessSdk.accessToken = accessToken.trim();
         if (!isGlobalConfigFetched()) {
+            logger.info("Access token updated, try to refetch global config");
             appEventLogger.initGlobalConfig();
         }
     }

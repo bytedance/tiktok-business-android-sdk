@@ -87,6 +87,8 @@ public class TTAppEventLogger {
         addToQ(TTAppEventsQueue::clearAll);
         if (TikTokBusinessSdk.getAccessToken() != null) {
             initGlobalConfig();
+        }else{
+            logger.info("Global config fetch is skipped because access token is empty");
         }
     }
 
@@ -300,34 +302,29 @@ public class TTAppEventLogger {
             try {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
 
-                if (requestResult == null) return;
+                if (requestResult == null) {
+                    logger.info("Opt out of initGlobalConfig because global config is null, either api returns error or access token is not correct");
+                    return;
+                }
 
                 JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
-
-                if (businessSdkConfig == null) return;
-
                 Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
                 String availableVersion = (String) businessSdkConfig.get("available_version");
 
-                if (enableSDK != null) {
-                    TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
-                    logger.debug("enable_sdk=" + enableSDK);
-                    // if sdk is shutdown, stop all the timers
-                    if (!enableSDK) {
-                        logger.info("Clear all events and stop timers because global switch is not turned on");
-                        clearAll();
-                    }
+                TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
+                logger.debug("enable_sdk=" + enableSDK);
+                // if sdk is shutdown, stop all the timers
+                if (!enableSDK) {
+                    logger.info("Clear all events and stop timers because global switch is not turned on");
+                    clearAll();
                 }
-
-                if (availableVersion != null && !availableVersion.equals("")) {
-                    TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
-                    logger.debug("available_version=" + availableVersion);
-                }
-
+                TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
+                logger.debug("available_version=" + availableVersion);
+                TikTokBusinessSdk.setGlobalConfigFetched();
             } catch (JSONException e) {
                 e.printStackTrace();
+                logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
             } finally {
-                TikTokBusinessSdk.setGlobalConfigFetched();
                 if (TikTokBusinessSdk.isSystemActivated()) {
                     activateSdk();
                 }
