@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class TimeUtil {
     private static DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
@@ -22,8 +23,8 @@ public class TimeUtil {
      * @return
      */
     public static String getISO8601Timestamp(Date date) {
-//        TimeZone tz = TimeZone.getTimeZone("Asia/Shanghai");
-//        df.setTimeZone(tz);
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        df.setTimeZone(tz);
         return df.format(date);
     }
 
