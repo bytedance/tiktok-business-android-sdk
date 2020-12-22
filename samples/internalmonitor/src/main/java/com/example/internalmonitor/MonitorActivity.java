@@ -26,6 +26,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.Timer;
 
 public class MonitorActivity extends AppCompatActivity {
 
@@ -33,15 +34,38 @@ public class MonitorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!TikTokBusinessSdk.isInitialized()) {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!
+            // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
-            String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
+
+            // explicitly set a wrong token, events will be saved to memory and disk as normal, but they wont be flushed to the network.
+            String wrongToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
 
             TikTokBusinessSdk.TTConfig ttConfig =
                     new TikTokBusinessSdk.TTConfig(getApplication())
                             .setAppId(appId)
-                            .setAccessToken(accessToken)
+                            // you may switch between setting a wrong token or not setting token at call
+//                            .setAccessToken(wrongToken)
                             .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(10000);
+                    System.out.println("Set another wrong token after 10 seconds");
+                    String correctToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
+                    TikTokBusinessSdk.updateAccessToken(correctToken);
+
+                    // update access token to a correct value, any accumulated events will be flushed
+                    System.out.println("Set correct token after 3 seconds");
+                    Thread.sleep(3000);
+                    correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
+                    // any accumulated events(in memory or on the disk) will be flushed to network
+                    TikTokBusinessSdk.updateAccessToken(correctToken);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
 
         SDKEventHandler handler = new SDKEventHandler(this);

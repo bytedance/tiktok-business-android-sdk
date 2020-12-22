@@ -57,6 +57,8 @@ public class App extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         if (savedInstanceState == null) {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!
+            // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
             String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             // Tiktok sdk init start

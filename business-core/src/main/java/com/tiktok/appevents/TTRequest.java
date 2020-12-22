@@ -66,10 +66,12 @@ class TTRequest {
                 }
                 logger.info("Global config fetched: " + TTUtil.ppStr(config));
             } catch (Exception e) {
+                // might be api returning something wrong
                 TTCrashHandler.handleCrash(TAG, e);
             }
         }
 
+        // might be api returning something wrong
         return config;
     }
 
