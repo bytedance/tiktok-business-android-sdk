@@ -39,6 +39,7 @@ class TTRequest {
     private static final List<TTAppEvent> successfullySentRequests = new ArrayList<>();
 
     private static final Map<String, String> headParamMap = new HashMap<>();
+    private static final Map<String, String> getHeadParamMap = new HashMap<>();
 
     static {
         // these fields wont change, so cache it locally to enhance performance
@@ -48,13 +49,16 @@ class TTRequest {
                 BuildConfig.VERSION_NAME,
                 TikTokBusinessSdk.getApiAvailableVersion());
         headParamMap.put("User-Agent", ua);
+        // no content-type application/json for get requests
+        getHeadParamMap.put("Connection", "Keep-Alive");
+        getHeadParamMap.put("User-Agent", ua);
     }
 
     public static JSONObject getBusinessSDKConfig() {
         logger.info("Try to fetch global configs");
-        headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
+        getHeadParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
         String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TikTokBusinessSdk.getAppId();
-        String result = HttpRequestUtil.doGet(url, headParamMap);
+        String result = HttpRequestUtil.doGet(url, getHeadParamMap);
         logger.debug(result);
         JSONObject config = null;
         if (result != null) {
