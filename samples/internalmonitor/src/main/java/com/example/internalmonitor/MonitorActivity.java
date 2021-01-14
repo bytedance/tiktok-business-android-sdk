@@ -46,13 +46,13 @@ public class MonitorActivity extends AppCompatActivity {
                             .setAppId(appId)
                             // you may switch between setting a wrong token or not setting token at call
 //                            .setAccessToken(wrongToken)
-                            .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
+                            .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);
             TikTokBusinessSdk.initializeSdk(ttConfig);
 
             new Thread(() -> {
                 try {
-                    Thread.sleep(10000);
-                    System.out.println("Set another wrong token after 10 seconds");
+                    Thread.sleep(5000);
+                    System.out.println("Set another wrong token after 5 seconds");
                     String correctToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
                     TikTokBusinessSdk.updateAccessToken(correctToken);
 
@@ -60,6 +60,15 @@ public class MonitorActivity extends AppCompatActivity {
                     System.out.println("Set correct token after 3 seconds");
                     Thread.sleep(3000);
                     correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
+                    // any accumulated events(in memory or on the disk) will be flushed to network
+                    TikTokBusinessSdk.updateAccessToken(correctToken);
+
+                    Thread.sleep(5000);
+                    System.out.println("Set another wrong token after 5 seconds");
+                    TikTokBusinessSdk.updateAccessToken(wrongToken);
+
+                    System.out.println("Set correct token after 3 seconds");
+                    Thread.sleep(3000);
                     // any accumulated events(in memory or on the disk) will be flushed to network
                     TikTokBusinessSdk.updateAccessToken(correctToken);
                 } catch (InterruptedException e) {

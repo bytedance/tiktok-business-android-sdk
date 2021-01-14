@@ -87,7 +87,7 @@ public class TTAppEventLogger {
         addToQ(TTAppEventsQueue::clearAll);
         if (TikTokBusinessSdk.getAccessToken() != null) {
             initGlobalConfig();
-        }else{
+        } else {
             logger.info("Global config fetch is skipped because access token is empty");
         }
     }
@@ -284,10 +284,12 @@ public class TTAppEventLogger {
     }
 
     public void clearAll() {
-        addToQ(() -> {
-            TTAppEventsQueue.clearAll();
-            TTAppEventStorage.clearAll();
-        });
+        addToQ(this::clearAllImmediately);
+    }
+
+    private void clearAllImmediately() {
+        TTAppEventsQueue.clearAll();
+        TTAppEventStorage.clearAll();
     }
 
     /**
@@ -316,7 +318,7 @@ public class TTAppEventLogger {
                 // if sdk is shutdown, stop all the timers
                 if (!enableSDK) {
                     logger.info("Clear all events and stop timers because global switch is not turned on");
-                    clearAll();
+                    clearAllImmediately();
                 }
                 TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
                 logger.debug("available_version=" + availableVersion);
