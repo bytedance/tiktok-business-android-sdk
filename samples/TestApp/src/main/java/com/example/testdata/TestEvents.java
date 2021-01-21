@@ -22,9 +22,9 @@ public class TestEvents {
     public static HashMap<String, String[]> TTEventProperties = new HashMap<>();
 
     static {
-        TTEventProperties.put("LaunchApp", new String[]{});
+        TTEventProperties.put("LaunchAPP", new String[]{});
         TTEventProperties.put("InstallApp", new String[]{});
-        TTEventProperties.put("2DRetention", new String[]{});
+        TTEventProperties.put("2Dretention", new String[]{});
         TTEventProperties.put("AddPaymentInfo", new String[]{
                 "success",
         });
@@ -42,7 +42,7 @@ public class TestEvents {
                 "currency",
                 "value",
         });
-        TTEventProperties.put("CheckOut", new String[]{
+        TTEventProperties.put("Checkout", new String[]{
                 "description",
                 "sku_id",
                 "num_items",

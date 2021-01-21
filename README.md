@@ -14,7 +14,7 @@ In essence, the SDK reports app events through the App events marketing API. See
 
 There are two types of app events:
 
-* Automatically logged app events: The TikTok business SDK automatically logs InstallApp, LaunchApp, 2DRetention, and (iOS only) Purchase app events.
+* Automatically logged app events: The TikTok business SDK automatically logs InstallApp, LaunchAPP, 2Dretention, and (iOS only) Purchase app events.
 
 * Manually logged app events: You can use the function provided by the TikTok business SDK to track events specific to your app. For a complete list of app events (and properties) supported by the TikTok marketing API, see the &quot;[Report App Events](https://ads.tiktok.com/marketing_api/docs?id=1679472066464769)&quot; marketing API documentation.
 <br/>
@@ -30,7 +30,7 @@ The TikTok business SDK takes the automatically/manually logged events, and repo
 ## Benefits
 
 * Easiest way to log events (e.g. App install, purchase) in your mobile application and send these events to TikTok
-   * Automatically logs InstallApp, LaunchApp, 2DRetention, and (iOS only) Purchase.
+   * Automatically logs InstallApp, LaunchAPP, 2Dretention, and (iOS only) Purchase.
    * Provides simple functions to manually log events.
    * Handles logic to save app events and flush app events to TikTok marketing API.
 

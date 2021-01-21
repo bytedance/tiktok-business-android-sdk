@@ -500,18 +500,18 @@ public class TikTokBusinessSdk {
         }
 
         /**
-         * to disable auto event tracking for LaunchApp event
+         * to disable auto event tracking for LaunchAPP event
          */
         public TTConfig disableLaunchLogging() {
-            this.disabledEvents.add("LaunchApp");
+            this.disabledEvents.add("LaunchAPP");
             return this;
         }
 
         /**
-         * to disable auto event tracking for 2DRetention event
+         * to disable auto event tracking for 2Dretention event
          */
         public TTConfig disableRetentionLogging() {
-            this.disabledEvents.add("2DRetention");
+            this.disabledEvents.add("2Dretention");
             return this;
         }
 

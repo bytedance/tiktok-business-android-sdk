@@ -118,7 +118,7 @@ public class TikTokBusinessSdkTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        // disable all other auto events other than LaunchApp
+        // disable all other auto events other than LaunchAPP
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableInstallLogging()
                 .disableRetentionLogging()
@@ -144,7 +144,7 @@ public class TikTokBusinessSdkTest {
         }
 
         // start delay track & force flush
-        // this will only trigger LaunchApp event
+        // this will only trigger LaunchAPP event
         TikTokBusinessSdk.startTrack();
 
         sleep(2);
@@ -237,7 +237,7 @@ public class TikTokBusinessSdkTest {
         Date yesterday = c.getTime();
         sh.edit().putString(TTSDK_APP_FIRST_INSTALL, timeFormat.format(yesterday)).commit();
 
-        // disable all other auto events other than 2DRetention
+        // disable all other auto events other than 2Dretention
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableLaunchLogging()
                 .disableInstallLogging()
@@ -263,7 +263,7 @@ public class TikTokBusinessSdkTest {
         }
 
         // start delay track & force flush
-        // this will only trigger 2DRetention event
+        // this will only trigger 2Dretention event
         TikTokBusinessSdk.startTrack();
 
         sleep(2);
@@ -288,7 +288,7 @@ public class TikTokBusinessSdkTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        // disable all other auto events other than LaunchApp
+        // disable all other auto events other than LaunchAPP
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
@@ -356,7 +356,7 @@ public class TikTokBusinessSdkTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        // disable all other auto events other than LaunchApp
+        // disable all other auto events other than LaunchAPP
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
@@ -403,7 +403,7 @@ public class TikTokBusinessSdkTest {
                 TTPurchaseItem.buildPurchaseProperties("USD", item1, item2));
 
         // start delay track & force flush
-        // this will only trigger LaunchApp event
+        // this will only trigger LaunchAPP event
         TikTokBusinessSdk.startTrack();
 
         sleep(2);
@@ -428,7 +428,7 @@ public class TikTokBusinessSdkTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        // disable all other auto events other than LaunchApp
+        // disable all other auto events other than LaunchAPP
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
                 .disableAutoStart()
                 .disableAutoEvents()
