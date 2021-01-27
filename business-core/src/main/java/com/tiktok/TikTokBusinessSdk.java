@@ -16,7 +16,9 @@ import androidx.annotation.Nullable;
 import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTPurchaseInfo;
+import com.tiktok.appevents.TTUserInfo;
 import com.tiktok.util.TTLogger;
+import com.tiktok.util.TTUtil;
 
 import org.json.JSONObject;
 
@@ -32,6 +34,9 @@ public class TikTokBusinessSdk {
      * Singleton instance for {@link TikTokBusinessSdk}
      */
     static volatile TikTokBusinessSdk ttSdk = null;
+
+    public static volatile boolean isActivatedLogicRun = false;
+
     /**
      * {@link TTAppEventLogger} package singleton
      */
@@ -114,6 +119,8 @@ public class TikTokBusinessSdk {
 
         ttSdk = new TikTokBusinessSdk(ttConfig);
 
+
+        TTUserInfo.reset(TikTokBusinessSdk.getApplicationContext(), false);
         // the appEventLogger instance will be the main interface to track events
         appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents);
     }
@@ -307,7 +314,7 @@ public class TikTokBusinessSdk {
         TikTokBusinessSdk.accessToken = accessToken.trim();
         if (!isGlobalConfigFetched()) {
             logger.info("Access token updated, try to refetch global config");
-            appEventLogger.initGlobalConfig();
+            appEventLogger.initGlobalConfig(0);
         }
     }
 
@@ -371,6 +378,35 @@ public class TikTokBusinessSdk {
 
     public static void setApiAvailableVersion(String apiAvailableVersion) {
         TikTokBusinessSdk.apiAvailableVersion = apiAvailableVersion;
+    }
+
+    /**
+     * Should be called whenever the user info changes <br/>
+     * - when the user logins in <br/>
+     * - when a new user signs up <br/>
+     * - when the user updates his/her profile <br/>
+     * - If the user's previous user info is remembered and the app is reopened.<br/>
+     *
+     * @param externalId
+     * @param externalUserName
+     * @param phoneNumber
+     * @param email
+     */
+    public static synchronized void identify(String externalId,
+                                             @Nullable String externalUserName,
+                                             @Nullable String phoneNumber,
+                                             @Nullable String email) {
+        appEventLogger.identify(externalId, externalUserName, phoneNumber, email);
+    }
+
+    /**
+     * Should be called when the user logs out <br/>
+     * - when the app logs out <br/>
+     * - when switching to another account,
+     * in that case, should call a subsequent {@link TikTokBusinessSdk#identify(String, String, String, String)}
+     */
+    public static synchronized void logout() {
+        appEventLogger.logout();
     }
 
     /**

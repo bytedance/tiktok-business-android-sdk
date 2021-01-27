@@ -46,7 +46,8 @@ class TTRequestBuilder {
 
     private static JSONObject contextForApiCache = null;
 
-    public static JSONObject getContextForApi() throws JSONException {
+    // the context part that does not change
+    private static JSONObject getImmutableContextForApi() throws JSONException {
         if (contextForApiCache != null) {
             return contextForApiCache;
         }
@@ -61,6 +62,13 @@ class TTRequestBuilder {
         }
         contextForApiCache = contextBuilder(adIdInfo);
         return contextForApiCache;
+    }
+
+    public static JSONObject getContextForApi(TTAppEvent event) throws JSONException {
+        JSONObject immutablePart = getImmutableContextForApi();
+        JSONObject finalObj = new JSONObject(immutablePart.toString());
+        finalObj.put("user", event.getUserInfo().toJsonObject());
+        return finalObj;
     }
 
     private static Locale getCurrentLocale() {

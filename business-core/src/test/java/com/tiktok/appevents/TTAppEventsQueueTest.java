@@ -28,8 +28,8 @@ public class TTAppEventsQueueTest extends BaseTest {
 
     @Test
     public void simpleCase() {
-        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
-        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}"));
 
         assertEquals(2, TTAppEventsQueue.size());
         TTAppEventsQueue.clearAll();
@@ -58,15 +58,15 @@ public class TTAppEventsQueueTest extends BaseTest {
 
             }
         });
-        TTAppEventsQueue.addEvent(new TTAppEvent("InternalTest", "{}"));
+        TTAppEventsQueue.addEvent(new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}"));
         TikTokBusinessSdk.destroy();
         TTAppEventsQueue.clearAll();
     }
 
     @Test
     public void testExport() {
-        TTAppEvent e1 = new TTAppEvent("InternalTest", "{}");
-        TTAppEvent e2 = new TTAppEvent("InternalTest", "{}");
+        TTAppEvent e1 = new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}");
+        TTAppEvent e2 = new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}");
         TTAppEventsQueue.addEvent(e1);
         TTAppEventsQueue.addEvent(e2);
 

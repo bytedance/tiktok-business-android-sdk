@@ -22,10 +22,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/spacing"
             android:layout_marginLeft="@dimen/spacing"
-            android:layout_marginTop="68dp"
             android:text="In Memory:"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/identify" />
 
         <TextView
             android:id="@+id/textView4"
@@ -312,6 +311,27 @@
             android:onClick="sendPurchaseEvent"
             app:layout_constraintStart_toStartOf="@+id/cardView"
             app:layout_constraintTop_toBottomOf="@+id/cardView" />
+
+        <Button
+            android:id="@+id/identify"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Identify"
+            android:onClick="identify"
+            app:layout_constraintStart_toStartOf="@+id/count"
+            app:layout_constraintTop_toBottomOf="@+id/count" />
+
+        <Button
+            android:id="@+id/logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:onClick="logout"
+            android:text="Logout"
+            app:layout_constraintStart_toEndOf="@+id/identify"
+            app:layout_constraintTop_toTopOf="@+id/identify" />
 
         <!--    <Button-->
         <!--        android:id="@+id/successfulEvents"-->
