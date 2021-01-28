@@ -64,13 +64,14 @@ public class TTUserInfo implements Cloneable, Serializable {
     }
 
     public void setEmail(String email) {
-        this.email = toSha256(email);
+//        this.email = toSha256(email);
+        this.email = email;
     }
 
     public JSONObject toJsonObject() {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("anonymousId", anonymousId);
+            jsonObject.put("anonymous_id", anonymousId);
             if (externalId != null) {
                 jsonObject.put("external_id", externalId);
             }

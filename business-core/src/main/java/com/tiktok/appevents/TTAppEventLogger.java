@@ -102,6 +102,7 @@ public class TTAppEventLogger {
 
     public void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
         if (!TikTokBusinessSdk.isSystemActivated()) {
+            logger.info("Global switch is off, ignore track purchase");
             return;
         }
         addToQ(() -> {
@@ -229,7 +230,6 @@ public class TTAppEventLogger {
 
     // only when this method is called will the whole sdk be activated
     private void activateSdk() {
-        TikTokBusinessSdk.isActivatedLogicRun = true;
         autoEventsManager.trackOnAppOpenEvents();
         startScheduler();
         flush(FlushReason.START_UP);
@@ -336,6 +336,9 @@ public class TTAppEventLogger {
      * any events in the memory will be gone when the app is closed.
      */
     public void initGlobalConfig(int delaySeconds) {
+        if (TikTokBusinessSdk.isGlobalConfigFetched()) {
+            return;
+        }
         addToLater(() -> {
             try {
                 logger.info("Fetching global config....");
@@ -367,17 +370,20 @@ public class TTAppEventLogger {
                 retryFetchingGlobalConfig();
             } finally {
                 if (TikTokBusinessSdk.isSystemActivated() && !TikTokBusinessSdk.isActivatedLogicRun) {
+                    TikTokBusinessSdk.isActivatedLogicRun = true;
                     activateSdk();
                 }
             }
         }, delaySeconds);
     }
 
+    /**
+     * Since the global config is not obtained due to network or api errors,
+     * should schedule a refetch at a certain interval
+     */
     private void retryFetchingGlobalConfig() {
-        if (!TikTokBusinessSdk.isGlobalConfigFetched()) {
-            int interval = 10;
-            logger.info("Will check global config in " + interval + " seconds");
-            initGlobalConfig(interval);
-        }
+        int interval = 10;
+        logger.info("Will check global config in " + interval + " seconds");
+        initGlobalConfig(interval);
     }
 }

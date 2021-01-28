@@ -348,7 +348,8 @@ public class TikTokBusinessSdk {
     }
 
     /**
-     * if globalSwitch request is sent to network, but the network returns error, activate the app regardless
+     * if globalSwitch request is sent to network, but the network returns error, activate the app regardless,
+     * because TiktokBUsinessSDK.sdkGlobalSwitch is set to true by default.
      * if globalSwitch request is sent to network and api returns false, then sdk will not be activated
      * if globalSwitch request is sent to network and api returns true, then check whether adInfoRun is set to true
      */
@@ -384,7 +385,7 @@ public class TikTokBusinessSdk {
      * Should be called whenever the user info changes <br/>
      * - when the user logins in <br/>
      * - when a new user signs up <br/>
-     * - when the user updates his/her profile <br/>
+     * - when the user updates his/her profile,logout first, then identify <br/>
      * - If the user's previous user info is remembered and the app is reopened.<br/>
      *
      * @param externalId

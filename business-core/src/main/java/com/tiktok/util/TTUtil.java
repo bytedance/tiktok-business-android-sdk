@@ -65,6 +65,7 @@ public class TTUtil {
         TTKeyValueStore store = new TTKeyValueStore(context);
         String anoId = store.get(TTSDK_APP_ANONYMOUS_ID);
         if (anoId == null || forceGenerate) {
+            // TODO make sure anoId universally unique, also limit the length.
             anoId = UUID.randomUUID().toString();
             store.set(TTSDK_APP_ANONYMOUS_ID, anoId);
             logger.info("AnonymousId reset to " + anoId);
