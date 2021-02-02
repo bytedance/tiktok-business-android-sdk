@@ -137,16 +137,22 @@ class TTRequestBuilder {
         JSONObject app = new JSONObject();
         app.put("name", SystemInfoUtil.getAppName());
         app.put("namespace", SystemInfoUtil.getPackageName());
-        app.put("version", SystemInfoUtil.getVersionName());
-        app.put("build", SystemInfoUtil.getVersionCode() + "");
+        app.put("version", SystemInfoUtil.getAppVersionName());
+        app.put("build", SystemInfoUtil.getAppVersionCode() + "");
 
         JSONObject device = new JSONObject();
         device.put("platform", "Android");
         if (adIdInfo != null) {
             device.put("gaid", adIdInfo.getAdId());
         }
+
+        JSONObject library = new JSONObject();
+        library.put("name", SystemInfoUtil.getSDKVersionName());
+        library.put("version", SystemInfoUtil.getSDKVersionCode());
+
         JSONObject context = new JSONObject();
         context.put("app", app);
+        context.put("library", library);
         context.put("device", device);
         context.put("locale", getBcp47Language());
         context.put("ip", SystemInfoUtil.getLocalIpAddress());
