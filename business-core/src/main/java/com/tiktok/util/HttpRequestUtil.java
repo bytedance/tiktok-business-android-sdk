@@ -50,11 +50,11 @@ public class HttpRequestUtil {
     public static String doGet(String url, Map<String, String> headerParamMap, HttpRequestOptions options) {
         String result = null;
 
-        HttpURLConnection connection = null;
+        HttpsURLConnection connection = null;
 
         try {
             URL httpURL = new URL(url);
-            connection = (HttpURLConnection) httpURL.openConnection();
+            connection = (HttpsURLConnection) httpURL.openConnection();
             connection.setRequestMethod("GET");
             options.configConnection(connection);
             connection.setDoOutput(false);

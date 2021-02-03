@@ -8,8 +8,6 @@ package com.tiktok;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 
 import androidx.annotation.Nullable;
 
@@ -18,7 +16,6 @@ import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.appevents.TTUserInfo;
 import com.tiktok.util.TTLogger;
-import com.tiktok.util.TTUtil;
 
 import org.json.JSONObject;
 
@@ -314,7 +311,7 @@ public class TikTokBusinessSdk {
         TikTokBusinessSdk.accessToken = accessToken.trim();
         if (!isGlobalConfigFetched()) {
             logger.info("Access token updated, try to refetch global config");
-            appEventLogger.initGlobalConfig(0);
+            appEventLogger.fetchGlobalConfig(0);
         }
     }
 

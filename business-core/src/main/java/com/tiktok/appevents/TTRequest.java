@@ -113,8 +113,8 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
 
-//        String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
-        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+        String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+//        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
         List<TTAppEvent> failedEvents = new ArrayList<>();
 

@@ -12,14 +12,12 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -86,7 +84,7 @@ public class TTAppEventLogger {
         SystemInfoUtil.initUserAgent();
         addToQ(TTAppEventsQueue::clearAll);
         if (TikTokBusinessSdk.getAccessToken() != null) {
-            initGlobalConfig(0);
+            fetchGlobalConfig(0);
         } else {
             logger.info("Global config fetch is skipped because access token is empty");
         }
@@ -335,10 +333,7 @@ public class TTAppEventLogger {
      * if the config is fetched and config.globalSwitch is false, the events can neither be saved in memory nor on the disk
      * any events in the memory will be gone when the app is closed.
      */
-    public void initGlobalConfig(int delaySeconds) {
-        if (TikTokBusinessSdk.isGlobalConfigFetched()) {
-            return;
-        }
+    public void fetchGlobalConfig(int delaySeconds) {
         addToLater(() -> {
             try {
                 logger.info("Fetching global config....");
@@ -346,7 +341,6 @@ public class TTAppEventLogger {
 
                 if (requestResult == null) {
                     logger.info("Opt out of initGlobalConfig because global config is null, either api returns error or access token is not correct");
-                    retryFetchingGlobalConfig();
                     return;
                 }
 
@@ -367,7 +361,6 @@ public class TTAppEventLogger {
             } catch (JSONException e) {
                 e.printStackTrace();
                 logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
-                retryFetchingGlobalConfig();
             } finally {
                 if (TikTokBusinessSdk.isSystemActivated() && !TikTokBusinessSdk.isActivatedLogicRun) {
                     TikTokBusinessSdk.isActivatedLogicRun = true;
@@ -375,15 +368,5 @@ public class TTAppEventLogger {
                 }
             }
         }, delaySeconds);
-    }
-
-    /**
-     * Since the global config is not obtained due to network or api errors,
-     * should schedule a refetch at a certain interval
-     */
-    private void retryFetchingGlobalConfig() {
-        int interval = 10;
-        logger.info("Will check global config in " + interval + " seconds");
-        initGlobalConfig(interval);
     }
 }

@@ -27,6 +27,7 @@ class TTActivityLifecycleCallbacksListener extends TTLifeCycleCallbacksAdapter {
     @Override
     public void onResume(@NonNull LifecycleOwner owner) {
         if (isPaused) {
+            appEventLogger.fetchGlobalConfig(0);
             appEventLogger.restartScheduler();
             appEventLogger.autoEventsManager.track2DayRetentionEvent();
         }
