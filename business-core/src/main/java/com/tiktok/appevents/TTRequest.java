@@ -116,7 +116,8 @@ class TTRequest {
         String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 //        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
-        List<TTAppEvent> failedEvents = new ArrayList<>();
+        List<TTAppEvent> failedEventsToBeSaved = new ArrayList<>();
+        List<TTAppEvent> failedEventsToBeDiscarded = new ArrayList<>();
 
         List<List<TTAppEvent>> chunks = averageAssign(appEventList, MAX_EVENT_SIZE);
 
@@ -134,7 +135,7 @@ class TTRequest {
             try {
                 bodyJson.put("batch", new JSONArray(batch));
             } catch (Exception e) {
-                failedEvents.addAll(currentBatch);
+                failedEventsToBeSaved.addAll(currentBatch);
                 TTCrashHandler.handleCrash(TAG, e);
                 continue;
             }
@@ -148,15 +149,19 @@ class TTRequest {
             String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
             if (result == null) {
-                failedEvents.addAll(currentBatch);
+                failedEventsToBeSaved.addAll(currentBatch);
                 failedRequests += currentBatch.size();
             } else {
                 try {
                     JSONObject resultJson = new JSONObject(result);
                     int code = (Integer) resultJson.getInt("code");
 
+                    if (code == TTConst.ApiErrorCodes.API_ERROR.code) {
+                        failedEventsToBeDiscarded.addAll(currentBatch);
+                        failedRequests += currentBatch.size();
+                    }
                     // some events made it while others not.
-                    if (code == TTConst.ApiErrorCodes.PARTIAL_SUCCESS.code) {
+                    else if (code == TTConst.ApiErrorCodes.PARTIAL_SUCCESS.code) {
                         try {
                             JSONArray partialFailedEvents = resultJson.getJSONObject("data").getJSONArray("failed_events");
                             int length = partialFailedEvents.length();
@@ -169,7 +174,7 @@ class TTRequest {
                             for (int i = 0; i < totalSize; i++) {
                                 TTAppEvent curr = currentBatch.get(i);
                                 if (failedIndices.contains(i)) {
-                                    failedEvents.add(curr);
+                                    failedEventsToBeDiscarded.add(curr);
                                     failedRequests += 1;
                                 } else {
                                     successfullySentRequests.add(curr);
@@ -178,11 +183,11 @@ class TTRequest {
                             }
                         } catch (Exception e) {
                             TTCrashHandler.handleCrash(TAG, e);
-                            failedEvents.addAll(currentBatch);
+                            failedEventsToBeSaved.addAll(currentBatch);
                             failedRequests += currentBatch.size();
                         }
                     } else if (code != 0) {
-                        failedEvents.addAll(currentBatch);
+                        failedEventsToBeSaved.addAll(currentBatch);
                         failedRequests += currentBatch.size();
                     } else {
                         successfulRequests += currentBatch.size();
@@ -190,19 +195,22 @@ class TTRequest {
                     }
                 } catch (JSONException e) {
                     failedRequests += currentBatch.size();
-                    failedEvents.addAll(currentBatch);
+                    failedEventsToBeSaved.addAll(currentBatch);
                     TTCrashHandler.handleCrash(TAG, e);
                 }
                 logger.debug(TTUtil.ppStr(result));
             }
             notifyChange();
         }
-        logger.debug("Flushed %d events successfully, failed to flush %d events", successfulRequests, failedEvents.size());
+        logger.debug("Flushed %d events successfully, failed to flush %d events", successfulRequests, failedEventsToBeSaved.size());
         toBeSentRequests = 0;
         failedRequests = 0;
         successfulRequests = 0;
         notifyChange();
-        return failedEvents;
+        if (failedEventsToBeDiscarded.size() != 0) {
+            logger.debug("Failed to send " + failedRequests + " events, will discard them");
+        }
+        return failedEventsToBeSaved;
     }
 
     private static void notifyChange() {

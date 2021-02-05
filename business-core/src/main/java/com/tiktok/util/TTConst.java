@@ -15,7 +15,8 @@ public class TTConst {
     public static final String TTSDK_APP_2DR_TIME = "com.tiktok.sdk.2drTime";
 
     public static enum ApiErrorCodes {
-        PARTIAL_SUCCESS(20001);
+        PARTIAL_SUCCESS(20001),
+        API_ERROR(40000);
 
         public Integer code;
 
