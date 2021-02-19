@@ -44,12 +44,8 @@ public class SystemInfoUtil {
         return application.getApplicationInfo().loadLabel(pm).toString();
     }
 
-    public static String getSDKVersionName() {
+    public static String getSDKVersion() {
         return BuildConfig.VERSION_NAME;
-    }
-
-    public static int getSDKVersionCode() {
-        return BuildConfig.VERSION_CODE;
     }
 
     public static String getAppVersionName() {

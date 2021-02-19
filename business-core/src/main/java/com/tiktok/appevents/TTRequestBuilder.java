@@ -147,8 +147,8 @@ class TTRequestBuilder {
         }
 
         JSONObject library = new JSONObject();
-        library.put("name", SystemInfoUtil.getSDKVersionName());
-//        library.put("version", SystemInfoUtil.getSDKVersionCode());
+        library.put("name", "bytedance/tiktok-business-android-sdk");
+        library.put("version", SystemInfoUtil.getSDKVersion());
 
         JSONObject context = new JSONObject();
         context.put("app", app);
