@@ -148,7 +148,7 @@ class TTRequestBuilder {
 
         JSONObject library = new JSONObject();
         library.put("name", SystemInfoUtil.getSDKVersionName());
-        library.put("version", SystemInfoUtil.getSDKVersionCode());
+//        library.put("version", SystemInfoUtil.getSDKVersionCode());
 
         JSONObject context = new JSONObject();
         context.put("app", app);
