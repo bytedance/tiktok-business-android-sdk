@@ -111,9 +111,9 @@ public class TTAppEventLoggerTest extends BaseTest {
         verify(logger).warn(TTAppEventLogger.SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN);
     }
 
-    TTAppEvent fromDisk1 = new TTAppEvent("InternalTest", "{}");
-    TTAppEvent fromDisk2 = new TTAppEvent("InternalTest", "{}");
-    TTAppEvent fromMemory3 = new TTAppEvent("InternalTest", "{}");
+    TTAppEvent fromDisk1 = new TTAppEvent(TTAppEvent.TTAppEventType.track, "InternalTest", "{}");
+    TTAppEvent fromDisk2 = new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}");
+    TTAppEvent fromMemory3 = new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}");
 
     private TTAppEventLogger flushCommon() {
         PowerMockito.mockStatic(TikTokBusinessSdk.class);
@@ -168,7 +168,7 @@ public class TTAppEventLoggerTest extends BaseTest {
     public void flushFailed() {
         TTAppEventLogger appEventLogger = flushCommon();
         List<TTAppEvent> failed = new LinkedList<>();
-        failed.add(new TTAppEvent("InternalTest", "{}"));
+        failed.add(new TTAppEvent(TTAppEvent.TTAppEventType.track,"InternalTest", "{}"));
 
         // when failed to flush, persist to disk
         when(TTRequest.reportAppEvent(any(), any())).thenReturn(failed);

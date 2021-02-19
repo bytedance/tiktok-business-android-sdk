@@ -58,5 +58,4 @@ class TTAppEventsQueue {
         return appEvents;
     }
 
-
 }

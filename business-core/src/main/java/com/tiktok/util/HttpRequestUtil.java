@@ -8,6 +8,8 @@ package com.tiktok.util;
 
 import com.tiktok.appevents.TTCrashHandler;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,7 +97,7 @@ public class HttpRequestUtil {
 
         String result = null;
 
-        HttpsURLConnection connection = null;
+        HttpURLConnection connection = null;
 
         OutputStream outputStream = null;
 
@@ -104,7 +106,7 @@ public class HttpRequestUtil {
 
             URL httpURL = new URL(url);
 
-            connection = (HttpsURLConnection) httpURL.openConnection();
+            connection = (HttpURLConnection) httpURL.openConnection();
             connection.setRequestMethod("POST");
             options.configConnection(connection);
             connection.setDoOutput(true);
@@ -122,8 +124,11 @@ public class HttpRequestUtil {
             outputStream.flush();
 
             int responseCode = connection.getResponseCode();
+            // http code is different from the code returned by api
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 result = streamToString(connection.getInputStream());
+                JSONObject obj = new JSONObject(result);
+                System.out.println(obj);
             }
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);

@@ -6,14 +6,24 @@
 
 package com.tiktok.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Looper;
 
+import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTCrashHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.UUID;
+
+import static com.tiktok.util.TTConst.TTSDK_APP_ANONYMOUS_ID;
+
 public class TTUtil {
+    private static final String TAG = TTUtil.class.getName();
+    private static final TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
+
     /**
      * All internal operations should be pushed to the internal {@link com.tiktok.appevents.TTAppEventLogger#eventLoop}
      * and run in a non-main thread
@@ -49,5 +59,17 @@ public class TTUtil {
         } catch (JSONException e) {
             return "";
         }
+    }
+
+    public static String getOrGenAnoId(Context context, boolean forceGenerate) {
+        TTKeyValueStore store = new TTKeyValueStore(context);
+        String anoId = store.get(TTSDK_APP_ANONYMOUS_ID);
+        if (anoId == null || forceGenerate) {
+            // TODO make sure anoId universally unique, also limit the length.
+            anoId = UUID.randomUUID().toString();
+            store.set(TTSDK_APP_ANONYMOUS_ID, anoId);
+            logger.info("AnonymousId reset to " + anoId);
+        }
+        return anoId;
     }
 }

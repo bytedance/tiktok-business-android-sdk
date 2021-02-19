@@ -9,6 +9,7 @@ package com.tiktok.appevents;
 import com.tiktok.BuildConfig;
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 import com.tiktok.util.TimeUtil;
@@ -19,8 +20,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 class TTRequest {
@@ -111,8 +114,10 @@ class TTRequest {
         notifyChange();
 
         String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+//        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
-        List<TTAppEvent> failedEvents = new ArrayList<>();
+        List<TTAppEvent> failedEventsToBeSaved = new ArrayList<>();
+        List<TTAppEvent> failedEventsToBeDiscarded = new ArrayList<>();
 
         List<List<TTAppEvent>> chunks = averageAssign(appEventList, MAX_EVENT_SIZE);
 
@@ -130,7 +135,7 @@ class TTRequest {
             try {
                 bodyJson.put("batch", new JSONArray(batch));
             } catch (Exception e) {
-                failedEvents.addAll(currentBatch);
+                failedEventsToBeSaved.addAll(currentBatch);
                 TTCrashHandler.handleCrash(TAG, e);
                 continue;
             }
@@ -144,15 +149,45 @@ class TTRequest {
             String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
             if (result == null) {
-                failedEvents.addAll(currentBatch);
+                failedEventsToBeSaved.addAll(currentBatch);
                 failedRequests += currentBatch.size();
             } else {
                 try {
                     JSONObject resultJson = new JSONObject(result);
-                    Integer code = (Integer) resultJson.get("code");
+                    int code = (Integer) resultJson.getInt("code");
 
-                    if (code != 0) {
-                        failedEvents.addAll(currentBatch);
+                    if (code == TTConst.ApiErrorCodes.API_ERROR.code) {
+                        failedEventsToBeDiscarded.addAll(currentBatch);
+                        failedRequests += currentBatch.size();
+                    }
+                    // some events made it while others not.
+                    else if (code == TTConst.ApiErrorCodes.PARTIAL_SUCCESS.code) {
+                        try {
+                            JSONArray partialFailedEvents = resultJson.getJSONObject("data").getJSONArray("failed_events");
+                            int length = partialFailedEvents.length();
+                            Set<Integer> failedIndices = new HashSet<>();
+                            for (int i = 0; i < length; i++) {
+                                JSONObject errorObj = partialFailedEvents.getJSONObject(i);
+                                failedIndices.add(errorObj.getInt("order_in_batch"));
+                            }
+                            int totalSize = currentBatch.size();
+                            for (int i = 0; i < totalSize; i++) {
+                                TTAppEvent curr = currentBatch.get(i);
+                                if (failedIndices.contains(i)) {
+                                    failedEventsToBeDiscarded.add(curr);
+                                    failedRequests += 1;
+                                } else {
+                                    successfullySentRequests.add(curr);
+                                    successfulRequests += 1;
+                                }
+                            }
+                        } catch (Exception e) {
+                            TTCrashHandler.handleCrash(TAG, e);
+                            failedEventsToBeSaved.addAll(currentBatch);
+                            failedRequests += currentBatch.size();
+                        }
+                    } else if (code != 0) {
+                        failedEventsToBeSaved.addAll(currentBatch);
                         failedRequests += currentBatch.size();
                     } else {
                         successfulRequests += currentBatch.size();
@@ -160,19 +195,22 @@ class TTRequest {
                     }
                 } catch (JSONException e) {
                     failedRequests += currentBatch.size();
-                    failedEvents.addAll(currentBatch);
+                    failedEventsToBeSaved.addAll(currentBatch);
                     TTCrashHandler.handleCrash(TAG, e);
                 }
                 logger.debug(TTUtil.ppStr(result));
             }
             notifyChange();
         }
-        logger.debug("Flushed %d events, failed to flush %d events", successfulRequests, failedEvents.size());
+        logger.debug("Flushed %d events successfully, failed to flush %d events", successfulRequests, failedEventsToBeSaved.size());
         toBeSentRequests = 0;
         failedRequests = 0;
         successfulRequests = 0;
         notifyChange();
-        return failedEvents;
+        if (failedEventsToBeDiscarded.size() != 0) {
+            logger.debug("Failed to send " + failedRequests + " events, will discard them");
+        }
+        return failedEventsToBeSaved;
     }
 
     private static void notifyChange() {
@@ -188,14 +226,16 @@ class TTRequest {
         }
         try {
             JSONObject propertiesJson = new JSONObject();
-            propertiesJson.put("type", "track");
-            propertiesJson.put("event", event.getEventName());
+            propertiesJson.put("type", event.getType());
+            if (event.getEventName() != null) {
+                propertiesJson.put("event", event.getEventName());
+            }
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
             JSONObject properties = new JSONObject(event.getPropertiesJson());
             if (properties.length() != 0) {
                 propertiesJson.put("properties", properties);
             }
-            propertiesJson.put("context", TTRequestBuilder.getContextForApi());
+            propertiesJson.put("context", TTRequestBuilder.getContextForApi(event));
             return propertiesJson;
         } catch (JSONException e) {
             TTCrashHandler.handleCrash(TAG, e);

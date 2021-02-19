@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.webkit.WebView;
 
+import com.tiktok.BuildConfig;
 import com.tiktok.TikTokBusinessSdk;
 
 import java.net.Inet4Address;
@@ -43,14 +44,18 @@ public class SystemInfoUtil {
         return application.getApplicationInfo().loadLabel(pm).toString();
     }
 
-    public static String getVersionName() {
+    public static String getSDKVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
+    public static String getAppVersionName() {
         if (packageInfo == null) {
             return "";
         }
         return packageInfo.versionName;
     }
 
-    public static int getVersionCode() {
+    public static int getAppVersionCode() {
         if (packageInfo == null) {
             return 0;
         }

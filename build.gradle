@@ -26,15 +26,12 @@ allprojects {
         maven {
             url "https://dl.bintray.com/bytedancer/bytedance"
         }
+        maven { url 'https://jitpack.io' }
         jcenter()
     }
-
-    group = GROUP
-    version = VERSION_NAME
 }
 
 ext {
-    versionCode = Integer.parseInt(VERSION_CODE)
     versionName = VERSION_NAME
 
     minSdkVersion = 16

@@ -12,14 +12,12 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -86,11 +84,12 @@ public class TTAppEventLogger {
         SystemInfoUtil.initUserAgent();
         addToQ(TTAppEventsQueue::clearAll);
         if (TikTokBusinessSdk.getAccessToken() != null) {
-            initGlobalConfig();
+            fetchGlobalConfig(0);
         } else {
             logger.info("Global config fetch is skipped because access token is empty");
         }
     }
+
 
     /**
      * persist events to the disk
@@ -101,6 +100,7 @@ public class TTAppEventLogger {
 
     public void trackPurchase(List<TTPurchaseInfo> purchaseInfos) {
         if (!TikTokBusinessSdk.isSystemActivated()) {
+            logger.info("Global switch is off, ignore track purchase");
             return;
         }
         addToQ(() -> {
@@ -161,6 +161,30 @@ public class TTAppEventLogger {
         }
     }
 
+    public void identify(String externalId,
+                         @Nullable String externalUserName,
+                         @Nullable String phoneNumber,
+                         @Nullable String email) {
+        TTUserInfo sharedInstance = TTUserInfo.sharedInstance;
+        if (sharedInstance.isIdentified()) {
+            logger.warn("SDK is already identified, if you want to switch to another" +
+                    "user account, plz call TiktokBusinessSDK.logout() first and then identify");
+            return;
+        }
+        sharedInstance.setIdentified();
+        sharedInstance.setExternalId(externalId);
+        sharedInstance.setExternalUserName(externalUserName);
+        sharedInstance.setPhoneNumber(phoneNumber);
+        sharedInstance.setEmail(email);
+        trackEvent(TTAppEvent.TTAppEventType.identify, null, null);
+        flushWithReason(TTAppEventLogger.FlushReason.IDENTIFY);
+    }
+
+    public void logout() {
+        TTUserInfo.reset(TikTokBusinessSdk.getApplicationContext(), true);
+        flushWithReason(TTAppEventLogger.FlushReason.LOGOUT);
+    }
+
     /**
      * interface exposed to {@link TikTokBusinessSdk}
      *
@@ -168,6 +192,10 @@ public class TTAppEventLogger {
      * @param props
      */
     public void track(String event, @Nullable JSONObject props) {
+        trackEvent(TTAppEvent.TTAppEventType.track, event, props);
+    }
+
+    private void trackEvent(TTAppEvent.TTAppEventType type, String event, @Nullable JSONObject props) {
         if (!TikTokBusinessSdk.isSystemActivated()) {
             return;
         }
@@ -179,7 +207,7 @@ public class TTAppEventLogger {
             } catch (JSONException e) {
             }
 
-            TTAppEventsQueue.addEvent(new TTAppEvent(event, finalProps.toString()));
+            TTAppEventsQueue.addEvent(new TTAppEvent(type, event, finalProps.toString()));
 
             if (TTAppEventsQueue.size() > THRESHOLD) {
                 flush(FlushReason.THRESHOLD);
@@ -190,8 +218,12 @@ public class TTAppEventLogger {
 
 
     public void forceFlush() {
-        logger.debug("FORCE_FLUSH called");
-        addToQ(() -> flush(FlushReason.FORCE_FLUSH));
+        flushWithReason(FlushReason.FORCE_FLUSH);
+    }
+
+    public void flushWithReason(FlushReason reason) {
+        logger.debug(reason.name() + " triggered flush");
+        addToQ(() -> flush(reason));
     }
 
     // only when this method is called will the whole sdk be activated
@@ -256,11 +288,13 @@ public class TTAppEventLogger {
     /**
      * flush reasons
      */
-    enum FlushReason {
+    public enum FlushReason {
         THRESHOLD, // when reaching the threshold of the event queue
         TIMER, // triggered every 15 seconds
         START_UP, // when app is started, flush all the accumulated events
         FORCE_FLUSH, // when developer calls flush from app
+        IDENTIFY,// when calling identify
+        LOGOUT,//when logging out
     }
 
     private void addToQ(Runnable task) {
@@ -299,9 +333,10 @@ public class TTAppEventLogger {
      * if the config is fetched and config.globalSwitch is false, the events can neither be saved in memory nor on the disk
      * any events in the memory will be gone when the app is closed.
      */
-    public void initGlobalConfig() {
-        addToQ(() -> {
+    public void fetchGlobalConfig(int delaySeconds) {
+        addToLater(() -> {
             try {
+                logger.info("Fetching global config....");
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig();
 
                 if (requestResult == null) {
@@ -327,10 +362,11 @@ public class TTAppEventLogger {
                 e.printStackTrace();
                 logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
             } finally {
-                if (TikTokBusinessSdk.isSystemActivated()) {
+                if (TikTokBusinessSdk.isSystemActivated() && !TikTokBusinessSdk.isActivatedLogicRun) {
+                    TikTokBusinessSdk.isActivatedLogicRun = true;
                     activateSdk();
                 }
             }
-        });
+        }, delaySeconds);
     }
 }

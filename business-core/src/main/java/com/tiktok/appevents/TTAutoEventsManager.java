@@ -7,7 +7,6 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 
 import java.text.ParseException;

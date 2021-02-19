@@ -37,44 +37,15 @@ public class MonitorActivity extends AppCompatActivity {
             // !!!!!!!!!!!!!!!!!!!!!!!!!
             // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
-
-            // explicitly set a wrong token, events will be saved to memory and disk as normal, but they wont be flushed to the network.
-            String wrongToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
+            String correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
 
             TikTokBusinessSdk.TTConfig ttConfig =
                     new TikTokBusinessSdk.TTConfig(getApplication())
                             .setAppId(appId)
                             // you may switch between setting a wrong token or not setting token at call
-//                            .setAccessToken(wrongToken)
+                            .setAccessToken(correctToken)
                             .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);
             TikTokBusinessSdk.initializeSdk(ttConfig);
-
-            new Thread(() -> {
-                try {
-                    Thread.sleep(5000);
-                    System.out.println("Set another wrong token after 5 seconds");
-                    String correctToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
-                    TikTokBusinessSdk.updateAccessToken(correctToken);
-
-                    // update access token to a correct value, any accumulated events will be flushed
-                    System.out.println("Set correct token after 3 seconds");
-                    Thread.sleep(3000);
-                    correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
-                    // any accumulated events(in memory or on the disk) will be flushed to network
-                    TikTokBusinessSdk.updateAccessToken(correctToken);
-
-                    Thread.sleep(5000);
-                    System.out.println("Set another wrong token after 5 seconds");
-                    TikTokBusinessSdk.updateAccessToken(wrongToken);
-
-                    System.out.println("Set correct token after 3 seconds");
-                    Thread.sleep(3000);
-                    // any accumulated events(in memory or on the disk) will be flushed to network
-                    TikTokBusinessSdk.updateAccessToken(correctToken);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
         }
 
         SDKEventHandler handler = new SDKEventHandler(this);
@@ -84,6 +55,42 @@ public class MonitorActivity extends AppCompatActivity {
         TTSDKMonitor monitor = new TTSDKMonitor(handler);
         TikTokBusinessSdk.setUpSdkListeners(monitor, monitor, monitor, monitor);
         setUpHandlers();
+    }
+
+    private void testCorrectToken() {
+        String correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
+        TikTokBusinessSdk.updateAccessToken(correctToken);
+    }
+
+    private void testWrongAccessTokens() {
+        // explicitly set a wrong token, events will be saved to memory and disk as normal, but they wont be flushed to the network.
+        String wrongToken = this.getResources().getString(R.string.wrong_tiktok_business_app_access_token);
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+                System.out.println("Set another wrong token after 5 seconds");
+                TikTokBusinessSdk.updateAccessToken(wrongToken);
+
+                // update access token to a correct value, any accumulated events will be flushed
+                System.out.println("Set correct token after 3 seconds");
+                Thread.sleep(3000);
+                String correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
+                // any accumulated events(in memory or on the disk) will be flushed to network
+                TikTokBusinessSdk.updateAccessToken(correctToken);
+
+                Thread.sleep(5000);
+                System.out.println("Set another wrong token after 5 seconds");
+                TikTokBusinessSdk.updateAccessToken(wrongToken);
+
+                System.out.println("Set correct token after 3 seconds");
+                Thread.sleep(3000);
+                // any accumulated events(in memory or on the disk) will be flushed to network
+                TikTokBusinessSdk.updateAccessToken(correctToken);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     private void sendEvent() {
@@ -164,6 +171,14 @@ public class MonitorActivity extends AppCompatActivity {
             startActivity(intent);
         }
         return true;
+    }
+
+    public void identify(View view) {
+        TikTokBusinessSdk.identify("ttid123", "testaccount", "12345", "test@bytedance.com");
+    }
+
+    public void logout(View view) {
+        TikTokBusinessSdk.logout();
     }
 
 }

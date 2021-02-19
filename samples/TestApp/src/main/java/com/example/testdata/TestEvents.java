@@ -115,6 +115,7 @@ public class TestEvents {
         TTEventProperties.put("LoanDisbursal", new String[]{
                 "value",
         });
+        // TODO remove LOGIN event? If not, determine the ordering.
         TTEventProperties.put("Login", new String[]{});
         TTEventProperties.put("Purchase", new String[]{
                 "page_type",

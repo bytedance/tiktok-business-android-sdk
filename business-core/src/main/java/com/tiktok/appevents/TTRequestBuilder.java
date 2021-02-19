@@ -46,7 +46,8 @@ class TTRequestBuilder {
 
     private static JSONObject contextForApiCache = null;
 
-    public static JSONObject getContextForApi() throws JSONException {
+    // the context part that does not change
+    private static JSONObject getImmutableContextForApi() throws JSONException {
         if (contextForApiCache != null) {
             return contextForApiCache;
         }
@@ -61,6 +62,13 @@ class TTRequestBuilder {
         }
         contextForApiCache = contextBuilder(adIdInfo);
         return contextForApiCache;
+    }
+
+    public static JSONObject getContextForApi(TTAppEvent event) throws JSONException {
+        JSONObject immutablePart = getImmutableContextForApi();
+        JSONObject finalObj = new JSONObject(immutablePart.toString());
+        finalObj.put("user", event.getUserInfo().toJsonObject());
+        return finalObj;
     }
 
     private static Locale getCurrentLocale() {
@@ -129,16 +137,22 @@ class TTRequestBuilder {
         JSONObject app = new JSONObject();
         app.put("name", SystemInfoUtil.getAppName());
         app.put("namespace", SystemInfoUtil.getPackageName());
-        app.put("version", SystemInfoUtil.getVersionName());
-        app.put("build", SystemInfoUtil.getVersionCode() + "");
+        app.put("version", SystemInfoUtil.getAppVersionName());
+        app.put("build", SystemInfoUtil.getAppVersionCode() + "");
 
         JSONObject device = new JSONObject();
         device.put("platform", "Android");
         if (adIdInfo != null) {
             device.put("gaid", adIdInfo.getAdId());
         }
+
+        JSONObject library = new JSONObject();
+        library.put("name", "bytedance/tiktok-business-android-sdk");
+        library.put("version", SystemInfoUtil.getSDKVersion());
+
         JSONObject context = new JSONObject();
         context.put("app", app);
+        context.put("library", library);
         context.put("device", device);
         context.put("locale", getBcp47Language());
         context.put("ip", SystemInfoUtil.getLocalIpAddress());

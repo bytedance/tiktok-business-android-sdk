@@ -39,7 +39,13 @@ public class TTLogger {
 
     public void info(String format, Object... extra) {
         if (shouldLog(LogLevel.INFO)) {
-            Log.i(tag, resolvedStr(format, extra));
+            String str = resolvedStr(format, extra);
+            if (str.length() > 1000) {
+                Log.i(tag, str.substring(0, 1000));
+                info(str.substring(1000));
+            } else {
+                Log.i(tag, str); // continuation
+            }
         }
     }
 
@@ -51,7 +57,13 @@ public class TTLogger {
 
     public void debug(String format, Object... extra) {
         if (shouldLog(LogLevel.DEBUG)) {
-            Log.d(tag, resolvedStr(format, extra));
+            String str = resolvedStr(format, extra);
+            if (str.length() > 1000) {
+                Log.d(tag, str.substring(0, 1000));
+                debug(str.substring(1000));
+            } else {
+                Log.d(tag, str); // continuation
+            }
         }
     }
 
