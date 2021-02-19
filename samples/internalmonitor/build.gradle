@@ -39,7 +39,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
     implementation project(':business-core')
-//    implementation 'com.github.bytedance:tiktok-business-android-sdk:1.1.0-alpha.9'
+//    implementation 'com.github.bytedance:tiktok-business-android-sdk:1.0.0-alpha.10'
     implementation 'androidx.cardview:cardview:1.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
