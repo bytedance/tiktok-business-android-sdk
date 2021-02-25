@@ -12,13 +12,16 @@ import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.SystemInfoUtil;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -39,7 +42,7 @@ public class TTAppEventLogger {
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
     // custom auto event disable, events will be disabled when disabledEvents.contains(event)
-    final List<String> disabledEvents;
+    final List<TTConst.AutoEvents> disabledEvents;
     /**
      * Logger util
      */
@@ -67,7 +70,7 @@ public class TTAppEventLogger {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable, List<String> disabledEvents) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AutoEvents> disabledEvents) {
         logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.disabledEvents = disabledEvents;
@@ -337,7 +340,16 @@ public class TTAppEventLogger {
         addToLater(() -> {
             try {
                 logger.info("Fetching global config....");
-                JSONObject requestResult = TTRequest.getBusinessSDKConfig();
+
+                Map<String, Object> options = new HashMap<>();
+                options.put("disable" + TTConst.AutoEvents.InstallApp.name,
+                        !this.autoEventsManager.shouldTrackAppLifecycleEvents(TTConst.AutoEvents.InstallApp));
+                options.put("disable" + TTConst.AutoEvents.LaunchAPP.name,
+                        !this.autoEventsManager.shouldTrackAppLifecycleEvents(TTConst.AutoEvents.LaunchAPP));
+                options.put("disable" + TTConst.AutoEvents.SecondDayRetention.name,
+                        !this.autoEventsManager.shouldTrackAppLifecycleEvents(TTConst.AutoEvents.SecondDayRetention));
+
+                JSONObject requestResult = TTRequest.getBusinessSDKConfig(options);
 
                 if (requestResult == null) {
                     logger.info("Opt out of initGlobalConfig because global config is null, either api returns error or access token is not correct");

@@ -24,4 +24,16 @@ public class TTConst {
             this.code = code;
         }
     }
+
+    public static enum AutoEvents {
+        InstallApp("InstallApp"),
+        SecondDayRetention("2Dretention"),
+        LaunchAPP("LaunchAPP");
+
+        public String name;
+
+        AutoEvents(String name) {
+            this.name = name;
+        }
+    }
 }

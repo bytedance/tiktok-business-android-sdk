@@ -7,6 +7,7 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TikTokBusinessSdk;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTKeyValueStore;
 
 import java.text.ParseException;
@@ -38,7 +39,7 @@ class TTAutoEventsManager {
         store = new TTKeyValueStore(TikTokBusinessSdk.getApplicationContext());
     }
 
-    private boolean shouldTrackAppLifecycleEvents(String event) {
+    Boolean shouldTrackAppLifecycleEvents(TTConst.AutoEvents event) {
         return appEventLogger.lifecycleTrackEnable
                 && !appEventLogger.disabledEvents.contains(event);
     }
@@ -65,8 +66,8 @@ class TTAutoEventsManager {
         hm.put(TTSDK_APP_FIRST_INSTALL, timeFormat.format(now));
 
         /* check and track InstallApp. */
-        if (shouldTrackAppLifecycleEvents("InstallApp")) {
-            appEventLogger.track("InstallApp", null);
+        if (shouldTrackAppLifecycleEvents(AutoEvents.InstallApp)) {
+            appEventLogger.track(AutoEvents.InstallApp.name, null);
         }
 
         store.set(hm);
@@ -88,9 +89,9 @@ class TTAutoEventsManager {
         try {
             Date firstLaunchTime = timeFormat.parse(firstInstall);
             Date now = new Date();
-            if (shouldTrackAppLifecycleEvents("2Dretention")
+            if (shouldTrackAppLifecycleEvents(AutoEvents.SecondDayRetention)
                     && isSatisfyRetention(firstLaunchTime, now)) {
-                appEventLogger.track("2Dretention", null);
+                appEventLogger.track(AutoEvents.SecondDayRetention.name, null);
                 store.set(TTSDK_APP_2DR_TIME, timeFormat.format(now));
             }
         } catch (ParseException ignored) {
@@ -98,8 +99,8 @@ class TTAutoEventsManager {
     }
 
     private void trackLaunchEvent() {
-        if (shouldTrackAppLifecycleEvents("LaunchAPP")) {
-            appEventLogger.track("LaunchAPP", null);
+        if (shouldTrackAppLifecycleEvents(AutoEvents.LaunchAPP)) {
+            appEventLogger.track(AutoEvents.LaunchAPP.name, null);
             store.set(TTSDK_APP_LAST_LAUNCH, timeFormat.format(new Date()));
         }
     }

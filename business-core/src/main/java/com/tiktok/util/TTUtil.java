@@ -16,6 +16,7 @@ import com.tiktok.appevents.TTCrashHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static com.tiktok.util.TTConst.TTSDK_APP_ANONYMOUS_ID;
@@ -71,5 +72,32 @@ public class TTUtil {
             logger.info("AnonymousId reset to " + anoId);
         }
         return anoId;
+    }
+
+    public static String escapeHTML(String s) {
+        StringBuilder out = new StringBuilder(Math.max(16, s.length()));
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+                out.append("&#");
+                out.append((int) c);
+                out.append(';');
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
+
+    public static String mapToString(Map<String, Object> map, String separator) {
+        if (map.isEmpty()) {
+            return "";
+        }
+        StringBuffer buf = new StringBuffer();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            buf.append(entry.getKey() + "=" + escapeHTML(entry.getValue().toString()) + "&");
+        }
+        String finalStr = buf.toString();
+        return finalStr.substring(0, finalStr.length() - 1);
     }
 }

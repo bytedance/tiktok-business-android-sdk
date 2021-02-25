@@ -15,6 +15,7 @@ import com.tiktok.appevents.TTAppEventLogger;
 import com.tiktok.appevents.TTCrashHandler;
 import com.tiktok.appevents.TTPurchaseInfo;
 import com.tiktok.appevents.TTUserInfo;
+import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
 import org.json.JSONObject;
@@ -429,7 +430,7 @@ public class TikTokBusinessSdk {
         /* auto init flag check in manifest */
         private boolean autoStart = true;
         /* disable custom auto events */
-        private List<String> disabledEvents;
+        private List<TTConst.AutoEvents> disabledEvents;
 
         /**
          * Read configs from <meta-data>
@@ -529,7 +530,7 @@ public class TikTokBusinessSdk {
          * to disable auto event tracking for InstallApp event
          */
         public TTConfig disableInstallLogging() {
-            this.disabledEvents.add("InstallApp");
+            this.disabledEvents.add(TTConst.AutoEvents.InstallApp);
             return this;
         }
 
@@ -537,7 +538,7 @@ public class TikTokBusinessSdk {
          * to disable auto event tracking for LaunchAPP event
          */
         public TTConfig disableLaunchLogging() {
-            this.disabledEvents.add("LaunchAPP");
+            this.disabledEvents.add(TTConst.AutoEvents.LaunchAPP);
             return this;
         }
 
@@ -545,7 +546,7 @@ public class TikTokBusinessSdk {
          * to disable auto event tracking for 2Dretention event
          */
         public TTConfig disableRetentionLogging() {
-            this.disabledEvents.add("2Dretention");
+            this.disabledEvents.add(TTConst.AutoEvents.SecondDayRetention);
             return this;
         }
 

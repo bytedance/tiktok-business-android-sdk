@@ -9,6 +9,7 @@ package com.tiktok.appevents;
 import com.tiktok.BuildConfig;
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
+import com.tiktok.util.SystemInfoUtil;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
@@ -57,10 +58,20 @@ class TTRequest {
         getHeadParamMap.put("User-Agent", ua);
     }
 
-    public static JSONObject getBusinessSDKConfig() {
+    public static JSONObject getBusinessSDKConfig(Map<String, Object> options) {
         logger.info("Try to fetch global configs");
         getHeadParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
-        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?app_id=" + TikTokBusinessSdk.getAppId();
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("app_id", TikTokBusinessSdk.getAppId());
+        // the rest params are for the sake of simplicity of debugging
+        paramsMap.put("client", "android");
+        paramsMap.put("sdk_version", SystemInfoUtil.getSDKVersion());
+        paramsMap.put("app_name", SystemInfoUtil.getAppName());
+        paramsMap.put("app_version", SystemInfoUtil.getAppVersionName());
+        paramsMap.putAll(options);
+
+        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
+        logger.debug(url);
         String result = HttpRequestUtil.doGet(url, getHeadParamMap);
         logger.debug(result);
         JSONObject config = null;
