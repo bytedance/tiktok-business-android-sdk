@@ -39,6 +39,8 @@ public class TTAppEventLogger {
     static final int THRESHOLD = 100;
     public static final String NETWORK_IS_TURNED_OFF = "SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking";
 
+    static int totalDumped = 0;
+
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
     // custom auto event disable, events will be disabled when disabledEvents.contains(event)

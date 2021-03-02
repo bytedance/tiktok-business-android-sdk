@@ -66,8 +66,6 @@ class TTAppEventStorage {
         saveToDisk(toBeSaved);
     }
 
-    private static int totalDumped = 0;
-
     /**
      * discard old events
      * In order not to overwhelm users' disk, only maxPersistNum is allowed to be persisted to disk
@@ -85,8 +83,8 @@ class TTAppEventStorage {
 
         if (size > maxPersistNum) {
             logger.debug("Way too many events(%d), slim it!", size);
-            totalDumped += size - maxPersistNum;
-            TikTokBusinessSdk.diskListener.onDumped(totalDumped);
+            TTAppEventLogger.totalDumped += size - maxPersistNum;
+            TikTokBusinessSdk.diskListener.onDumped(TTAppEventLogger.totalDumped);
             ttAppEventPersist.setAppEvents(new ArrayList<>(appEvents.subList(size - maxPersistNum, size)));
         }
     }
