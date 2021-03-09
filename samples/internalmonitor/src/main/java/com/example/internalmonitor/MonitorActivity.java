@@ -44,7 +44,7 @@ public class MonitorActivity extends AppCompatActivity {
                     new TikTokBusinessSdk.TTConfig(getApplication())
                             .disableLaunchLogging()
                             .setAppId(appId)
-//                            .setTTAppId(ttAppId)
+                            .setTTAppId(ttAppId)
                             // you may switch between setting a wrong token or not setting token at call
                             .setAccessToken(correctToken)
                             .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);

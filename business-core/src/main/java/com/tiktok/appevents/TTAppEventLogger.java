@@ -375,6 +375,9 @@ public class TTAppEventLogger {
             } catch (JSONException e) {
                 e.printStackTrace();
                 logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
+            } catch (Exception e){
+                logger.warn("Errors occurred during initGlobalConfig because of " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 if (TikTokBusinessSdk.isSystemActivated() && !TikTokBusinessSdk.isActivatedLogicRun) {
                     TikTokBusinessSdk.isActivatedLogicRun = true;

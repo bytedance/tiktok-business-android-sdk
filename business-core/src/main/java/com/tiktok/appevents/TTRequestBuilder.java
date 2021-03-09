@@ -150,6 +150,7 @@ class TTRequestBuilder {
 
         JSONObject device = new JSONObject();
         device.put("platform", "Android");
+        device.put("version", SystemInfoUtil.getAndroidVersion());
         if (adIdInfo != null) {
             device.put("gaid", adIdInfo.getAdId());
         }
