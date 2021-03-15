@@ -103,5 +103,8 @@ public class SystemInfoUtil {
         return userAgent;
     }
 
+    public static String getAndroidVersion() {
+        return Build.VERSION.SDK_INT + "";
+    }
 
 }

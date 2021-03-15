@@ -39,6 +39,8 @@ public class TTAppEventLogger {
     static final int THRESHOLD = 100;
     public static final String NETWORK_IS_TURNED_OFF = "SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking";
 
+    static int totalDumped = 0;
+
     // whether to trigger automatic events in the lifeCycle callbacks provided by Android
     final boolean lifecycleTrackEnable;
     // custom auto event disable, events will be disabled when disabledEvents.contains(event)
@@ -373,6 +375,9 @@ public class TTAppEventLogger {
             } catch (JSONException e) {
                 e.printStackTrace();
                 logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
+            } catch (Exception e){
+                logger.warn("Errors occurred during initGlobalConfig because of " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 if (TikTokBusinessSdk.isSystemActivated() && !TikTokBusinessSdk.isActivatedLogicRun) {
                     TikTokBusinessSdk.isActivatedLogicRun = true;

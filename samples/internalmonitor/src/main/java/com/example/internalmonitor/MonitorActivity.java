@@ -37,12 +37,14 @@ public class MonitorActivity extends AppCompatActivity {
             // !!!!!!!!!!!!!!!!!!!!!!!!!
             // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
+            String ttAppId = this.getResources().getString(R.string.tt_app_id);
             String correctToken = this.getResources().getString(R.string.correct_tiktok_business_app_access_token);
 
             TikTokBusinessSdk.TTConfig ttConfig =
                     new TikTokBusinessSdk.TTConfig(getApplication())
                             .disableLaunchLogging()
                             .setAppId(appId)
+                            .setTTAppId(ttAppId)
                             // you may switch between setting a wrong token or not setting token at call
                             .setAccessToken(correctToken)
                             .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);

@@ -49,6 +49,9 @@ class TTRequest {
         // these fields wont change, so cache it locally to enhance performance
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
+//        headParamMap.put("X-USE-PPE", "1");
+//        headParamMap.put("X-TT-ENV", "ppe_opensite_i18n_m");
+
         String ua = String.format("tiktok-business-android-sdk/%s/%s",
                 BuildConfig.VERSION_NAME,
                 TikTokBusinessSdk.getApiAvailableVersion());
@@ -213,14 +216,25 @@ class TTRequest {
             }
             notifyChange();
         }
-        logger.debug("Flushed %d events successfully, failed to flush %d events", successfulRequests, failedEventsToBeSaved.size());
+        logger.debug("Flushed %d events successfully", successfulRequests);
+
+        // might be due to network disconnection
+        if (failedEventsToBeSaved.size() != 0) {
+            logger.debug("Failed to flush %d events, will save them to disk", failedEventsToBeSaved.size());
+        }
+        // api returns some unrecoverable error
+        int discardedEventCount = failedEventsToBeDiscarded.size();
+        if (discardedEventCount != 0) {
+            logger.debug("Failed to flush " + discardedEventCount + " events, will discard them");
+            TTAppEventLogger.totalDumped += discardedEventCount;
+            TikTokBusinessSdk.diskListener.onDumped(TTAppEventLogger.totalDumped);
+        }
+        logger.debug("Failed to flush %d events in total", failedRequests);
+
         toBeSentRequests = 0;
         failedRequests = 0;
         successfulRequests = 0;
         notifyChange();
-        if (failedEventsToBeDiscarded.size() != 0) {
-            logger.debug("Failed to send " + failedRequests + " events, will discard them");
-        }
         return failedEventsToBeSaved;
     }
 

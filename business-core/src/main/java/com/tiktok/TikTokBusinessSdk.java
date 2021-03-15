@@ -40,20 +40,6 @@ public class TikTokBusinessSdk {
      */
     static TTAppEventLogger appEventLogger;
 
-    /**
-     * app {@link Context}
-     */
-    private static Application applicationContext;
-
-    private static boolean gaidCollectionEnabled = true;
-    /**
-     * app_id
-     */
-    private static String appId;
-    /**
-     * access token
-     */
-    private static String accessToken;
     private static final AtomicBoolean globalConfigFetched = new AtomicBoolean(false);
 
     /**
@@ -76,30 +62,31 @@ public class TikTokBusinessSdk {
      */
     private static AtomicBoolean networkSwitch;
 
+    private static TTConfig config;
     /**
      * logger util
      */
     private static TTLogger logger;
 
     private TikTokBusinessSdk(TTConfig ttConfig) {
-        /* no app id exception */
-        if (ttConfig.appId == null) {
-            throw new IllegalArgumentException("app id not found");
-        }
-        appId = ttConfig.appId;
-
-        if (ttConfig.accessToken != null) {
-            accessToken = ttConfig.accessToken.trim();
-        }
-
-        /* validation done in TTConfig */
-        applicationContext = ttConfig.application;
-        gaidCollectionEnabled = ttConfig.advertiserIDCollectionEnable;
-
         /* sdk logger & loglevel */
         logLevel = ttConfig.logLevel;
         logger = new TTLogger(TAG, logLevel);
 
+        /* no app id exception */
+        if (ttConfig.appId == null) {
+            throw new IllegalArgumentException("app id not set");
+        }
+
+        if (ttConfig.ttAppId == null) {
+            logger.warn("ttAppId not set, but its usage is encouraged");
+        }
+
+        if (ttConfig.accessToken != null) {
+            ttConfig.accessToken = ttConfig.accessToken.trim();
+        }
+
+        config = ttConfig;
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
     }
 
@@ -292,14 +279,14 @@ public class TikTokBusinessSdk {
     public static Application getApplicationContext() {
         if (ttSdk == null)
             throw new RuntimeException("TikTokBusinessSdk instance is not initialized");
-        return applicationContext;
+        return config.application;
     }
 
     /**
      * appKey getter
      */
     public static String getAccessToken() {
-        return accessToken;
+        return config.accessToken;
     }
 
     public static void updateAccessToken(String accessToken) {
@@ -309,7 +296,7 @@ public class TikTokBusinessSdk {
         if (accessToken == null) {
             throw new IllegalArgumentException("Access Token cannot be null");
         }
-        TikTokBusinessSdk.accessToken = accessToken.trim();
+        TikTokBusinessSdk.config.accessToken = accessToken.trim();
         if (!isGlobalConfigFetched()) {
             logger.info("Access token updated, try to refetch global config");
             appEventLogger.fetchGlobalConfig(0);
@@ -324,7 +311,7 @@ public class TikTokBusinessSdk {
     }
 
     public static boolean isGaidCollectionEnabled() {
-        return gaidCollectionEnabled;
+        return config.advertiserIDCollectionEnable;
     }
 
     /**
@@ -338,7 +325,76 @@ public class TikTokBusinessSdk {
      * returns api_id
      */
     public static String getAppId() {
-        return appId;
+        return config.appId;
+    }
+
+    /**
+     * returns api_id
+     */
+    public static Long getTTAppId() {
+        return config.ttAppId;
+    }
+
+    /**
+     * if only appId is provided, the json schema would be like
+     * {
+     * "app_id": "1211123727",
+     * "batch": [
+     * {
+     * "type": "track",
+     * "event": "PURCHASE",
+     * "timestamp": "2020-09-18T19:49:27Z",
+     * "context": {
+     * "app": {
+     * "name": "Angry Birds Classic",
+     * "namespace": "com.rovio.baba",
+     * "version": "3.0.2",
+     * "build": "122"
+     * },
+     * ....
+     * }
+     * ....
+     * }
+     * ]
+     * }
+     * Only setting appId is discouraged and should be deprecated in the future by making ttAppId
+     * mandatory.
+     * <p>
+     * If both appId and ttAppId are provided, ttAppId is set at the root level while appIds
+     * are moved into context.app.id.
+     * {
+     * "tiktok_app_id": 6899407619589406722,
+     * "batch": [
+     * {
+     * "type": "identify",
+     * "event": "INSTALL_APP",
+     * "timestamp": "2020-09-17T19:49:27Z",
+     * "context": {
+     * "app": {
+     * "id": "com.rovio.angrybirds",
+     * ....
+     * },
+     * ...
+     * }
+     * ...
+     * }
+     * ]
+     * }
+     */
+
+    public static boolean onlyAppIdProvided() {
+        if(config.appId == null){
+            throw new IllegalStateException("AppId should be checked before, this path should not be accessed");
+        }
+        return config.ttAppId == null;
+    }
+
+    /**
+     * Both appId and ttAppId are provided
+     * @return
+     */
+    public static boolean bothIdsProvided(){
+        return !onlyAppIdProvided();
     }
 
     public static Boolean getSdkGlobalSwitch() {
@@ -419,6 +475,7 @@ public class TikTokBusinessSdk {
         private final Application application;
         /* api_id for api calls */
         private String appId;
+        private Long ttAppId;
         /* Access-Token for api calls */
         private String accessToken;
         /* to enable logs */
@@ -491,6 +548,14 @@ public class TikTokBusinessSdk {
          */
         public TTConfig setLogLevel(LogLevel ll) {
             this.logLevel = ll;
+            return this;
+        }
+
+        /**
+         * set app id
+         */
+        public TTConfig setTTAppId(String ttAppId) {
+            this.ttAppId = Long.valueOf(ttAppId);
             return this;
         }
 

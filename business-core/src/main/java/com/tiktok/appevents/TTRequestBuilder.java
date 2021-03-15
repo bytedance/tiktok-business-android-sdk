@@ -33,7 +33,12 @@ class TTRequestBuilder {
         JSONObject result = new JSONObject();
 
         try {
-            result.put("app_id", TikTokBusinessSdk.getAppId());
+            if (TikTokBusinessSdk.onlyAppIdProvided()) {// to be compatible with the old versions
+                result.put("app_id", TikTokBusinessSdk.getAppId());
+            } else {
+                result.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
+            }
+
             result.put("event_source", "APP_EVENTS_SDK");
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
@@ -135,6 +140,9 @@ class TTRequestBuilder {
 
     private static JSONObject contextBuilder(@Nullable TTIdentifierFactory.AdIdInfo adIdInfo) throws JSONException {
         JSONObject app = new JSONObject();
+        if (TikTokBusinessSdk.bothIdsProvided()) {
+            app.put("id", TikTokBusinessSdk.getAppId());
+        }
         app.put("name", SystemInfoUtil.getAppName());
         app.put("namespace", SystemInfoUtil.getPackageName());
         app.put("version", SystemInfoUtil.getAppVersionName());
@@ -142,6 +150,7 @@ class TTRequestBuilder {
 
         JSONObject device = new JSONObject();
         device.put("platform", "Android");
+        device.put("version", SystemInfoUtil.getAndroidVersion());
         if (adIdInfo != null) {
             device.put("gaid", adIdInfo.getAdId());
         }
