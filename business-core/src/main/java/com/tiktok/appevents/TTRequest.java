@@ -71,7 +71,7 @@ class TTRequest {
         paramsMap.put("sdk_version", SystemInfoUtil.getSDKVersion());
         paramsMap.put("app_name", SystemInfoUtil.getAppName());
         paramsMap.put("app_version", SystemInfoUtil.getAppVersionName());
-        paramsMap.put("tt_app_id", TikTokBusinessSdk.getTTAppId());
+        paramsMap.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
         paramsMap.putAll(options);
 
         String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
