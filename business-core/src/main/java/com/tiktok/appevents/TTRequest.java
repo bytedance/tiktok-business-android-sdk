@@ -69,7 +69,7 @@ class TTRequest {
         // the rest params are for the sake of simplicity of debugging
         paramsMap.put("client", "android");
         paramsMap.put("sdk_version", SystemInfoUtil.getSDKVersion());
-        //  for fix bug in lower edition, maybe there is something wrong with language package, url can not parse some special char
+        //  for fix bug in lower Android API edition. Maybe there is something wrong with language package, url can not be parsed successfully with some special char
         //  paramsMap.put("app_name", SystemInfoUtil.getAppName());
         paramsMap.put("app_version", SystemInfoUtil.getAppVersionName());
         paramsMap.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
