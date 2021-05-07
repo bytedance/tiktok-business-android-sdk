@@ -54,6 +54,10 @@ public class TikTokBusinessSdk {
      */
     private static String apiAvailableVersion = "v1.1";
     /**
+     * api treckEvent sent Domain
+     */
+    private static String apiTrackDomain = "ads-api.tiktok.com";
+    /**
      * {@link LogLevel} of initialized sdk
      */
     private static LogLevel logLevel = LogLevel.INFO;
@@ -433,6 +437,14 @@ public class TikTokBusinessSdk {
 
     public static void setApiAvailableVersion(String apiAvailableVersion) {
         TikTokBusinessSdk.apiAvailableVersion = apiAvailableVersion;
+    }
+
+    public static String getApiTrackDomain() {
+        return apiTrackDomain;
+    }
+
+    public static void setApiTrackDomain(String apiTrackDomain) {
+        TikTokBusinessSdk.apiTrackDomain = apiTrackDomain;
     }
 
     /**

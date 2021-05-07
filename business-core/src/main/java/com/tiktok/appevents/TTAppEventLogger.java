@@ -361,6 +361,7 @@ public class TTAppEventLogger {
                 JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
                 Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
                 String availableVersion = (String) businessSdkConfig.get("available_version");
+                String trackEventDomain = (String) businessSdkConfig.get("domain");
 
                 TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
                 logger.debug("enable_sdk=" + enableSDK);
@@ -370,6 +371,7 @@ public class TTAppEventLogger {
                     clearAllImmediately();
                 }
                 TikTokBusinessSdk.setApiAvailableVersion(availableVersion);
+                TikTokBusinessSdk.setApiTrackDomain(trackEventDomain);
                 logger.debug("available_version=" + availableVersion);
                 TikTokBusinessSdk.setGlobalConfigFetched();
             } catch (JSONException e) {

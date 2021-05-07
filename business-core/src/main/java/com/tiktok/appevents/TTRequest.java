@@ -50,7 +50,7 @@ class TTRequest {
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
 //        headParamMap.put("X-USE-PPE", "1");
-//        headParamMap.put("X-TT-ENV", "ppe_opensite_i18n_m");
+//        headParamMap.put("X-TT-ENV", "ppe_bofang");
 
         String ua = String.format("tiktok-business-android-sdk/%s/%s",
                 BuildConfig.VERSION_NAME,
@@ -59,6 +59,8 @@ class TTRequest {
         // no content-type application/json for get requests
         getHeadParamMap.put("Connection", "Keep-Alive");
         getHeadParamMap.put("User-Agent", ua);
+        getHeadParamMap.put("X-USE-PPE", "1");
+        getHeadParamMap.put("X-TT-ENV", "ppe_bofang");
     }
 
     public static JSONObject getBusinessSDKConfig(Map<String, Object> options) {
@@ -75,7 +77,7 @@ class TTRequest {
         paramsMap.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
         paramsMap.putAll(options);
 
-        String url = "https://ads.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
+        String url = "https://ads-api.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
         logger.debug(url);
         String result = HttpRequestUtil.doGet(url, getHeadParamMap);
         logger.debug(result);
@@ -128,9 +130,10 @@ class TTRequest {
         failedRequests = 0;
         successfulRequests = 0;
         notifyChange();
-
-        String url = "https://ads.tiktok.com/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
-//        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+        //  dynamic req domain and version
+        String url = "https://" + TikTokBusinessSdk.getApiTrackDomain() + "/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
+        logger.info(url);
+        //        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
         List<TTAppEvent> failedEventsToBeSaved = new ArrayList<>();
         List<TTAppEvent> failedEventsToBeDiscarded = new ArrayList<>();
