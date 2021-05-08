@@ -132,8 +132,6 @@ class TTRequest {
         notifyChange();
         //  dynamic req domain and version
         String url = "https://" + TikTokBusinessSdk.getApiTrackDomain() + "/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
-        logger.info(url);
-        //        String url = "http://10.231.253.20:6789/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/batch/";
 
         List<TTAppEvent> failedEventsToBeSaved = new ArrayList<>();
         List<TTAppEvent> failedEventsToBeDiscarded = new ArrayList<>();
