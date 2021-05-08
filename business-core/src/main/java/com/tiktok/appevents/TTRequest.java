@@ -59,6 +59,7 @@ class TTRequest {
         // no content-type application/json for get requests
         getHeadParamMap.put("Connection", "Keep-Alive");
         getHeadParamMap.put("User-Agent", ua);
+        //  only for test, must delete before launch
         getHeadParamMap.put("X-USE-PPE", "1");
         getHeadParamMap.put("X-TT-ENV", "ppe_bofang");
     }
