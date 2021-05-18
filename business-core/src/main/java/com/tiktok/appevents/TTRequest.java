@@ -78,7 +78,7 @@ class TTRequest {
         paramsMap.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
         paramsMap.putAll(options);
 
-        String url = "https://ads-api.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
+        String url = "https://business-api.tiktok.com/open_api/business_sdk_config/get/?" + TTUtil.mapToString(paramsMap, "&");
         logger.debug(url);
         String result = HttpRequestUtil.doGet(url, getHeadParamMap);
         logger.debug(result);
