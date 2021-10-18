@@ -9,11 +9,9 @@ buildscript {
     repositories {
         mavenCentral()
         google()
-        jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:4.0.2"
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+'
+        classpath 'com.android.tools.build:gradle:4.2.2'
     }
 }
 
@@ -23,20 +21,16 @@ allprojects {
     repositories {
         mavenCentral()
         google()
-        maven {
-            url "https://dl.bintray.com/bytedancer/bytedance"
-        }
         maven { url 'https://jitpack.io' }
-        jcenter()
     }
 }
 
 ext {
     versionName = VERSION_NAME
 
-    minSdkVersion = 16
-    targetSdkVersion = 30
-    compileSdkVersion = 30
+    minSdkVersion = 17
+    targetSdkVersion = 31
+    compileSdkVersion = 31
 
     sourceCompatibilityVersion = JavaVersion.VERSION_1_8
     targetCompatibilityVersion = JavaVersion.VERSION_1_8

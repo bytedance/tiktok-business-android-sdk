@@ -169,7 +169,7 @@ class TTRequest {
             } else {
                 try {
                     JSONObject resultJson = new JSONObject(result);
-                    int code = (Integer) resultJson.getInt("code");
+                    int code = resultJson.getInt("code");
 
                     if (code == TTConst.ApiErrorCodes.API_ERROR.code) {
                         failedEventsToBeDiscarded.addAll(currentBatch);
