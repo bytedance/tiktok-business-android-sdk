@@ -52,7 +52,7 @@ public class TikTokBusinessSdk {
     /**
      * api available version
      */
-    private static String apiAvailableVersion = "v1.1";
+    private static String apiAvailableVersion = "v1.2";
     /**
      * api treckEvent sent Domain
      */
@@ -111,7 +111,7 @@ public class TikTokBusinessSdk {
 
         TTUserInfo.reset(TikTokBusinessSdk.getApplicationContext(), false);
         // the appEventLogger instance will be the main interface to track events
-        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents);
+        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents, ttConfig.flushTime);
     }
 
     /**
@@ -485,9 +485,12 @@ public class TikTokBusinessSdk {
     public static class TTConfig {
         /* application context */
         private final Application application;
-        /* api_id for api calls */
+        /* api_id for api calls, App ID in EM */
         private String appId;
+        /* tt_app_id for api calls, TikTok App ID from EM */
         private Long ttAppId;
+        /* flush time interval in seconds, default 15, 0 -> disabled */
+        private int flushTime = 15;
         /* Access-Token for api calls */
         private String accessToken;
         /* to enable logs */
@@ -499,7 +502,7 @@ public class TikTokBusinessSdk {
         /* auto init flag check in manifest */
         private boolean autoStart = true;
         /* disable custom auto events */
-        private List<TTConst.AutoEvents> disabledEvents;
+        private final List<TTConst.AutoEvents> disabledEvents;
 
         /**
          * Read configs from <meta-data>
@@ -632,6 +635,15 @@ public class TikTokBusinessSdk {
          */
         public TTConfig disableAdvertiserIDCollection() {
             this.advertiserIDCollectionEnable = false;
+            return this;
+        }
+
+        /**
+         * to set a custom flush time interval in seconds, defaults to 15
+         */
+        public TTConfig setFlushTimeInterval(int seconds) {
+            if (seconds < 0) throw new RuntimeException("Invalid Flush interval");
+            this.flushTime = seconds;
             return this;
         }
     }

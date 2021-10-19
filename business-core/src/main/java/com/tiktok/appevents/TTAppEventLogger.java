@@ -34,7 +34,8 @@ public class TTAppEventLogger {
     static final String TAG = TTAppEventLogger.class.getName();
 
     // every TIME_BUFFER seconds, a flush task will be pushed to the execution queue
-    private static final int TIME_BUFFER = 15;
+    private static int TIME_BUFFER;
+    int counter;
     // once THRESHOLD events got accumulated in the memory, a flush task will be pushed to the execution queue
     static final int THRESHOLD = 100;
     public static final String NETWORK_IS_TURNED_OFF = "SDK can't send tracking events to server, it will be cached locally, and will be sent in batches only after startTracking";
@@ -72,21 +73,20 @@ public class TTAppEventLogger {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AutoEvents> disabledEvents) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AutoEvents> disabledEvents, int flushTime) {
         logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.disabledEvents = disabledEvents;
-
+        TIME_BUFFER = flushTime;
+        counter = flushTime;
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
 
         /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacksListener activityLifecycleCallbacks = new TTActivityLifecycleCallbacksListener(this);
         this.lifecycle.addObserver(activityLifecycleCallbacks);
 
-        /** advertiser id fetch */
         autoEventsManager = new TTAutoEventsManager(this);
-
-        SystemInfoUtil.initUserAgent();
+        addToQ(SystemInfoUtil::initUserAgent);
         addToQ(TTAppEventsQueue::clearAll);
         if (TikTokBusinessSdk.getAccessToken() != null) {
             fetchGlobalConfig(0);
@@ -94,7 +94,6 @@ public class TTAppEventLogger {
             logger.info("Global config fetch is skipped because access token is empty");
         }
     }
-
 
     /**
      * persist events to the disk
@@ -122,14 +121,16 @@ public class TTAppEventLogger {
         });
     }
 
-    int counter = 15;
-
     void startScheduler() {
-        doStartScheduler(TIME_BUFFER, false);
+        if (TIME_BUFFER != 0) {
+            doStartScheduler(TIME_BUFFER, false);
+        }
     }
 
     void restartScheduler() {
-        doStartScheduler(TIME_BUFFER, true);
+        if (TIME_BUFFER != 0) {
+            doStartScheduler(TIME_BUFFER, true);
+        }
     }
 
     /**
@@ -298,8 +299,8 @@ public class TTAppEventLogger {
         TIMER, // triggered every 15 seconds
         START_UP, // when app is started, flush all the accumulated events
         FORCE_FLUSH, // when developer calls flush from app
-        IDENTIFY,// when calling identify
-        LOGOUT,//when logging out
+        IDENTIFY, // when calling identify
+        LOGOUT, //when logging out
     }
 
     private void addToQ(Runnable task) {
@@ -359,9 +360,9 @@ public class TTAppEventLogger {
                 }
 
                 JSONObject businessSdkConfig = (JSONObject) requestResult.get("business_sdk_config");
-                Boolean enableSDK = (Boolean) businessSdkConfig.get("enable_sdk");
-                String availableVersion = (String) businessSdkConfig.get("available_version");
-                String trackEventDomain = (String) businessSdkConfig.get("domain");
+                Boolean enableSDK = businessSdkConfig.getBoolean("enable_sdk");
+                String availableVersion = businessSdkConfig.getString("available_version");
+                String trackEventDomain = businessSdkConfig.getString("domain");
 
                 TikTokBusinessSdk.setSdkGlobalSwitch(enableSDK);
                 logger.debug("enable_sdk=" + enableSDK);
@@ -377,7 +378,7 @@ public class TTAppEventLogger {
             } catch (JSONException e) {
                 e.printStackTrace();
                 logger.warn("Errors happened during initGlobalConfig because the structure of api result is not correct");
-            } catch (Exception e){
+            } catch (Exception e) {
                 logger.warn("Errors occurred during initGlobalConfig because of " + e.getMessage());
                 e.printStackTrace();
             } finally {

@@ -60,16 +60,20 @@ public class App extends AppCompatActivity {
             // !!!!!!!!!!!!!!!!!!!!!!!!!
             // in order for this app to be runnable, plz create a resource file containing the relevant string resources
             String appId = this.getResources().getString(R.string.tiktok_business_app_id);
+            String ttAppId = this.getResources().getString(R.string.tiktok_tt_app_id);
             String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             // Tiktok sdk init start
+
+            long beforeStartTT = System.currentTimeMillis();
             TTConfig ttConfig = new TTConfig(getApplication())
                     .setAppId(appId)
+                    .setTTAppId(ttAppId)
+                    .setAccessToken(accessToken)
                     .disableAutoStart()
                     .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);
             TikTokBusinessSdk.initializeSdk(ttConfig);
-            // Tiktok sdk init end
-
-            TikTokBusinessSdk.updateAccessToken(accessToken);
+            long afterStartTT = System.currentTimeMillis();
+            android.util.Log.i("TikTokBusinessSdk", " Init time in ms " + (afterStartTT-beforeStartTT));
 
             // testing delay tracking, implementing a 60 sec delay manually
             // ideally has to be after accepting tracking permission

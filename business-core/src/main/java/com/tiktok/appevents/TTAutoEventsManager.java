@@ -32,7 +32,7 @@ class TTAutoEventsManager {
     }
 
     private final TTAppEventLogger appEventLogger;
-    private TTKeyValueStore store;
+    private final TTKeyValueStore store;
 
     public TTAutoEventsManager(TTAppEventLogger appEventLogger) {
         this.appEventLogger = appEventLogger;

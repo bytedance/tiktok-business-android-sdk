@@ -10,15 +10,19 @@ import android.app.Application;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.webkit.WebView;
+import android.webkit.WebSettings;
 
+import android.webkit.WebView;
+import androidx.annotation.RequiresApi;
 import com.tiktok.BuildConfig;
 import com.tiktok.TikTokBusinessSdk;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 
 public class SystemInfoUtil {
@@ -91,9 +95,10 @@ public class SystemInfoUtil {
     private static String userAgent = "";
 
     // invoke it in the mainThread
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static void initUserAgent() {
         try {
-            userAgent = new WebView(TikTokBusinessSdk.getApplicationContext()).getSettings().getUserAgentString();
+            userAgent = WebSettings.getDefaultUserAgent(TikTokBusinessSdk.getApplicationContext());
         } catch (Exception e) {
             userAgent = System.getProperty("http.agent");
         }
