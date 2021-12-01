@@ -69,6 +69,16 @@ class TTRequestBuilder {
         return contextForApiCache;
     }
 
+    public static JSONObject getContextForCrashReportApi() throws JSONException {
+        TTUtil.checkThread(TAG);
+        JSONObject immutablePart = contextBuilder(null);
+        JSONObject finalObj = new JSONObject(immutablePart.toString());
+        JSONObject userObj = new JSONObject();
+        userObj.put("anonymous_id", TTUtil.getOrGenAnoId(TikTokBusinessSdk.getApplicationContext(), false));
+        finalObj.put("user", userObj);
+        return finalObj;
+    }
+
     public static JSONObject getContextForApi(TTAppEvent event) throws JSONException {
         JSONObject immutablePart = getImmutableContextForApi();
         JSONObject finalObj = new JSONObject(immutablePart.toString());

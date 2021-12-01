@@ -102,7 +102,7 @@ public class TikTokBusinessSdk {
      * Only one TikTokBusinessSdk instance exist within a single App process
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
-        Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
+        Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleUncaughtCrash(TAG, e));
 
         if (ttSdk != null) throw new RuntimeException("TikTokBusinessSdk instance already exists");
 
@@ -112,6 +112,7 @@ public class TikTokBusinessSdk {
         TTUserInfo.reset(TikTokBusinessSdk.getApplicationContext(), false);
         // the appEventLogger instance will be the main interface to track events
         appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents, ttConfig.flushTime);
+        appEventLogger.sendCrashReport();
     }
 
     /**

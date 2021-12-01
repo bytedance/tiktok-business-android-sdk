@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -237,6 +238,49 @@ class TTRequest {
         successfulRequests = 0;
         notifyChange();
         return failedEventsToBeSaved;
+    }
+
+    public static String sendCrashReport(JSONObject basePayload) {
+        TTUtil.checkThread(TAG);
+        // access-token might change during runtime
+        headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
+        //  dynamic req domain and version
+        String url = "https://" + TikTokBusinessSdk.getApiTrackDomain() + "/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/monitor/";
+        JSONObject propertiesJson = null;
+        try {
+            propertiesJson = TTRequestBuilder.getContextForCrashReportApi();
+            Iterator<String> keys = basePayload.keys();
+            while(keys.hasNext()) {
+                String property = keys.next();
+                propertiesJson.put(property, basePayload.get(property));
+            }
+
+            String bodyStr = propertiesJson.toString(4);
+            logger.debug("To Api:\n" + bodyStr);
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
+        }
+
+        String result = HttpRequestUtil.doPost(url, headParamMap, propertiesJson.toString());
+        String crashLogId = null;
+        if (result != null) {
+            try {
+                JSONObject resultJson = new JSONObject(result);
+                int code = (Integer) resultJson.getInt("code");
+
+                if (code == 0) {
+                    try {
+                        crashLogId = (String) resultJson.getJSONObject("data").get("crash_log_id");
+                    } catch (Exception e) {
+                        TTCrashHandler.handleCrash(TAG, e);
+                    }
+                }
+            } catch (JSONException e) {
+                TTCrashHandler.handleCrash(TAG, e);
+            }
+            logger.debug(TTUtil.ppStr(result));
+        }
+        return crashLogId;
     }
 
     private static void notifyChange() {
