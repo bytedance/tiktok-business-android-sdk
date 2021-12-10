@@ -28,4 +28,10 @@
         android:name="com.example.ui.eventlog.EventLogFragment"
         android:label="@string/menu_eventlog"
         tools:layout="@layout/fragment_eventlog" />
+
+    <fragment
+            android:id="@+id/nav_identify"
+            android:name="com.example.ui.identify.IdentifyFragment"
+            android:label="@string/menu_identify"
+            tools:layout="@layout/identify_fragment" />
 </navigation>

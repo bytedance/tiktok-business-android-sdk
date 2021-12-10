@@ -22,9 +22,22 @@
 
     <string name="menu_billing">Google play Billing V4</string>
     <string name="menu_events">Events</string>
+    <string name="menu_identify">Identify</string>
     <string name="menu_eventlog">Event Logs</string>
     <string name="properties">Event Properties</string>
     <string name="clear_log">Clear Log</string>
     <string name="load_test">Load Test</string>
     <string name="preload_all_events">Preload All Events</string>
+
+    <string name="tt_am_init">TT_AM_INIT</string>
+    <string name="tt_am_external_id">TT_AM_EXTERNAL_ID</string>
+    <string name="tt_am_external_username">TT_AM_EXTERNAL_USERNAME</string>
+    <string name="tt_am_external_phone">TT_AM_EXTERNAL_PHONE</string>
+    <string name="tt_am_external_email">TT_AM_EXTERNAL_EMAIL</string>
+    <string name="external_id">External ID</string>
+    <string name="username">Username</string>
+    <string name="phone">Phone</string>
+    <string name="email">Email</string>
+    <string name="identify">Identify</string>
+    <string name="logout">Logout</string>
 </resources>
