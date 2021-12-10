@@ -10,10 +10,10 @@ import android.content.Context;
 
 import com.tiktok.util.TTUtil;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.security.MessageDigest;
 
 public class TTUserInfo implements Cloneable, Serializable {
     static final String TAG = TTUserInfo.class.getName();
@@ -37,8 +37,19 @@ public class TTUserInfo implements Cloneable, Serializable {
     }
 
     private String toSha256(String str) {
-        if (str != null) {
-            return DigestUtils.sha256Hex(str);
+        if (str == null) {
+            return null;
+        }
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(str.getBytes());
+            StringBuilder result = new StringBuilder();
+            for (byte b : md.digest()) {
+                result.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
+            }
+            return result.toString();
+        } catch (Exception e) {
+            TTCrashHandler.handleCrash(TAG, e);
         }
         return null;
     }

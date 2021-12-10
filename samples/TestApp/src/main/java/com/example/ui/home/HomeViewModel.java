@@ -6,17 +6,33 @@
 
 package com.example.ui.home;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+import androidx.annotation.Nullable;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
+import com.example.R;
+import com.tiktok.TikTokBusinessSdk;
 
-public class HomeViewModel extends ViewModel {
+public class HomeViewModel extends AndroidViewModel {
 
-    private MutableLiveData<String> mText;
+    private final MutableLiveData<String> mText;
+    SharedPreferences sharedPreferences;
 
-    public HomeViewModel() {
+    public HomeViewModel(Application application) {
+        super(application);
         mText = new MutableLiveData<>();
         mText.setValue("Purchase");
+        sharedPreferences = getApplication().getSharedPreferences("TT_IDENTIFY", Context.MODE_PRIVATE);
+    }
+
+    public void checkInitTTAM() {
+        if (checkAMCacheExist()) {
+            TikTokBusinessSdk.identify(getExternalID(), getExternalUsername(),
+                    getExternalPhoneNumber(), getExternalEmail());
+        }
     }
 
     public void setText(String txt) {
@@ -25,5 +41,54 @@ public class HomeViewModel extends ViewModel {
 
     public LiveData<String> getText() {
         return mText;
+    }
+
+    public void setNewCache(String externalId,
+                            @Nullable String externalUserName,
+                            @Nullable String phoneNumber,
+                            @Nullable String email) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(getApplication().getString(R.string.tt_am_external_id), externalId);
+        if (externalUserName != null) {
+            editor.putString(getApplication().getString(R.string.tt_am_external_username), externalUserName);
+        }
+        if (phoneNumber != null) {
+            editor.putString(getApplication().getString(R.string.tt_am_external_phone), phoneNumber);
+        }
+        if (email != null) {
+            editor.putString(getApplication().getString(R.string.tt_am_external_email), email);
+        }
+        editor.putBoolean(getApplication().getString(R.string.tt_am_init), true);
+        editor.apply();
+    }
+
+    public void resetCache() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(getApplication().getString(R.string.tt_am_external_id));
+        editor.remove(getApplication().getString(R.string.tt_am_external_username));
+        editor.remove(getApplication().getString(R.string.tt_am_external_phone));
+        editor.remove(getApplication().getString(R.string.tt_am_external_email));
+        editor.remove(getApplication().getString(R.string.tt_am_init));
+        editor.apply();
+    }
+
+    boolean checkAMCacheExist() {
+        return sharedPreferences.getBoolean(getApplication().getString(R.string.tt_am_init), false);
+    }
+
+    String getExternalID() {
+        return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_id), null);
+    }
+
+    String getExternalUsername() {
+        return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_username), null);
+    }
+
+    String getExternalPhoneNumber() {
+        return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_phone), null);
+    }
+
+    String getExternalEmail() {
+        return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_email), null);
     }
 }

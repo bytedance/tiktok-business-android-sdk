@@ -12,9 +12,11 @@ import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import androidx.lifecycle.ViewModelProvider;
 import com.example.model.EventLog;
 import com.example.persistence.EventLogRepo;
 import com.example.testdata.TestEvents;
+import com.example.ui.home.HomeViewModel;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.NonNull;
@@ -38,6 +40,7 @@ import java.util.Objects;
 public class App extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
+    private HomeViewModel homeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +58,7 @@ public class App extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         if (savedInstanceState == null) {
             // !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -75,7 +79,10 @@ public class App extends AppCompatActivity {
             long afterStartTT = System.currentTimeMillis();
             android.util.Log.i("TikTokBusinessSdk", " Init time in ms " + (afterStartTT-beforeStartTT));
 
-            // testing delay tracking, implementing a 60 sec delay manually
+            // check if user info is cached & init
+            homeViewModel.checkInitTTAM();
+
+            // testing delay tracking, implementing a 6 sec delay manually
             // ideally has to be after accepting tracking permission
             new Handler(Looper.getMainLooper()).postDelayed(TikTokBusinessSdk::startTrack, 6000);
         }

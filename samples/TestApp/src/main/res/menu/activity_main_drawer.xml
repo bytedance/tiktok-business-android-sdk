@@ -15,12 +15,16 @@
             android:icon="@drawable/ic_baseline_view_list_24"
             android:title="@string/menu_events" />
         <item
+                android:id="@+id/nav_identify"
+                android:icon="@drawable/ic_baseline_view_list_24"
+                android:title="@string/menu_identify" />
+        <item
             android:id="@+id/nav_eventlog"
             android:icon="@drawable/ic_baseline_view_list_24"
             android:title="@string/menu_eventlog" />
         <item
             android:id="@+id/nav_billing"
-            android:icon="@drawable/ic_baseline_home_24"
+            android:icon="@drawable/ic_baseline_view_list_24"
             android:title="@string/menu_billing" />
     </group>
 </menu>
