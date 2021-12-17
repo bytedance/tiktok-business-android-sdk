@@ -239,6 +239,11 @@ public class TTAppEventLogger {
         flush(FlushReason.START_UP);
     }
 
+    public void sendCrashReport() {
+        logger.debug("Send CrashReport");
+        addToQ(() -> TTCrashHandler.sendCrashReport());
+    }
+
     void flush(FlushReason reason) {
         TTUtil.checkThread(TAG);
 
