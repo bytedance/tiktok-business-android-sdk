@@ -27,4 +27,14 @@
         android:orderInCategory="100"
         android:title="@string/clear_log"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_crash_sdk"
+        android:orderInCategory="100"
+        android:title="@string/crash_app_from_sdk"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_crash_app"
+        android:orderInCategory="100"
+        android:title="@string/crash_app_from_app"
+        app:showAsAction="never" />
 </menu>

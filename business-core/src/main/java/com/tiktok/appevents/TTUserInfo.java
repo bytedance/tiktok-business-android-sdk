@@ -107,7 +107,7 @@ public class TTUserInfo implements Cloneable, Serializable {
         try {
             return (TTUserInfo) super.clone();
         } catch (Exception e) {
-            return (TTUserInfo) new TTUserInfo();
+            return new TTUserInfo();
         }
     }
 }

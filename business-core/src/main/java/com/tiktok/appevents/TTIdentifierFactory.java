@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.*;
-
 import android.text.TextUtils;
 
 import com.tiktok.TikTokBusinessSdk;
@@ -27,17 +26,16 @@ import java.util.concurrent.BlockingQueue;
 public class TTIdentifierFactory {
     private static final String TAG = TTIdentifierFactory.class.getCanonicalName();
 
-    private static TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
-    private static RuntimeException serviceNotInstalled = new RuntimeException("Google play service not installed");
+    private static final TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
 
-    public static AdIdInfo getGoogleAdIdInfo(Context context) throws RemoteException {
+    public static AdIdInfo getGoogleAdIdInfo(Context context) {
         PackageManager packageManager = context.getPackageManager();
         try {
             // is google play installed
             packageManager.getPackageInfo("com.android.vending", 0);
         } catch (PackageManager.NameNotFoundException e) {
             // google play is not installed
-            throw serviceNotInstalled;
+            logger.info("Google play service not installed");
         }
 
         // service binding intent
@@ -61,10 +59,13 @@ public class TTIdentifierFactory {
                 // connection to service was not successful
                 return new AdIdInfo("", true);
             }
+        } catch (Exception e) {
+            logger.error(e, "remote exception");
         } finally {
             // finally unbind from service
             context.unbindService(serviceConnection);
         }
+        return new AdIdInfo("", true);
     }
 
 

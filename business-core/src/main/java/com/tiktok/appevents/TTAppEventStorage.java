@@ -11,6 +11,7 @@ import android.content.Context;
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -93,8 +94,14 @@ class TTAppEventStorage {
         if (appEventPersist.isEmpty()) {
             return false;
         }
-
+        long initTimeMS = System.currentTimeMillis();
+//        try {
+//            JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+//                    .put("size", appEventPersist.getAppEvents().size());
+//            TikTokBusinessSdk.getAppEventLogger().monitorMetric("file_w_start", meta, null);
+//        } catch (Exception ignored) {}
         Context context = TikTokBusinessSdk.getApplicationContext();
+        boolean success = false;
         try (ObjectOutputStream oos = new ObjectOutputStream(
                 new BufferedOutputStream(context.openFileOutput(EVENT_STORAGE_FILE, Context.MODE_PRIVATE)))) {
             oos.writeObject(appEventPersist);
@@ -102,11 +109,19 @@ class TTAppEventStorage {
             if (TikTokBusinessSdk.diskListener != null) {
                 TikTokBusinessSdk.diskListener.onDiskChange(appEventPersist.getAppEvents().size(), false);
             }
-            return true;
+            success = true;
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
-            return false;
         }
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+                    .put("latency", endTimeMS-initTimeMS)
+                    .put("success", success)
+                    .put("size", appEventPersist.getAppEvents().size());
+            TikTokBusinessSdk.getAppEventLogger().monitorMetric("file_w", meta, null);
+        } catch (Exception ignored) {}
+        return  success;
     }
 
     private static void deleteFile(File f) {
@@ -116,6 +131,7 @@ class TTAppEventStorage {
     }
 
     synchronized static TTAppEventPersist readFromDisk() {
+        long initTimeMS = System.currentTimeMillis();
         TTUtil.checkThread(TAG);
 
         Context context = TikTokBusinessSdk.getApplicationContext();
@@ -134,13 +150,19 @@ class TTAppEventStorage {
             if (TikTokBusinessSdk.diskListener != null) {
                 TikTokBusinessSdk.diskListener.onDiskChange(0, true);
             }
-        } catch (ClassNotFoundException e) {
-            deleteFile(f);
-            TTCrashHandler.handleCrash(TAG, e);
         } catch (Exception e) {
             deleteFile(f);
             TTCrashHandler.handleCrash(TAG, e);
         }
+
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(endTimeMS)
+                    .put("latency", endTimeMS-initTimeMS)
+                    .put("size", appEventPersist.getAppEvents().size());
+            TikTokBusinessSdk.getAppEventLogger().monitorMetric("file_r", meta, null);
+        } catch (Exception ignored) {}
+
         return appEventPersist;
     }
 

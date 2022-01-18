@@ -7,11 +7,7 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.util.TTLogger;
 import com.tiktok.util.TTUtil;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +27,7 @@ class TTAppEventsQueue {
 
         if (TikTokBusinessSdk.nextTimeFlushListener != null) {
             int left = TTAppEventLogger.THRESHOLD - size();
-            TikTokBusinessSdk.nextTimeFlushListener.thresholdLeft(TTAppEventLogger.THRESHOLD, left > 0 ? left : 0);
+            TikTokBusinessSdk.nextTimeFlushListener.thresholdLeft(TTAppEventLogger.THRESHOLD, Math.max(left, 0));
         }
     }
 

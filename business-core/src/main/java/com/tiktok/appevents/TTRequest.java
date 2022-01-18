@@ -49,8 +49,6 @@ class TTRequest {
         // these fields wont change, so cache it locally to enhance performance
         headParamMap.put("Content-Type", "application/json");
         headParamMap.put("Connection", "Keep-Alive");
-//        headParamMap.put("X-USE-PPE", "1");
-//        headParamMap.put("X-TT-ENV", "ppe_bofang");
 
         String ua = String.format("tiktok-business-android-sdk/%s/%s",
                 BuildConfig.VERSION_NAME,
@@ -62,8 +60,9 @@ class TTRequest {
     }
 
     public static JSONObject getBusinessSDKConfig(Map<String, Object> options) {
+        long initTimeMS = System.currentTimeMillis();
+//        TikTokBusinessSdk.getAppEventLogger().monitorMetric("config_api_start", TTUtil.getMetaWithTS(initTimeMS), null);
         logger.info("Try to fetch global configs");
-        getHeadParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
         Map<String, Object> paramsMap = new HashMap<>();
         paramsMap.put("app_id", TikTokBusinessSdk.getAppId());
         // the rest params are for the sake of simplicity of debugging
@@ -93,7 +92,14 @@ class TTRequest {
                 TTCrashHandler.handleCrash(TAG, e);
             }
         }
-
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+                    .put("latency", endTimeMS-initTimeMS)
+                    .put("success", config != null)
+                    .put("log_id", HttpRequestUtil.getLogIDFromApi(result));
+            TikTokBusinessSdk.getAppEventLogger().monitorMetric("config_api", meta, null);
+        } catch (Exception ignored) {}
         // might be api returning something wrong
         return config;
     }
@@ -114,9 +120,6 @@ class TTRequest {
      */
     public static synchronized List<TTAppEvent> reportAppEvent(JSONObject basePayload, List<TTAppEvent> appEventList) {
         TTUtil.checkThread(TAG);
-        // access-token might change during runtime
-        headParamMap.put("access-token", TikTokBusinessSdk.getAccessToken());
-
         if (appEventList == null || appEventList.size() == 0) {
             return new ArrayList<>();
         }
@@ -137,6 +140,14 @@ class TTRequest {
         List<List<TTAppEvent>> chunks = averageAssign(appEventList, MAX_EVENT_SIZE);
 
         for (List<TTAppEvent> currentBatch : chunks) {
+//            long initTimeMS = System.currentTimeMillis();
+//            try {
+//                JSONObject initMeta = TTUtil.getMetaWithTS(initTimeMS)
+//                        .put("size", currentBatch.size())
+//                        .put("total", appEventList.size());
+//                TikTokBusinessSdk.getAppEventLogger().monitorMetric("track_api_start", initMeta, null);
+//            } catch (Exception ignored) {}
+
             List<JSONObject> batch = new ArrayList<>();
             for (TTAppEvent event : currentBatch) {
                 JSONObject propertiesJson = transferJson(event);
@@ -158,8 +169,7 @@ class TTRequest {
             try {
                 String bodyStr = bodyJson.toString(4);
                 logger.debug("To Api:\n" + bodyStr);
-            } catch (JSONException e) {
-            }
+            } catch (JSONException ignored) {}
 
             String result = HttpRequestUtil.doPost(url, headParamMap, bodyJson.toString());
 
@@ -216,6 +226,18 @@ class TTRequest {
                 logger.debug(TTUtil.ppStr(result));
             }
             notifyChange();
+
+//            long endTimeMS = System.currentTimeMillis();
+//            try {
+//                JSONObject endMeta = TTUtil.getMetaWithTS(endTimeMS)
+//                        .put("size", currentBatch.size())
+//                        .put("total", appEventList.size())
+//                        .put("log_id", HttpRequestUtil.getLogIDFromApi(result))
+//                        .put("latency", endTimeMS-initTimeMS)
+//                        .put("status_code", HttpRequestUtil.getCodeFromApi(result))
+//                        .put("success", result != null);
+//                TikTokBusinessSdk.getAppEventLogger().monitorMetric("track_api_end", endMeta, null);
+//            } catch (Exception ignored) {}
         }
         logger.debug("Flushed %d events successfully", successfulRequests);
 
@@ -228,7 +250,9 @@ class TTRequest {
         if (discardedEventCount != 0) {
             logger.debug("Failed to flush " + discardedEventCount + " events, will discard them");
             TTAppEventLogger.totalDumped += discardedEventCount;
-            TikTokBusinessSdk.diskListener.onDumped(TTAppEventLogger.totalDumped);
+            if (TikTokBusinessSdk.diskListener != null) {
+                TikTokBusinessSdk.diskListener.onDumped(TTAppEventLogger.totalDumped);
+            }
         }
         logger.debug("Failed to flush %d events in total", failedRequests);
 
@@ -287,5 +311,10 @@ class TTRequest {
             result.add(new ArrayList<>(sourceList.subList(start, Math.min(size, end))));
         }
         return result;
+    }
+
+    public static String reportMonitorEvent(JSONObject stat) {
+        String url = "https://" + TikTokBusinessSdk.getApiTrackDomain() + "/open_api/" + TikTokBusinessSdk.getApiAvailableVersion() + "/app/monitor/";
+        return HttpRequestUtil.doPost(url, headParamMap, stat.toString());
     }
 }
