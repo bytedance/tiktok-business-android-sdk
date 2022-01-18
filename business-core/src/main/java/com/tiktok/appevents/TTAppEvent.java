@@ -7,11 +7,7 @@
 package com.tiktok.appevents;
 
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -25,7 +21,6 @@ public class TTAppEvent implements Serializable {
     }
 
     private static final long serialVersionUID = 1L;
-
 
     private TTAppEventType type;
     private String eventName;

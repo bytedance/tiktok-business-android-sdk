@@ -35,16 +35,23 @@ public class IdentifyFragment extends Fragment {
         mViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         View root = inflater.inflate(R.layout.identify_fragment, container, false);
 
+        EditText externalID = root.findViewById(R.id.externalID);
+        EditText externalUsername = root.findViewById(R.id.externalUsername);
+        EditText externalPhone = root.findViewById(R.id.externalPhone);
+        EditText externalEmail = root.findViewById(R.id.externalEmail);
+        if (mViewModel.checkAMCacheExist()) {
+            externalID.setText(mViewModel.getExternalID());
+            externalUsername.setText(mViewModel.getExternalUsername());
+            externalPhone.setText(mViewModel.getExternalPhoneNumber());
+            externalEmail.setText(mViewModel.getExternalEmail());
+        }
+
         root.findViewById(R.id.resetBtn).setOnClickListener(view -> {
             TikTokBusinessSdk.logout();
             mViewModel.resetCache();
         });
 
         root.findViewById(R.id.identifyBtn).setOnClickListener(view -> {
-            EditText externalID = root.findViewById(R.id.externalID);
-            EditText externalUsername = root.findViewById(R.id.externalUsername);
-            EditText externalPhone = root.findViewById(R.id.externalPhone);
-            EditText externalEmail = root.findViewById(R.id.externalEmail);
             String externalIDStr = externalID.getText().toString();
             String externalUsernameStr = externalUsername.getText().toString();
             String externalPhoneStr = externalPhone.getText().toString();

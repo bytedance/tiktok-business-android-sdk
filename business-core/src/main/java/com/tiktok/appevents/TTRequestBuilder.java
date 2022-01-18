@@ -9,6 +9,7 @@ package com.tiktok.appevents;
 import android.content.Context;
 import android.os.Build;
 
+import android.os.SystemClock;
 import androidx.annotation.Nullable;
 
 import com.tiktok.TikTokBusinessSdk;
@@ -24,6 +25,7 @@ class TTRequestBuilder {
     private static final String TAG = TTRequestBuilder.class.getCanonicalName();
 
     private static JSONObject basePayloadCache = null;
+    private static JSONObject healthBasePayloadCache = null;
 
     public static JSONObject getBasePayload() {
         TTUtil.checkThread(TAG);
@@ -57,14 +59,19 @@ class TTRequestBuilder {
             return contextForApiCache;
         }
         TTIdentifierFactory.AdIdInfo adIdInfo = null;
-        try {
-            if (TikTokBusinessSdk.isGaidCollectionEnabled()) {
-                // fetch gaid info through google service
-                adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(TikTokBusinessSdk.getApplicationContext());
-            }
-        } catch (Exception e) {
-            TTCrashHandler.handleCrash(TAG, e);
+        long initTimeMS = System.currentTimeMillis();
+        TikTokBusinessSdk.getAppEventLogger().monitorMetric("did_start", TTUtil.getMetaWithTS(initTimeMS), null);
+        if (TikTokBusinessSdk.isGaidCollectionEnabled()) {
+            // fetch gaid info through google service
+            adIdInfo = TTIdentifierFactory.getGoogleAdIdInfo(TikTokBusinessSdk.getApplicationContext());
         }
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(endTimeMS)
+                    .put("latency", endTimeMS-initTimeMS)
+                    .put("success", adIdInfo.getAdId() != null && adIdInfo.getAdId() != "");
+            TikTokBusinessSdk.getAppEventLogger().monitorMetric("did_end", meta, null);
+        } catch (Exception ignored) {}
         contextForApiCache = contextBuilder(adIdInfo);
         return contextForApiCache;
     }
@@ -86,7 +93,7 @@ class TTRequestBuilder {
         }
     }
 
-    private static String getBcp47Language() {
+    static String getBcp47Language() {
         Locale loc = getCurrentLocale();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return loc.toLanguageTag();
@@ -171,5 +178,34 @@ class TTRequestBuilder {
             context.put("user_agent", userAgent);
         }
         return context;
+    }
+
+    private static JSONObject enrichDeviceBase(JSONObject d) throws JSONException {
+        JSONObject device = new JSONObject(d.toString());
+        device.put("id", TTUtil.getOrGenAnoId(TikTokBusinessSdk.getApplicationContext(), false));
+        device.put("user_agent", SystemInfoUtil.getUserAgent());
+        device.put("ip", SystemInfoUtil.getLocalIpAddress());
+        device.put("network", SystemInfoUtil.getNetworkClass(TikTokBusinessSdk.getApplicationContext()));
+        device.put("session", TikTokBusinessSdk.getSessionID());
+        device.put("locale", getBcp47Language());
+        device.put("ts", System.currentTimeMillis()-SystemClock.elapsedRealtime());
+        return device;
+    }
+
+    public static JSONObject getHealthMonitorBase() throws JSONException {
+        if (healthBasePayloadCache != null) {
+            healthBasePayloadCache.put("device",
+                    enrichDeviceBase(healthBasePayloadCache.getJSONObject("device")));
+            return healthBasePayloadCache;
+        }
+        JSONObject finalObj = new JSONObject();
+        JSONObject app = new JSONObject(getImmutableContextForApi().getJSONObject("app").toString());
+        app.put("app_namespace", SystemInfoUtil.getPackageName());
+        finalObj.put("app", app);
+        finalObj.put("library", getImmutableContextForApi().get("library"));
+        finalObj.put("device", enrichDeviceBase(getImmutableContextForApi().getJSONObject("device")));
+        finalObj.put("log_extra", null);
+        healthBasePayloadCache = finalObj;
+        return healthBasePayloadCache;
     }
 }

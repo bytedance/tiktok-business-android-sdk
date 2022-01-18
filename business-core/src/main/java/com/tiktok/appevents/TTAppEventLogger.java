@@ -6,15 +6,13 @@
 
 package com.tiktok.appevents;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.tiktok.TikTokBusinessSdk;
-import com.tiktok.util.SystemInfoUtil;
-import com.tiktok.util.TTConst;
-import com.tiktok.util.TTLogger;
-import com.tiktok.util.TTUtil;
+import com.tiktok.util.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +26,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class TTAppEventLogger {
-    static final String SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN = "Skip flushing because access token is null";
     static final String SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF = "Skip flushing because global switch is turned off";
     static final String SKIP_FLUSHING_BECAUSE_GLOBAL_CONFIG_IS_NOT_FETCHED = "Skip flushing because global config is not fetched";
     static final String TAG = TTAppEventLogger.class.getName();
@@ -69,17 +66,26 @@ public class TTAppEventLogger {
 
     final TTAutoEventsManager autoEventsManager;
 
+    static boolean metricsEnabled = true;
+
     public static List<TTAppEvent> getSuccessfulEvents() {
         return TTRequest.getSuccessfullySentRequests();
     }
 
-    public TTAppEventLogger(boolean lifecycleTrackEnable, List<TTConst.AutoEvents> disabledEvents, int flushTime) {
+    public TTAppEventLogger(boolean lifecycleTrackEnable,
+                            List<TTConst.AutoEvents> disabledEvents,
+                            int flushTime,
+                            boolean monitorDisable,
+                            long initTimeMS) {
         logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
         this.lifecycleTrackEnable = lifecycleTrackEnable;
         this.disabledEvents = disabledEvents;
         TIME_BUFFER = flushTime;
         counter = flushTime;
         lifecycle = ProcessLifecycleOwner.get().getLifecycle();
+        if (monitorDisable) {
+            metricsEnabled = false;
+        }
 
         /** ActivityLifecycleCallbacks & LifecycleObserver */
         TTActivityLifecycleCallbacksListener activityLifecycleCallbacks = new TTActivityLifecycleCallbacksListener(this);
@@ -88,11 +94,9 @@ public class TTAppEventLogger {
         autoEventsManager = new TTAutoEventsManager(this);
         addToQ(SystemInfoUtil::initUserAgent);
         addToQ(TTAppEventsQueue::clearAll);
-        if (TikTokBusinessSdk.getAccessToken() != null) {
-            fetchGlobalConfig(0);
-        } else {
-            logger.info("Global config fetch is skipped because access token is empty");
-        }
+        addToQ(TTCrashHandler::initCrashReporter);
+        fetchGlobalConfig(0);
+        monitorMetric("init_start", TTUtil.getMetaWithTS(initTimeMS), null);
     }
 
     /**
@@ -210,8 +214,7 @@ public class TTAppEventLogger {
         Runnable task = () -> {
             try {
                 logger.debug("track " + event + " : " + finalProps.toString(4));
-            } catch (JSONException e) {
-            }
+            } catch (JSONException ignored) {}
 
             TTAppEventsQueue.addEvent(new TTAppEvent(type, event, finalProps.toString()));
 
@@ -240,6 +243,7 @@ public class TTAppEventLogger {
     }
 
     void flush(FlushReason reason) {
+        long initTimeMS = System.currentTimeMillis();
         TTUtil.checkThread(TAG);
 
         // if global config is not fetched, we can track events and put in into memory
@@ -253,11 +257,8 @@ public class TTAppEventLogger {
             logger.info(SKIP_FLUSHING_BECAUSE_GLOBAL_SWITCH_IS_TURNED_OFF);
             return;
         }
-        String accessToken = TikTokBusinessSdk.getAccessToken();
-        if (accessToken == null) {
-            logger.warn(SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN);
-            return;
-        }
+
+        int flushSize = 0;
 
         try {
             if (TikTokBusinessSdk.getNetworkSwitch()) {
@@ -266,6 +267,8 @@ public class TTAppEventLogger {
                 TTAppEventPersist appEventPersist = TTAppEventStorage.readFromDisk();
 
                 appEventPersist.addEvents(TTAppEventsQueue.exportAllEvents());
+
+                flushSize = appEventPersist.getAppEvents().size();
 
                 List<TTAppEvent> failedEvents = TTRequest
                         .reportAppEvent(TTRequestBuilder.getBasePayload(), appEventPersist.getAppEvents());
@@ -284,6 +287,20 @@ public class TTAppEventLogger {
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
         }
+
+        if (flushSize != 0) {
+            try {
+                long endTimeMS = System.currentTimeMillis();
+                JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+                        .put("latency", endTimeMS-initTimeMS)
+                        .put("type",reason.name())
+                        .put("interval", TIME_BUFFER)
+                        .put("size", flushSize);
+                monitorMetric("flush", meta, null);
+            } catch (Exception ignored) {}
+        }
+
+        addToQ(TTCrashHandler::initCrashReporter);
     }
 
     public void destroy() {
@@ -355,7 +372,7 @@ public class TTAppEventLogger {
                 JSONObject requestResult = TTRequest.getBusinessSDKConfig(options);
 
                 if (requestResult == null) {
-                    logger.info("Opt out of initGlobalConfig because global config is null, either api returns error or access token is not correct");
+                    logger.info("Opt out of initGlobalConfig because global config is null, api returns error");
                     return;
                 }
 
@@ -388,5 +405,34 @@ public class TTAppEventLogger {
                 }
             }
         }, delaySeconds);
+    }
+
+    public void monitorMetric(@NonNull String name,
+                              @Nullable JSONObject meta,
+                              @Nullable JSONObject extra) {
+        if (!metricsEnabled) return;
+        addToQ(() -> {
+            JSONObject stat = new JSONObject();
+            try {
+                stat = TTRequestBuilder.getHealthMonitorBase();
+            } catch (Exception ignored) {}
+            JSONObject monitor = new JSONObject();
+            try {
+                monitor.put("type", "metric");
+                monitor.put("name", name);
+                if (meta != null) {
+                    monitor.put("meta", meta);
+                }
+                if (extra != null) {
+                    monitor.put("extra", extra);
+                }
+                stat.put("monitor", monitor);
+            } catch (Exception ignored) {}
+            TTCrashHandler.retryLater(stat);
+        });
+    }
+
+    void persistMonitor() {
+        addToQ(TTCrashHandler::persistToFile);
     }
 }

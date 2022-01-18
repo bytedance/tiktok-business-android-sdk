@@ -9,20 +9,18 @@ package com.tiktok;
 import android.app.Application;
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.tiktok.appevents.TTAppEventLogger;
-import com.tiktok.appevents.TTCrashHandler;
-import com.tiktok.appevents.TTPurchaseInfo;
-import com.tiktok.appevents.TTUserInfo;
+import com.tiktok.appevents.*;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
+import com.tiktok.util.TTUtil;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.math.BigInteger;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TikTokBusinessSdk {
@@ -72,7 +70,14 @@ public class TikTokBusinessSdk {
      */
     private static TTLogger logger;
 
-    private TikTokBusinessSdk(TTConfig ttConfig) {
+    /**
+     * unique session ID, not persisted
+     */
+    private static final String sessionID = UUID.randomUUID().toString();
+
+    private static CrashListener onCrashListener;
+
+    private TikTokBusinessSdk(@NonNull TTConfig ttConfig) {
         /* sdk logger & loglevel */
         logLevel = ttConfig.logLevel;
         logger = new TTLogger(TAG, logLevel);
@@ -84,10 +89,6 @@ public class TikTokBusinessSdk {
 
         if (ttConfig.ttAppId == null) {
             logger.warn("ttAppId not set, but its usage is encouraged");
-        }
-
-        if (ttConfig.accessToken != null) {
-            ttConfig.accessToken = ttConfig.accessToken.trim();
         }
 
         config = ttConfig;
@@ -102,16 +103,40 @@ public class TikTokBusinessSdk {
      * Only one TikTokBusinessSdk instance exist within a single App process
      */
     public static synchronized void initializeSdk(TTConfig ttConfig) {
-        Thread.currentThread().setUncaughtExceptionHandler((t, e) -> TTCrashHandler.handleCrash(TAG, e));
-
-        if (ttSdk != null) throw new RuntimeException("TikTokBusinessSdk instance already exists");
+        if (ttSdk != null) return;
+        long initTimeMS = System.currentTimeMillis();
+        try {
+            Thread.UncaughtExceptionHandler existingExHandler = Thread.getDefaultUncaughtExceptionHandler();
+            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
+                    if (TTCrashHandler.isTTSDKRelatedException(throwable)) {
+                        TTCrashHandler.handleCrash(TAG, throwable);
+                    }
+                    if (getCrashListener() != null) {
+                        getCrashListener().onCrash(thread, throwable);
+                    }
+                    if (existingExHandler != null) {
+                        existingExHandler.uncaughtException(thread, throwable);
+                    }
+                }
+            });
+        } catch (Exception ignored) {
+            // SecurityException
+        }
 
         ttSdk = new TikTokBusinessSdk(ttConfig);
-
-
         TTUserInfo.reset(TikTokBusinessSdk.getApplicationContext(), false);
         // the appEventLogger instance will be the main interface to track events
-        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent, ttConfig.disabledEvents, ttConfig.flushTime);
+        appEventLogger = new TTAppEventLogger(ttConfig.autoEvent,ttConfig.disabledEvents,
+                ttConfig.flushTime, ttConfig.disableMetrics, initTimeMS);
+
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(null)
+                    .put("latency", endTimeMS-initTimeMS);
+            appEventLogger.monitorMetric("init_end", meta, null);
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -204,7 +229,6 @@ public class TikTokBusinessSdk {
     public static NetworkListener networkListener;
     public static NextTimeFlushListener nextTimeFlushListener;
 
-
     /**
      * A shortcut method for the situations where the events do not require a property body.
      * see more {@link TikTokBusinessSdk#trackEvent(String, JSONObject)}
@@ -287,27 +311,6 @@ public class TikTokBusinessSdk {
     }
 
     /**
-     * appKey getter
-     */
-    public static String getAccessToken() {
-        return config.accessToken;
-    }
-
-    public static void updateAccessToken(String accessToken) {
-        if (!TikTokBusinessSdk.isInitialized()) {
-            throw new IllegalStateException("This function should only be called after sdk is initialized");
-        }
-        if (accessToken == null) {
-            throw new IllegalArgumentException("Access Token cannot be null");
-        }
-        TikTokBusinessSdk.config.accessToken = accessToken.trim();
-        if (!isGlobalConfigFetched()) {
-            logger.info("Access token updated, try to refetch global config");
-            appEventLogger.fetchGlobalConfig(0);
-        }
-    }
-
-    /**
      * sdkInit getter
      */
     public static boolean getNetworkSwitch() {
@@ -335,7 +338,7 @@ public class TikTokBusinessSdk {
     /**
      * returns api_id
      */
-    public static Long getTTAppId() {
+    public static BigInteger getTTAppId() {
         return config.ttAppId;
     }
 
@@ -463,7 +466,18 @@ public class TikTokBusinessSdk {
                                              @Nullable String externalUserName,
                                              @Nullable String phoneNumber,
                                              @Nullable String email) {
+        long initTimeMS = System.currentTimeMillis();
         appEventLogger.identify(externalId, externalUserName, phoneNumber, email);
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+                    .put("latency", endTimeMS-initTimeMS)
+                    .put("extid", externalId != null)
+                    .put("username", externalUserName != null)
+                    .put("phone", phoneNumber != null)
+                    .put("email", email != null);
+            appEventLogger.monitorMetric("identify", meta, null);
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -473,7 +487,36 @@ public class TikTokBusinessSdk {
      * in that case, should call a subsequent {@link TikTokBusinessSdk#identify(String, String, String, String)}
      */
     public static synchronized void logout() {
+        long initTimeMS = System.currentTimeMillis();
         appEventLogger.logout();
+        try {
+            long endTimeMS = System.currentTimeMillis();
+            JSONObject meta = TTUtil.getMetaWithTS(initTimeMS)
+                    .put("latency", endTimeMS-initTimeMS);
+            appEventLogger.monitorMetric("logout", meta, null);
+        } catch (Exception ignored) {}
+    }
+
+    public static String getSessionID() {
+        return sessionID;
+    }
+
+    /**
+     * Get app event logger
+     *
+     * @return app event logger
+     */
+    public static TTAppEventLogger getAppEventLogger() {
+        StackTraceElement[] stackTraceElts = Thread.currentThread().getStackTrace();
+        if (TTCrashHandler.isTTSDKRelatedException(Arrays.copyOfRange(stackTraceElts, 3, stackTraceElts.length))) {
+            return appEventLogger;
+        }
+        return null;
+    }
+
+    public static void crashSDK() {
+        // only used for test purposes
+        throw new RuntimeException("force crash from sdk");
     }
 
     /**
@@ -488,11 +531,11 @@ public class TikTokBusinessSdk {
         /* api_id for api calls, App ID in EM */
         private String appId;
         /* tt_app_id for api calls, TikTok App ID from EM */
-        private Long ttAppId;
+        private BigInteger ttAppId;
         /* flush time interval in seconds, default 15, 0 -> disabled */
         private int flushTime = 15;
-        /* Access-Token for api calls */
-        private String accessToken;
+//        /* Access-Token for api calls */
+//        private String accessToken;
         /* to enable logs */
         private LogLevel logLevel = LogLevel.NONE;
         /* to enable auto event tracking */
@@ -503,6 +546,8 @@ public class TikTokBusinessSdk {
         private boolean autoStart = true;
         /* disable custom auto events */
         private final List<TTConst.AutoEvents> disabledEvents;
+        /* disable monitor metrics */
+        private boolean disableMetrics = false;
 
         /**
          * Read configs from <meta-data>
@@ -513,49 +558,6 @@ public class TikTokBusinessSdk {
             if (context == null) throw new IllegalArgumentException("Context must not be null");
             application = (Application) context.getApplicationContext();
             disabledEvents = new ArrayList<>();
-            /* try fetch app key from AndroidManifest file first */
-
-//            ApplicationInfo appInfo = null;
-//            try {
-//                appInfo = application.getPackageManager().getApplicationInfo(
-//                        application.getPackageName(), PackageManager.GET_META_DATA);
-//            } catch (Exception e) {
-//                TTCrashHandler.handleCrash(TAG, e);
-//            }
-//
-//            if (appInfo == null) return;
-//
-//            try {
-//                Object token = appInfo.metaData.get("com.tiktok.sdk.AccessToken");
-//                if (token != null) {
-//                    accessToken = token.toString();
-//                }
-//            } catch (Exception ignored) {
-//            }
-//
-//            try {
-//                Object aid = appInfo.metaData.get("com.tiktok.sdk.AppId");
-//                if (aid != null) {
-//                    appId = aid.toString();
-//                }
-//            } catch (Exception ignored) {
-//            }
-//
-//            try {
-//                Object autoFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoStart");
-//                if (autoFlag != null && autoFlag.toString().equals("true")) {
-//                    autoStart = false;
-//                }
-//            } catch (Exception ignored) {
-//            }
-//
-//            try {
-//                Object autoEventFlag = appInfo.metaData.get("com.tiktok.sdk.disableAutoEvents");
-//                if (autoEventFlag != null && autoEventFlag.toString().equals("true")) {
-//                    autoEvent = false;
-//                }
-//            } catch (Exception ignored) {
-//            }
         }
 
         /**
@@ -570,7 +572,7 @@ public class TikTokBusinessSdk {
          * set app id
          */
         public TTConfig setTTAppId(String ttAppId) {
-            this.ttAppId = Long.valueOf(ttAppId);
+            this.ttAppId = new BigInteger(ttAppId);
             return this;
         }
 
@@ -579,14 +581,6 @@ public class TikTokBusinessSdk {
          */
         public TTConfig setAppId(String apiId) {
             this.appId = apiId;
-            return this;
-        }
-
-        /**
-         * to set the access token if not in manifest file
-         */
-        public TTConfig setAccessToken(String key) {
-            accessToken = key;
             return this;
         }
 
@@ -646,6 +640,14 @@ public class TikTokBusinessSdk {
             this.flushTime = seconds;
             return this;
         }
+
+        /**
+         * to disable sdk monitor - metrics tracking
+         */
+        public TTConfig disableMonitor() {
+            disableMetrics = true;
+            return this;
+        }
     }
 
     /**
@@ -665,5 +667,16 @@ public class TikTokBusinessSdk {
         }
     }
 
+    public interface CrashListener {
+        void onCrash(Thread thread, Throwable ex);
+    }
+
+    public static void setOnCrashListener(CrashListener crashListener) {
+        onCrashListener = crashListener;
+    }
+
+    public static CrashListener getCrashListener() {
+        return onCrashListener;
+    }
 }
 

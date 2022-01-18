@@ -80,7 +80,6 @@ public class TTAppEventLoggerTest extends BaseTest {
 
         when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
         when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
-        when(TikTokBusinessSdk.getAccessToken()).thenReturn("aaa");
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -99,7 +98,6 @@ public class TTAppEventLoggerTest extends BaseTest {
 
         when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
         when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
-        when(TikTokBusinessSdk.getAccessToken()).thenReturn(null);
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 
@@ -108,7 +106,6 @@ public class TTAppEventLoggerTest extends BaseTest {
 
         appEventLogger.logger = logger;
         appEventLogger.flush(TTAppEventLogger.FlushReason.FORCE_FLUSH);
-        verify(logger).warn(TTAppEventLogger.SKIP_FLUSHING_BECAUSE_NULL_ACCESS_TOKEN);
     }
 
     TTAppEvent fromDisk1 = new TTAppEvent(TTAppEvent.TTAppEventType.track, "InternalTest", "{}");
@@ -123,7 +120,6 @@ public class TTAppEventLoggerTest extends BaseTest {
         when(TikTokBusinessSdk.isGlobalConfigFetched()).thenReturn(true);
         when(TikTokBusinessSdk.isSystemActivated()).thenReturn(true);
         when(TikTokBusinessSdk.getNetworkSwitch()).thenReturn(true);
-        when(TikTokBusinessSdk.getAccessToken()).thenReturn("aaa");
 
         TTAppEventLogger appEventLogger = mock(TTAppEventLogger.class);
 

@@ -7,15 +7,17 @@
 package com.tiktok.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.appevents.TTCrashHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
 
@@ -99,5 +101,54 @@ public class TTUtil {
         }
         String finalStr = buf.toString();
         return finalStr.substring(0, finalStr.length() - 1);
+    }
+
+    public static JSONObject getMetaWithTS(@Nullable Long ts) {
+        if (ts == null) {
+            ts = System.currentTimeMillis();
+        }
+        try {
+            return new JSONObject().put("ts", ts);
+        } catch (Exception ignored) {}
+        return new JSONObject();
+    }
+
+    public static JSONObject getMonitorException(@Nullable Throwable ex, @Nullable Long ts) {
+        JSONObject monitor = new JSONObject();
+        try {
+            monitor.put("type", "exception");
+            monitor.put("name", "exception");
+            monitor.put("meta", getMetaException(ex, ts));
+            monitor.put("extra", null);
+        } catch (Exception ignored) {}
+        return monitor;
+    }
+
+    public static JSONObject getMetaException(@Nullable Throwable ex, @Nullable Long ts) {
+        JSONObject meta = getMetaWithTS(ts);
+        try {
+            if (ex != null) {
+                Throwable rootCause = ex;
+                while(rootCause.getCause() != null && rootCause.getCause() != rootCause)
+                    rootCause = rootCause.getCause();
+                meta.put("ex_class", rootCause.getStackTrace()[0].getClassName());
+                meta.put("ex_method", rootCause.getStackTrace()[0].getMethodName());
+                String argMsg = rootCause.getStackTrace()[0].getFileName() +
+                        " " + rootCause.getStackTrace()[0].getLineNumber();
+                meta.put("ex_args", argMsg);
+                meta.put("ex_msg", rootCause.getMessage());
+                final int stackLimit = 15;
+                String[] st = new String[stackLimit];
+                for(int i = 0; i < stackLimit; i++) {
+                    if (rootCause.getStackTrace()[i] != null)
+                        st[i] = rootCause.getStackTrace()[i].toString();
+                }
+                meta.put("ex_stack", Arrays.toString(st));
+                meta.put("success", false);
+            } else {
+                meta.put("success", true);
+            }
+        } catch (Exception ignored) {}
+        return meta;
     }
 }

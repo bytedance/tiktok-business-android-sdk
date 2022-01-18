@@ -72,23 +72,23 @@ public class HomeViewModel extends AndroidViewModel {
         editor.apply();
     }
 
-    boolean checkAMCacheExist() {
+    public boolean checkAMCacheExist() {
         return sharedPreferences.getBoolean(getApplication().getString(R.string.tt_am_init), false);
     }
 
-    String getExternalID() {
+    public String getExternalID() {
         return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_id), null);
     }
 
-    String getExternalUsername() {
+    public String getExternalUsername() {
         return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_username), null);
     }
 
-    String getExternalPhoneNumber() {
+    public String getExternalPhoneNumber() {
         return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_phone), null);
     }
 
-    String getExternalEmail() {
+    public String getExternalEmail() {
         return sharedPreferences.getString(getApplication().getString(R.string.tt_am_external_email), null);
     }
 }

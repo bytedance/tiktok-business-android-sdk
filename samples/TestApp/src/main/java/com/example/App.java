@@ -6,6 +6,7 @@
 
 package com.example;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -40,7 +41,6 @@ import java.util.Objects;
 public class App extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private HomeViewModel homeViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,33 +58,29 @@ public class App extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        HomeViewModel homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         if (savedInstanceState == null) {
             // !!!!!!!!!!!!!!!!!!!!!!!!!
             // in order for this app to be runnable, plz create a resource file containing the relevant string resources
-            String appId = this.getResources().getString(R.string.tiktok_business_app_id);
-            String ttAppId = this.getResources().getString(R.string.tiktok_tt_app_id);
-            String accessToken = this.getResources().getString(R.string.tiktok_business_app_access_token);
             // Tiktok sdk init start
 
-            long beforeStartTT = System.currentTimeMillis();
             TTConfig ttConfig = new TTConfig(getApplication())
-                    .setAppId(appId)
-                    .setTTAppId(ttAppId)
-                    .setAccessToken(accessToken)
+                    .setAppId(this.getResources().getString(R.string.tiktok_business_app_id))
+                    .setTTAppId(this.getResources().getString(R.string.tiktok_tt_app_id))
                     .disableAutoStart()
+                    .disableMonitor()
                     .setLogLevel(TikTokBusinessSdk.LogLevel.DEBUG);
             TikTokBusinessSdk.initializeSdk(ttConfig);
-            long afterStartTT = System.currentTimeMillis();
-            android.util.Log.i("TikTokBusinessSdk", " Init time in ms " + (afterStartTT-beforeStartTT));
 
             // check if user info is cached & init
             homeViewModel.checkInitTTAM();
 
+            TikTokBusinessSdk.setOnCrashListener((thread, ex) -> android.util.Log.i("TikTokBusinessSdk", "setOnCrashListener" + thread.getName(), ex));
+
             // testing delay tracking, implementing a 6 sec delay manually
             // ideally has to be after accepting tracking permission
-            new Handler(Looper.getMainLooper()).postDelayed(TikTokBusinessSdk::startTrack, 6000);
+             new Handler(Looper.getMainLooper()).postDelayed(TikTokBusinessSdk::startTrack, 10000);
         }
     }
 
@@ -94,6 +90,7 @@ public class App extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         EventLogRepo eventLogRepo = new EventLogRepo(getApplication());
@@ -131,6 +128,11 @@ public class App extends AppCompatActivity {
                     }
                 }
                 break;
+            case R.id.action_crash_sdk:
+                TikTokBusinessSdk.crashSDK();
+                break;
+            case R.id.action_crash_app:
+                throw new RuntimeException("force crash from app");
         }
         return super.onOptionsItemSelected(item);
     }

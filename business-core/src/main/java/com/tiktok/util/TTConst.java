@@ -14,6 +14,8 @@ public class TTConst {
     public static final String TTSDK_APP_LAST_LAUNCH = "com.tiktok.sdk.lastLaunch";
     public static final String TTSDK_APP_2DR_TIME = "com.tiktok.sdk.2drTime";
 
+    public static final String TTSDK_PREFIX = "com.tiktok";
+
     public static enum ApiErrorCodes {
         PARTIAL_SUCCESS(20001),
         API_ERROR(40000);

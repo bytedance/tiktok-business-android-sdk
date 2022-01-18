@@ -50,10 +50,8 @@ public class TikTokBusinessSdkTest {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
         String appId = appContext.getResources().getString(R.string.tiktok_business_app_id);
-        String accessToken = appContext.getResources().getString(R.string.tiktok_business_app_access_token);
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
-                .setAppId(appId)
-                .setAccessToken(accessToken);
+                .setAppId(appId);
         TikTokBusinessSdk.initializeSdk(ttConfig);
 
         // check singleton is set
@@ -72,16 +70,8 @@ public class TikTokBusinessSdkTest {
             return;
         }
 
-        // check access token from meta data
-        assertEquals(TikTokBusinessSdk.getAccessToken(), metaData.get("com.tiktok.sdk.AccessToken").toString());
         // check app id from meta data
         assertEquals(TikTokBusinessSdk.getAppId(), metaData.get("com.tiktok.sdk.AppId").toString());
-
-        // update access token with new value
-        String newAccessToken = "newAccessToken";
-        TikTokBusinessSdk.updateAccessToken(newAccessToken);
-        assertEquals(TikTokBusinessSdk.getAccessToken(), newAccessToken);
-
     }
 
     @Test
@@ -89,10 +79,8 @@ public class TikTokBusinessSdkTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        String newAccessToken = "newAccessToken";
         String newAppID = "newAppID";
         TikTokBusinessSdk.TTConfig ttConfig = new TikTokBusinessSdk.TTConfig(appContext)
-                .setAccessToken(newAccessToken)
                 .setAppId(newAppID)
                 .disableAutoStart();
         TikTokBusinessSdk.initializeSdk(ttConfig);
@@ -100,17 +88,10 @@ public class TikTokBusinessSdkTest {
         // check singleton is set
         assertTrue(TikTokBusinessSdk.isInitialized());
 
-        // check access token from meta data
-        assertEquals(TikTokBusinessSdk.getAccessToken(), newAccessToken);
         // check app id from meta data
         assertEquals(TikTokBusinessSdk.getAppId(), newAppID);
         // check auto event flag
         assertFalse(TikTokBusinessSdk.getNetworkSwitch());
-
-        // update access token with new value
-        String anotherAccessToken = "anotherAccessToken";
-        TikTokBusinessSdk.updateAccessToken(anotherAccessToken);
-        assertEquals(TikTokBusinessSdk.getAccessToken(), anotherAccessToken);
     }
 
     @Test
@@ -366,9 +347,6 @@ public class TikTokBusinessSdkTest {
         // clear all persisted events
         TikTokBusinessSdk.clearAll();
 
-        // set an invalid token to fail
-        TikTokBusinessSdk.updateAccessToken("INVALID_ACCESS_TOKEN");
-
         MessageHandler messageHandler = new MessageHandler();
         Handler mHandler = new Handler(Looper.getMainLooper()) {
             @Override
@@ -512,10 +490,6 @@ public class TikTokBusinessSdkTest {
         assertEquals(2,messageHandler.totalRequests);
         // 2 total success
         assertEquals(2, messageHandler.totalSuccessfulRequests);
-
-        // set an invalid token to fail
-        TikTokBusinessSdk.updateAccessToken("INVALID_ACCESS_TOKEN");
-
 
         // common purchase event
         // Order with 2 items in cart
