@@ -181,7 +181,7 @@ class TTRequest {
                     JSONObject resultJson = new JSONObject(result);
                     int code = resultJson.getInt("code");
 
-                    if (code == TTConst.ApiErrorCodes.API_ERROR.code) {
+                    if (TikTokBusinessSdk.isInSdkDebugMode() || code == TTConst.ApiErrorCodes.API_ERROR.code) {
                         failedEventsToBeDiscarded.addAll(currentBatch);
                         failedRequests += currentBatch.size();
                     }
@@ -285,6 +285,10 @@ class TTRequest {
             if (properties.length() != 0) {
                 propertiesJson.put("properties", properties);
             }
+            if (TikTokBusinessSdk.isInSdkDebugMode()) {
+                propertiesJson.put("test_event_code", TikTokBusinessSdk.getTestEventCode());
+            }
+
             propertiesJson.put("context", TTRequestBuilder.getContextForApi(event));
             return propertiesJson;
         } catch (JSONException e) {

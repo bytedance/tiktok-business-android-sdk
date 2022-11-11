@@ -64,6 +64,16 @@ public class TikTokBusinessSdk {
      */
     private static AtomicBoolean networkSwitch;
 
+    /**
+     *  debug mode switch
+     */
+    private static AtomicBoolean sdkDebugModeSwitch = new AtomicBoolean(false);
+
+    /**
+     * save the test Event code
+     */
+    private static String testEventCode = "";
+
     private static TTConfig config;
     /**
      * logger util
@@ -93,6 +103,14 @@ public class TikTokBusinessSdk {
 
         config = ttConfig;
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
+        sdkDebugModeSwitch.set(ttConfig.debugModeSwitch);
+        if (sdkGlobalSwitch) {
+            testEventCode = createTestEventCode(ttConfig);
+        }
+    }
+
+    private String createTestEventCode(@NonNull TTConfig ttConfig) {
+        return ttConfig.appId + "_" + ttConfig.ttAppId;
     }
 
     public static synchronized boolean isInitialized() {
@@ -430,6 +448,17 @@ public class TikTokBusinessSdk {
         globalConfigFetched.set(true);
     }
 
+    public static Boolean isInSdkDebugMode() {
+        return sdkGlobalSwitch;
+    }
+    public static void setSdkDebugModeSwitch() {
+        sdkDebugModeSwitch.set(true);
+    }
+
+    public static String getTestEventCode() {
+        return testEventCode;
+    }
+
     public static void setSdkGlobalSwitch(Boolean sdkGlobalSwitch) {
         TikTokBusinessSdk.sdkGlobalSwitch = sdkGlobalSwitch;
     }
@@ -548,6 +577,9 @@ public class TikTokBusinessSdk {
         private final List<TTConst.AutoEvents> disabledEvents;
         /* disable monitor metrics */
         private boolean disableMetrics = false;
+        /* open debug mode*/
+        private boolean debugModeSwitch = false;
+
 
         /**
          * Read configs from <meta-data>
@@ -646,6 +678,14 @@ public class TikTokBusinessSdk {
          */
         public TTConfig disableMonitor() {
             disableMetrics = true;
+            return this;
+        }
+
+        /**
+         * to open the debug mode
+         */
+        public  TTConfig openDebugMode() {
+            debugModeSwitch = true;
             return this;
         }
     }
