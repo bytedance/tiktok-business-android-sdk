@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
                     .setAccessToken(accessToken)
                     .disableInstallLogging()
                     .disableLaunchLogging()
+                    .openDebugMode()
                     .disableRetentionLogging()
                     .setLogLevel(TikTokBusinessSdk.LogLevel.INFO);
             TikTokBusinessSdk.initializeSdk(ttConfig);

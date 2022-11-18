@@ -285,10 +285,6 @@ class TTRequest {
             if (properties.length() != 0) {
                 propertiesJson.put("properties", properties);
             }
-            if (TikTokBusinessSdk.isInSdkDebugMode()) {
-                propertiesJson.put("test_event_code", TikTokBusinessSdk.getTestEventCode());
-            }
-
             propertiesJson.put("context", TTRequestBuilder.getContextForApi(event));
             return propertiesJson;
         } catch (JSONException e) {

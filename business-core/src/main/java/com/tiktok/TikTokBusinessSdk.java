@@ -110,7 +110,7 @@ public class TikTokBusinessSdk {
     }
 
     private String createTestEventCode(@NonNull TTConfig ttConfig) {
-        return ttConfig.appId + "_" + ttConfig.ttAppId;
+        return ttConfig.ttAppId.toString();
     }
 
     public static synchronized boolean isInitialized() {
