@@ -104,7 +104,7 @@ public class TikTokBusinessSdk {
         config = ttConfig;
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
         sdkDebugModeSwitch.set(ttConfig.debugModeSwitch);
-        if (sdkGlobalSwitch) {
+        if (sdkDebugModeSwitch.get()) {
             testEventCode = createTestEventCode(ttConfig);
         }
     }
@@ -449,10 +449,7 @@ public class TikTokBusinessSdk {
     }
 
     public static Boolean isInSdkDebugMode() {
-        return sdkGlobalSwitch;
-    }
-    public static void setSdkDebugModeSwitch() {
-        sdkDebugModeSwitch.set(true);
+        return sdkDebugModeSwitch.get();
     }
 
     public static String getTestEventCode() {
