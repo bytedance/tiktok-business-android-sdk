@@ -42,6 +42,4 @@
     <string name="logout">Logout</string>
     <string name="crash_app_from_sdk">Force Crash from SDK</string>
     <string name="crash_app_from_app">Force Crash from App</string>
-    <string name="tiktok_business_app_id">1234567</string>
-    <string name="tiktok_tt_app_id">456789</string>
 </resources>
