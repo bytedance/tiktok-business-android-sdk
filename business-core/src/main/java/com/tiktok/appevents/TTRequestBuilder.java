@@ -40,7 +40,9 @@ class TTRequestBuilder {
             } else {
                 result.put("tiktok_app_id", TikTokBusinessSdk.getTTAppId());
             }
-
+            if (TikTokBusinessSdk.isInSdkDebugMode()) {
+                result.put("test_event_code", TikTokBusinessSdk.getTestEventCode());
+            }
             result.put("event_source", "APP_EVENTS_SDK");
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);

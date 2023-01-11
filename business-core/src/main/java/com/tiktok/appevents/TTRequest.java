@@ -181,7 +181,7 @@ class TTRequest {
                     JSONObject resultJson = new JSONObject(result);
                     int code = resultJson.getInt("code");
 
-                    if (code == TTConst.ApiErrorCodes.API_ERROR.code) {
+                    if (TikTokBusinessSdk.isInSdkDebugMode() || code == TTConst.ApiErrorCodes.API_ERROR.code) {
                         failedEventsToBeDiscarded.addAll(currentBatch);
                         failedRequests += currentBatch.size();
                     }
