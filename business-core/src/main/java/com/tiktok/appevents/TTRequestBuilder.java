@@ -43,6 +43,9 @@ class TTRequestBuilder {
             if (TikTokBusinessSdk.isInSdkDebugMode()) {
                 result.put("test_event_code", TikTokBusinessSdk.getTestEventCode());
             }
+            if (TikTokBusinessSdk.isInSdkLDUMode()) {
+                result.put("limited_data_use", true);
+            }
             result.put("event_source", "APP_EVENTS_SDK");
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);
