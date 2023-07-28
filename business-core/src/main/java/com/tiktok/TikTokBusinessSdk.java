@@ -75,6 +75,7 @@ public class TikTokBusinessSdk {
     private static AtomicBoolean sdkLDUModeSwitch = new AtomicBoolean(false);
 
     /**
+
      * save the test Event code
      */
     private static String testEventCode = "";
@@ -697,6 +698,7 @@ public class TikTokBusinessSdk {
             debugModeSwitch = true;
             return this;
         }
+      
         /**
          * to open the LDU(limited data use)mode
          */
