@@ -70,6 +70,12 @@ public class TikTokBusinessSdk {
     private static AtomicBoolean sdkDebugModeSwitch = new AtomicBoolean(false);
 
     /**
+     *  debug mode switch
+     */
+    private static AtomicBoolean sdkLDUModeSwitch = new AtomicBoolean(false);
+
+    /**
+
      * save the test Event code
      */
     private static String testEventCode = "";
@@ -107,6 +113,7 @@ public class TikTokBusinessSdk {
         if (sdkDebugModeSwitch.get()) {
             testEventCode = createTestEventCode(ttConfig);
         }
+        sdkLDUModeSwitch.set(ttConfig.lduModeSwitch);
     }
 
     private String createTestEventCode(@NonNull TTConfig ttConfig) {
@@ -452,6 +459,10 @@ public class TikTokBusinessSdk {
         return sdkDebugModeSwitch.get();
     }
 
+    public static Boolean isInSdkLDUMode() {
+        return sdkLDUModeSwitch.get();
+    }
+
     public static String getTestEventCode() {
         return testEventCode;
     }
@@ -576,6 +587,8 @@ public class TikTokBusinessSdk {
         private boolean disableMetrics = false;
         /* open debug mode*/
         private boolean debugModeSwitch = false;
+        /* open LDU mode*/
+        private boolean lduModeSwitch = false;
 
 
         /**
@@ -683,6 +696,14 @@ public class TikTokBusinessSdk {
          */
         public  TTConfig openDebugMode() {
             debugModeSwitch = true;
+            return this;
+        }
+      
+        /**
+         * to open the LDU(limited data use)mode
+         */
+        public  TTConfig enableLimitedDataUse() {
+            lduModeSwitch = true;
             return this;
         }
     }

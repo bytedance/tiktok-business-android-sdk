@@ -281,6 +281,9 @@ class TTRequest {
                 propertiesJson.put("event", event.getEventName());
             }
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
+            if (TikTokBusinessSdk.isInSdkLDUMode()) {
+                propertiesJson.put("limited_data_use", true);
+            }
             JSONObject properties = new JSONObject(event.getPropertiesJson());
             if (properties.length() != 0) {
                 propertiesJson.put("properties", properties);
