@@ -6,6 +6,10 @@
 
 package com.example.ui.events;
 
+import static com.example.ui.events.PropEditActivity.SOURCE;
+import static com.example.ui.events.PropEditActivity.SOURCE_CONTENT;
+import static com.tiktok.appevents.contents.TTContentsEventConstants.Params.EVENT_PROPERTY_CONTENTS;
+
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -70,6 +74,8 @@ public class EventFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_events, container, false);
 
         final TextView propsTV = root.findViewById(R.id.propsPrettyViewer);
+        final Button propertyBtn = root.findViewById(R.id.addContents);
+        propertyBtn.setVisibility(View.GONE);
         eventViewModel.getLiveProperties().observe(getViewLifecycleOwner(), s -> {
             try {
                 assert s != null;
@@ -91,6 +97,9 @@ public class EventFragment extends Fragment {
             Iterator<String> keys = eventViewModel.getPropIterator();
             while (keys.hasNext()) {
                 String key = keys.next();
+                if(EVENT_PROPERTY_CONTENTS.equals(key)){
+                    continue;
+                }
                 try {
                     bundlePros.putString(key, eventViewModel.getProp(key));
                 } catch (JSONException e) {
@@ -98,6 +107,11 @@ public class EventFragment extends Fragment {
                 }
             }
             intent.putExtras(bundlePros);
+            startActivityForResult(intent, 2);
+        });
+        propertyBtn.setOnClickListener(view -> {
+            Intent intent = new Intent(requireContext(), PropEditActivity.class);
+            intent.putExtra(SOURCE, SOURCE_CONTENT);
             startActivityForResult(intent, 2);
         });
 
@@ -109,11 +123,23 @@ public class EventFragment extends Fragment {
             builder.setItems(events, (dialog, selected) -> {
                 eventViewModel.resetProps();
                 eventViewModel.setEvent(events[selected]);
-                for (String property : Objects.requireNonNull(TestEvents.TTEventProperties.get(events[selected]))) {
-                    try {
-                        eventViewModel.addProp(property, "");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                if(TestEvents.TTBaseEvents.containsKey(events[selected])){
+                    propsTV.setVisibility(View.GONE);
+                    propertyBtn.setVisibility(View.GONE);
+                } else {
+                    for (String property : Objects.requireNonNull(TestEvents.TTEventProperties.get(events[selected]))) {
+                        try {
+                            eventViewModel.addProp(property, "");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if(TestEvents.TTContentsEvent.contains(events[selected])){
+                        propsTV.setVisibility(View.VISIBLE);
+                        propertyBtn.setVisibility(View.VISIBLE);
+                    } else {
+                        propsTV.setVisibility(View.VISIBLE);
+                        propertyBtn.setVisibility(View.GONE);
                     }
                 }
             });
@@ -144,20 +170,36 @@ public class EventFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if(data == null || data.getExtras() == null){
+            return;
+        }
+        Bundle bundle = data.getExtras();
         if (resultCode == 2) {
-            assert data != null;
-            Bundle bundle = data.getExtras();
             eventViewModel.resetProps();
-            if (bundle != null) {
-                for (String key : bundle.keySet()) {
-                    if (bundle.get(key) != null) {
-                        try {
-                            eventViewModel.addProp(key, bundle.get(key));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+            for (String key : bundle.keySet()) {
+                if (bundle.get(key) != null) {
+                    try {
+                        eventViewModel.addProp(key, bundle.get(key));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }
+            }
+        } else if (resultCode == 3) {
+            JSONObject jsonObject = new JSONObject();
+            for (String key : bundle.keySet()) {
+                if (bundle.get(key) != null) {
+                    try {
+                        jsonObject.put(key, bundle.get(key));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            try {
+                eventViewModel.addContents(jsonObject);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
             }
         }
     }

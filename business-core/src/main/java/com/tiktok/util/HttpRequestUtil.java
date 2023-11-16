@@ -45,6 +45,8 @@ public class HttpRequestUtil {
 
     private static final String TAG = HttpRequestUtil.class.getCanonicalName();
 
+    private static final TTLogger ttLogger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
+
     public static String doGet(String url, Map<String, String> headerParamMap) {
         HttpRequestOptions options = new HttpRequestOptions();
         options.connectTimeout = 2000;
@@ -197,6 +199,10 @@ public class HttpRequestUtil {
             // http code is different from the code returned by api
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 result = streamToString(connection.getInputStream());
+            }
+            if(TikTokBusinessSdk.isInSdkDebugMode()) {
+                ttLogger.info("doPost request body: %s", jsonStr);
+                ttLogger.info("doPost result: %s", result == null ? String.valueOf(responseCode) : result);
             }
         } catch (Exception e) {
             TTCrashHandler.handleCrash(TAG, e);

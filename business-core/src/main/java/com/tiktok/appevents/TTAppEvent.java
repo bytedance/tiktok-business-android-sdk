@@ -26,21 +26,23 @@ public class TTAppEvent implements Serializable {
     private String eventName;
     private Date timeStamp;
     private String propertiesJson;
+    private String eventId;
     private static AtomicLong counter = new AtomicLong(new Date().getTime() + 0L);
     private Long uniqueId;
     private TTUserInfo userInfo;
     private static String TAG = TTAppEventsQueue.class.getCanonicalName();
     private static TTLogger logger = new TTLogger(TAG, TikTokBusinessSdk.getLogLevel());
 
-    TTAppEvent(TTAppEventType type, String eventName, String propertiesJson) {
-        this(type, eventName, new Date(), propertiesJson);
+    TTAppEvent(TTAppEventType type, String eventName, String propertiesJson, String eventId) {
+        this(type, eventName, new Date(), propertiesJson, eventId);
     }
 
-    TTAppEvent(TTAppEventType type, String eventName, Date timeStamp, String propertiesJson) {
+    TTAppEvent(TTAppEventType type, String eventName, Date timeStamp, String propertiesJson, String eventId) {
         this.type = type;
         this.eventName = eventName;
         this.timeStamp = timeStamp;
         this.propertiesJson = propertiesJson;
+        this.eventId = eventId;
         this.uniqueId = TTAppEvent.counter.getAndIncrement();
         this.userInfo = TTUserInfo.sharedInstance.clone();
     }
@@ -69,6 +71,14 @@ public class TTAppEvent implements Serializable {
         this.timeStamp = timeStamp;
     }
 
+    public String getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
+    }
+
     public String getPropertiesJson() {
         return propertiesJson;
     }
@@ -87,6 +97,7 @@ public class TTAppEvent implements Serializable {
                 "eventName='" + eventName + '\'' +
                 ", timeStamp=" + timeStamp +
                 ", propertiesJson='" + propertiesJson + '\'' +
+                ", eventId='" + eventId + '\'' +
                 ", uniqueId=" + uniqueId +
                 '}';
     }

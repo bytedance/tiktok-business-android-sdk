@@ -6,6 +6,8 @@
 
 package com.tiktok.appevents;
 
+import android.text.TextUtils;
+
 import com.tiktok.BuildConfig;
 import com.tiktok.TikTokBusinessSdk;
 import com.tiktok.util.HttpRequestUtil;
@@ -279,6 +281,9 @@ class TTRequest {
             propertiesJson.put("type", event.getType());
             if (event.getEventName() != null) {
                 propertiesJson.put("event", event.getEventName());
+            }
+            if (!TextUtils.isEmpty(event.getEventId())) {
+                propertiesJson.put("event_id", event.getEventId());
             }
             propertiesJson.put("timestamp", TimeUtil.getISO8601Timestamp(event.getTimeStamp()));
             if (TikTokBusinessSdk.isInSdkLDUMode()) {

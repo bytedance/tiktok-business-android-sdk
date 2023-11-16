@@ -186,7 +186,7 @@ public class TTAppEventLogger {
         sharedInstance.setExternalUserName(externalUserName);
         sharedInstance.setPhoneNumber(phoneNumber);
         sharedInstance.setEmail(email);
-        trackEvent(TTAppEvent.TTAppEventType.identify, null, null);
+        trackEvent(TTAppEvent.TTAppEventType.identify, null, null, null);
         flushWithReason(TTAppEventLogger.FlushReason.IDENTIFY);
     }
 
@@ -202,10 +202,13 @@ public class TTAppEventLogger {
      * @param props
      */
     public void track(String event, @Nullable JSONObject props) {
-        trackEvent(TTAppEvent.TTAppEventType.track, event, props);
+        trackEvent(TTAppEvent.TTAppEventType.track, event, props, null);
+    }
+    public void track(String event, @Nullable JSONObject props, String eventId) {
+        trackEvent(TTAppEvent.TTAppEventType.track, event, props, eventId);
     }
 
-    private void trackEvent(TTAppEvent.TTAppEventType type, String event, @Nullable JSONObject props) {
+    private void trackEvent(TTAppEvent.TTAppEventType type, String event, @Nullable JSONObject props, String eventId) {
         if (!TikTokBusinessSdk.isSystemActivated()) {
             return;
         }
@@ -216,7 +219,7 @@ public class TTAppEventLogger {
                 logger.debug("track " + event + " : " + finalProps.toString(4));
             } catch (JSONException ignored) {}
 
-            TTAppEventsQueue.addEvent(new TTAppEvent(type, event, finalProps.toString()));
+            TTAppEventsQueue.addEvent(new TTAppEvent(type, event, finalProps.toString(), eventId));
 
             if (TTAppEventsQueue.size() > THRESHOLD) {
                 flush(FlushReason.THRESHOLD);

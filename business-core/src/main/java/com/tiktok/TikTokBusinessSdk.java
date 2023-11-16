@@ -13,6 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.tiktok.appevents.*;
+import com.tiktok.appevents.base.EventName;
+import com.tiktok.appevents.base.TTBaseEvent;
+import com.tiktok.iap.TTInAppPurchaseWrapper;
 import com.tiktok.util.TTConst;
 import com.tiktok.util.TTLogger;
 
@@ -105,7 +108,7 @@ public class TikTokBusinessSdk {
         if (ttConfig.ttAppId == null) {
             logger.warn("ttAppId not set, but its usage is encouraged");
         }
-
+        logger.info("appId: %s, TTAppId: %s, autoIapTrack: %s", ttConfig.appId, ttConfig.ttAppId, ttConfig.autoIapTrack);
         config = ttConfig;
         networkSwitch = new AtomicBoolean(ttConfig.autoStart);
         sdkDebugModeSwitch.set(ttConfig.debugModeSwitch);
@@ -154,6 +157,9 @@ public class TikTokBusinessSdk {
         // the appEventLogger instance will be the main interface to track events
         appEventLogger = new TTAppEventLogger(ttConfig.autoEvent,ttConfig.disabledEvents,
                 ttConfig.flushTime, ttConfig.disableMetrics, initTimeMS);
+        if (ttConfig.autoIapTrack) {
+            TTInAppPurchaseWrapper.registerIapTrack();
+        }
 
         try {
             long endTimeMS = System.currentTimeMillis();
@@ -257,10 +263,27 @@ public class TikTokBusinessSdk {
      * A shortcut method for the situations where the events do not require a property body.
      * see more {@link TikTokBusinessSdk#trackEvent(String, JSONObject)}
      */
+    @Deprecated
     public static void trackEvent(String event) {
         appEventLogger.track(event, null);
     }
 
+    @Deprecated
+    public static void trackEvent(String event, String eventId) {
+        appEventLogger.track(event, null, eventId);
+    }
+
+    public static void trackEvent(TTBaseEvent event) {
+        appEventLogger.track(event.eventName, event.properties);
+    }
+
+    public static void trackEvent(EventName event) {
+        appEventLogger.track(event.toString(), null);
+    }
+
+    public static void trackEvent(EventName event, String eventId) {
+        appEventLogger.track(event.toString(), null, eventId);
+    }
 
     /**
      * <pre>
@@ -285,8 +308,13 @@ public class TikTokBusinessSdk {
      *
      * @param event event name
      */
+    @Deprecated
     public static void trackEvent(String event, @Nullable JSONObject props) {
-        appEventLogger.track(event, props);
+        appEventLogger.track(event, props, "");
+    }
+    @Deprecated
+    public static void trackEvent(String event, @Nullable JSONObject props, String eventId) {
+        appEventLogger.track(event, props, eventId);
     }
 
     /**
@@ -589,6 +617,8 @@ public class TikTokBusinessSdk {
         /* open LDU mode*/
         private boolean lduModeSwitch = false;
 
+        private boolean autoIapTrack = false;
+
 
         /**
          * Read configs from <meta-data>
@@ -704,6 +734,18 @@ public class TikTokBusinessSdk {
             lduModeSwitch = true;
             return this;
         }
+
+        /**
+         * to open the Auto In App Purchase Track
+         */
+        public  TTConfig enableAutoIapTrack() {
+            autoIapTrack = true;
+            return this;
+        }
+
+        public boolean isAutoIapTrack() {
+            return autoIapTrack;
+        }
     }
 
     /**
@@ -721,6 +763,10 @@ public class TikTokBusinessSdk {
         public boolean log() {
             return this != NONE;
         }
+    }
+
+    public static boolean enableAutoIapTrack() {
+        return config != null && config.isAutoIapTrack();
     }
 
     public interface CrashListener {

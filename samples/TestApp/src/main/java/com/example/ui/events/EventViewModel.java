@@ -6,6 +6,8 @@
 
 package com.example.ui.events;
 
+import static com.tiktok.appevents.contents.TTContentsEventConstants.Params.EVENT_PROPERTY_CONTENTS;
+
 import android.app.Application;
 import android.os.Build;
 
@@ -14,6 +16,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,9 +54,21 @@ public class EventViewModel extends AndroidViewModel {
         properties.setValue(newProp);
     }
 
+    void addContents(Object value) throws JSONException {
+        JSONObject newProp = properties.getValue();
+        if(newProp.optJSONArray(EVENT_PROPERTY_CONTENTS) != null){
+            newProp.getJSONArray(EVENT_PROPERTY_CONTENTS).put(value);
+        } else {
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(value);
+            newProp.put(EVENT_PROPERTY_CONTENTS, jsonArray);
+        }
+        properties.setValue(newProp);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     String getProp(String key) throws JSONException {
-        return (String) Objects.requireNonNull(properties.getValue()).get(key);
+        return String.valueOf(Objects.requireNonNull(properties.getValue()).get(key));
     }
 
     LiveData<JSONObject> getLiveProperties() {
