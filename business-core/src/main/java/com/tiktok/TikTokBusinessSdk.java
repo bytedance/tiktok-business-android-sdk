@@ -275,7 +275,7 @@ public class TikTokBusinessSdk {
     }
 
     public static void trackEvent(TTBaseEvent event) {
-        appEventLogger.track(event.eventName, event.properties);
+        appEventLogger.track(event.eventName, event.properties, event.eventId);
     }
 
     public static void trackEvent(EventName event) {

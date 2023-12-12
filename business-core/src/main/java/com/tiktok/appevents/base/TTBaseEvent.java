@@ -25,6 +25,10 @@ public class TTBaseEvent {
         return new Builder(eventName);
     }
 
+    public static Builder newBuilder(String eventName, String eventId) {
+        return new Builder(eventName, eventId);
+    }
+
     public static class Builder {
         public JSONObject properties = new JSONObject();
         public String eventName;

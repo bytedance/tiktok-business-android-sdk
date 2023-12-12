@@ -119,7 +119,7 @@ public class TTAppEventLogger {
             for (TTPurchaseInfo purchaseInfo : purchaseInfos) {
                 JSONObject property = TTInAppPurchaseManager.getPurchaseProps(purchaseInfo);
                 if (property != null) {
-                    track("Purchase", property);
+                    track("Purchase", property, purchaseInfo.getEventId());
                 }
             }
         });
